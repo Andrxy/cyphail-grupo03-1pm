@@ -1,0 +1,11 @@
+# Archivos de compilación de Maven
+target/
+**/target/
+
+# Configuración específica de IntelliJ
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+**/out/
