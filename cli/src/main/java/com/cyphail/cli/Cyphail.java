@@ -4,16 +4,21 @@ import picocli.CommandLine.Command;
 
 @Command(
         name = "cyphail",
+        subcommands = {
+                CompileCommand.class,
+                RunCommand.class,
+                CommandLine.HelpCommand.class
+        },
         version = "1.0"
 )
-public class CyphailCommand implements Runnable {
+public class Cyphail implements Runnable {
     @Override
     public void run() {
         System.out.println("El CLI de Cyphail ha iniciado correctamente");
     }
 
-    public static void main(String[] args) {
-        int exitCode = new CommandLine(new CyphailCommand()).execute(args);
+    static void main(String[] args) {
+        int exitCode = new CommandLine(new Cyphail()).execute(args);
         System.exit(exitCode);
     }
 }
