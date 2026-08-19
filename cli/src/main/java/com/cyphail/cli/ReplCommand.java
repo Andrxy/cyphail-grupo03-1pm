@@ -5,7 +5,10 @@ import picocli.CommandLine.Command;
 import java.util.Scanner;
 
 /**
+ * Implementación del subcomando repl encargado de cargar el shell
+ *
  * @author Andrey Solano
+ * @version 1.0
  */
 @Command(
         name = "repl",
