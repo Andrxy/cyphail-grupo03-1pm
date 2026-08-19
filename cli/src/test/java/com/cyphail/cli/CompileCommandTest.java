@@ -10,7 +10,7 @@ public class CompileCommandTest {
 
     @Test
     void testSinPath() {
-        cmd = new CommandLine(new Cyphail());
+        cmd = new CommandLine(new CyphailCommand());
         int exitCode = cmd.execute("run");
         assertEquals(2, exitCode);
     }

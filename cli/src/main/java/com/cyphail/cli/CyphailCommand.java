@@ -13,11 +13,12 @@ import picocli.CommandLine.Command;
         subcommands = {
                 CompileCommand.class,
                 RunCommand.class,
-                CommandLine.HelpCommand.class
+                CommandLine.HelpCommand.class,
+                ReplCommand.class
         },
         version = "1.0"
 )
-public class Cyphail implements Runnable {
+public class CyphailCommand implements Runnable {
     /**
      *
      */
@@ -31,7 +32,7 @@ public class Cyphail implements Runnable {
      * @param args
      */
     static void main(String[] args) {
-        int exitCode = new CommandLine(new Cyphail()).execute(args);
+        int exitCode = new CommandLine(new CyphailCommand()).execute(args);
         System.exit(exitCode);
     }
 }
