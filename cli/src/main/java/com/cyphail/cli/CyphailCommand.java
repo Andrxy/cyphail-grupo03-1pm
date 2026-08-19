@@ -2,6 +2,12 @@ package com.cyphail.cli;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
+/**
+ * Comando raiz encargado
+ *
+ * @author Andrey Solano
+ * @version 1.0
+ */
 @Command(
         name = "cyphail",
         subcommands = {
@@ -12,11 +18,18 @@ import picocli.CommandLine.Command;
         version = "1.0"
 )
 public class Cyphail implements Runnable {
+    /**
+     *
+     */
     @Override
     public void run() {
         System.out.println("El CLI de Cyphail ha iniciado correctamente");
     }
 
+    /**
+     *
+     * @param args
+     */
     static void main(String[] args) {
         int exitCode = new CommandLine(new Cyphail()).execute(args);
         System.exit(exitCode);
