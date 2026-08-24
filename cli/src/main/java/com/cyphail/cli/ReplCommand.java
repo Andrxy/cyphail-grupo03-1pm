@@ -12,8 +12,13 @@ import java.util.Scanner;
  */
 @Command(
         name = "repl",
-        description = "Carga el REPL interactico de cyphail"
+        description = "Carga el REPL interactico de cyphail",
+        subcommands = { UseCommand.class,
+                        AboutCommand.class
+                        }
 )
+
+
 public class ReplCommand implements Runnable {
     @Override
     public void run() {
