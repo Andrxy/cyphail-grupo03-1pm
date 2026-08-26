@@ -1,7 +1,5 @@
 package com.cyphail.cli.repl;
 
-import java.io.PrintStream;
-
 /**
  * Mensaje de bienvenida que se muestra al arrancar "cyphail repl", siguiendo
  * el formato pedido en el correo del sprint P1.1 (18 agosto 2026):
@@ -16,7 +14,7 @@ import java.io.PrintStream;
  * GROUP_CODE debe coincidir con el codigo real de grupo-horario
  * (ajustar si el repo no es grupo03-1pm).
  *
- * @author Sebastian Gonzalez
+ * @author Sebastian Gonzalez - Grupo 03-1pm
  * @version 1.0
  */
 public final class ReplBanner {
@@ -29,15 +27,13 @@ public final class ReplBanner {
     }
 
     /**
-     * Imprime el banner de bienvenida en el stream indicado.
-     *
-     * @param out stream de salida (normalmente System.out)
+     * Imprime el banner de bienvenida en la salida estandar.
      */
-    public static void print(PrintStream out) {
-        out.println("Welcome to Cyphail-" + GROUP_CODE + " v." + VERSION + ". August 2026. ESCINF/UNA EIF400-II-2026");
-        out.println("Visit www.whatiscyphail.com for more information");
-        out.println("Type \".help\" for more information and commands");
-        out.println("Type \".exit\" to quit");
-        out.println();
+    public static void print() {
+        IO.println("Welcome to Cyphail-" + GROUP_CODE + " v." + VERSION + ". August 2026. ESCINF/UNA EIF400-II-2026");
+        IO.println("Visit www.whatiscyphail.com for more information");
+        IO.println("Type \".help\" for more information and commands");
+        IO.println("Type \".exit\" to quit");
+        IO.println();
     }
 }

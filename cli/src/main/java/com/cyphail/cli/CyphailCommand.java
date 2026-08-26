@@ -5,7 +5,7 @@ import picocli.CommandLine.Command;
 /**
  * Comando raiz encargado
  *
- * @author Andrey Solano
+ * @author Andrey Solano - Grupo 03-1pm
  * @version 1.0
  */
 @Command(
@@ -14,7 +14,7 @@ import picocli.CommandLine.Command;
                 CompileCommand.class,
                 RunCommand.class,
                 CommandLine.HelpCommand.class,
-                ReplCommand.class
+                ReplCommand.class,
         },
         version = "1.0"
 )
@@ -24,7 +24,7 @@ public class CyphailCommand implements Runnable {
      */
     @Override
     public void run() {
-        System.out.println("El CLI de Cyphail ha iniciado correctamente");
+        IO.println("El CLI de Cyphail ha iniciado correctamente");
     }
 
     /**
