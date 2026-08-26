@@ -5,13 +5,19 @@ import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Pruebas del subcomando "compile" del CLI de Cyphail.
+ *
+ * @author Andrey Solano - Grupo 03-1pm
+ * @version 1.0
+ */
 public class CompileCommandTest {
     private CommandLine cmd;
 
     @Test
     void testSinPath() {
         cmd = new CommandLine(new CyphailCommand());
-        int exitCode = cmd.execute("run");
+        int exitCode = cmd.execute("compile");
         assertEquals(2, exitCode);
     }
 }
