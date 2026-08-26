@@ -5,6 +5,12 @@ import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Pruebas del subcomando "run" del CLI de Cyphail.
+ *
+ * @author Andrey Solano - Grupo 03-1pm
+ * @version 1.0
+ */
 public class RunCommandTest {
     private CommandLine cmd;
 
