@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
  * implementacion sale de una vez, sin pedir confirmacion.
  *
  * @author Alejandro Miranda - Grupo 03-1pm
+ * @author Andrey Solano
  * @version 1.2
  */
 
@@ -19,16 +20,14 @@ import java.util.concurrent.Callable;
         name = ".exit",
         description = "Salir de Cyphail REPL"
 )
-
-public class ExitCommand implements Callable<Integer> {
+public class ExitCommand implements Runnable {
 
     @ParentCommand
     private ReplCommand parent;
 
     @Override
-    public Integer call() {
+    public void run() {
         IO.println("Bye! Thanks for using Cyphail.");
         parent.session().requestExit();
-        return 0;
     }
 }
