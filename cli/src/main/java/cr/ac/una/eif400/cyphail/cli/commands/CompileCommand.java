@@ -4,11 +4,12 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Command;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
 /**
- * @author Andrey Solano - Grupo 03-1pm
+ * @author Andrey Solano
  * @version 1.0
  */
 @Command(
@@ -16,24 +17,24 @@ import java.util.concurrent.Callable;
 )
 public class CompileCommand implements Callable<Integer> {
 
-    /**
-     *
-     */
     @Parameters(index = "0", arity = "1", description = "Ruta de la ubicación del archivo")
-    private Path filePath;
+    private Path inFilePath;
 
-    /**
-     *
-     */
     @Option(names = {"--out", "-o"})
-    private Path outPath;
+    private Path outFilePath;
 
-    /**
-     *
-     * @return
-     */
     @Override
-    public Integer call() {
-        return 0; // falta agregar validaciones
+    public Integer call() throws Exception {
+        try {
+            if (!Files.exists(inFilePath)) throw new IllegalArgumentException("El archivo fuente no fue encontrado");
+
+            IO.println("Mandar a compilar");
+
+            return 0;
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+
+            return 1;
+        }
     }
 }
