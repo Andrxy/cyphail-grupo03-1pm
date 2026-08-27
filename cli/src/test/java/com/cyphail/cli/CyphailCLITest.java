@@ -1,5 +1,5 @@
 package com.cyphail.cli;
-import cr.ac.una.eif400.cyphail.cli.cmd.CyphailCommand;
+import cr.ac.una.eif400.cyphail.cli.commands.CyphailCommand;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;

@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.cyphail.cli.cmd;
+package cr.ac.una.eif400.cyphail.cli.repl;
 
 /**
  * Mensaje de bienvenida que se muestra al arrancar "cyphail repl", siguiendo
