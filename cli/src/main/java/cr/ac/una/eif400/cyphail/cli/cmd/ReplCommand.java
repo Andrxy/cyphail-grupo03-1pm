@@ -1,8 +1,10 @@
-package com.cyphail.cli;
+package cr.ac.una.eif400.cyphail.cli.cmd;
 
-import com.cyphail.cli.repl.ReplBanner;
-import com.cyphail.cli.repl.ReplSession;
 import com.cyphail.cli.repl.commands.*;
+import cr.ac.una.eif400.cyphail.cli.commands.AboutCommand;
+import cr.ac.una.eif400.cyphail.cli.commands.ExitCommand;
+import cr.ac.una.eif400.cyphail.cli.commands.HelpCommand;
+import cr.ac.una.eif400.cyphail.cli.commands.UseCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 

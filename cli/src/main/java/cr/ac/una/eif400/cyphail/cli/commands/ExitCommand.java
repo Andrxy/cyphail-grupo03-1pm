@@ -1,6 +1,6 @@
-package com.cyphail.cli.repl.commands;
+package cr.ac.una.eif400.cyphail.cli.commands;
 
-import com.cyphail.cli.ReplCommand;
+import cr.ac.una.eif400.cyphail.cli.cmd.ReplCommand;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ParentCommand;
 

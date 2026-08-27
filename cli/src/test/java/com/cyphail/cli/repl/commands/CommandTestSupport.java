@@ -1,6 +1,6 @@
 package com.cyphail.cli.repl.commands;
 
-import com.cyphail.cli.ReplCommand;
+import cr.ac.una.eif400.cyphail.cli.cmd.ReplCommand;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import picocli.CommandLine;

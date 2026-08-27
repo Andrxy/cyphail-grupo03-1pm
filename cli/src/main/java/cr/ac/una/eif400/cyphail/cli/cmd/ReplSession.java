@@ -1,4 +1,4 @@
-package com.cyphail.cli.repl;
+package cr.ac.una.eif400.cyphail.cli.cmd;
 
 /**
  * Estado compartido de una sesion interactiva del REPL de Cyphail.

@@ -1,4 +1,4 @@
-package com.cyphail.cli;
+package cr.ac.una.eif400.cyphail.cli.cmd;
 
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
