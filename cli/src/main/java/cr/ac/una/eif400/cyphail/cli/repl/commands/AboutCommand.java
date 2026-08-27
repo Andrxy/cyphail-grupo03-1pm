@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
  * que sirve, sin salir de la sesion del REPL.
  *
  * @author Wilson Umaña - Grupo 03-1pm
+ * @author Andrey Solano
  * @version 1.0
  */
 
@@ -17,10 +18,8 @@ import java.util.concurrent.Callable;
         description = "Muestra informacion sobre cyphail"
 )
 
-public class AboutCommand implements Callable<Integer> {
-    @Override
-    public Integer call() {
+public class AboutCommand implements Runnable {
+    public void run() {
         IO.println("cyphail - transpilador de consultas sobre grafos");
-        return 0;
     }
 }
