@@ -42,7 +42,15 @@ public class Repl {
             String line = scanner.nextLine().trim();
             if (line.isEmpty()) continue;
 
-            dispatcher.execute(line.split("\\s+"));
+            String[] args = line.split("\\s+");
+            String firstWord = args[0];
+
+            if (firstWord.startsWith(".")) {
+                dispatcher.execute(args);
+            }
+            else {
+                // procesar query
+            }
         }
     }
 }
