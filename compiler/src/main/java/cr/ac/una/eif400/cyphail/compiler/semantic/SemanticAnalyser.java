@@ -1,8 +1,11 @@
 package cr.ac.una.eif400.cyphail.compiler.semantic;
 
-public class SemanticAnalyser implements Runnable {
-    @Override
-    public void run() {
-        IO.println("Haciendo análisis semántico");
+import cr.ac.una.eif400.cyphail.compiler.ast.AST;
+
+/**
+ * @author Andrey Solano
+ */
+public class SemanticAnalyser {
+    public void analyse(AST ast) {
     }
 }

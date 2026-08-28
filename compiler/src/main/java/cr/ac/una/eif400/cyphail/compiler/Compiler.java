@@ -1,5 +1,6 @@
 package cr.ac.una.eif400.cyphail.compiler;
 
+import cr.ac.una.eif400.cyphail.compiler.ast.AST;
 import cr.ac.una.eif400.cyphail.compiler.codegen.CodeGenerator;
 import cr.ac.una.eif400.cyphail.compiler.exceptions.CompilationException;
 import cr.ac.una.eif400.cyphail.compiler.parser.Parser;
@@ -25,13 +26,13 @@ public class Compiler {
     public String compile(String sourceCode) throws CompilationException {
         try {
             String tokens = tokenizer.tokenize(sourceCode);
-            String ast = parser.parse(tokens);
+            AST ast = parser.parse(tokens);
 
             semanticAnalyser.analyse(ast);
 
             return codeGenerator.generate(ast);
         } catch (Exception e) {
-            throw new CompilationException("Error al compilar la query");
+            throw new CompilationException("Error al compilar la query: " + e.getMessage());
         }
     }
 }
