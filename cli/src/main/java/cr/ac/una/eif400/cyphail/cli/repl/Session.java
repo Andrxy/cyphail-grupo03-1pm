@@ -11,7 +11,7 @@ package cr.ac.una.eif400.cyphail.cli.repl;
  * @author Alejandro Miranda - Grupo 03-1pm
  * @version 1.0
  */
-public class ReplSession {
+public class Session {
 
     private boolean running = true;
 

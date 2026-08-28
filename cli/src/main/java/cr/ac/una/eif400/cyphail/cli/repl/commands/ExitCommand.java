@@ -28,6 +28,6 @@ public class ExitCommand implements Runnable {
     @Override
     public void run() {
         IO.println("Bye! Thanks for using Cyphail.");
-        parent.session().requestExit();
+        // parent.session().requestExit();
     }
 }
