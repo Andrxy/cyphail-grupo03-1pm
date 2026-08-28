@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
  * registrados en el comando padre y sus descripciones.
  *
  * @author Sebastian Gonzalez - Grupo 03-1pm
+ * @author Andrey Solano
  * @version 1.1
  */
 

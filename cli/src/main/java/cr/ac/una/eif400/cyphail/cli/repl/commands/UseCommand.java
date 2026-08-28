@@ -17,44 +17,17 @@ import java.util.concurrent.Callable;
         name = ".use",
         description = "Lista los grafos disponibles o selecciona uno para trabajar"
 )
-
-public class UseCommand implements Callable<Integer>{
-
-    private static final Map<String, String> grafos_disponibles =  Map.of(
-            "Amigos", "Social Network",
-            "Tasks", "Task and resources",
-            "teams",   "Soccer Teams",
-            "planets", "Planets in Solar System"
-    );
-
-    private void printGrafosDisponibles(){
-        IO.println(String.format("%-10s %s", "Graph", "Description"));
-        IO.println("-".repeat(20));
-
-        grafos_disponibles.forEach((key, value) -> {
-            IO.println(String.format("%-10s %s", key, value));
-        });
-    }
-
-    private Integer conectarConGrafo(String graphName){
-        if(!grafos_disponibles.containsKey(graphName)){
-            IO.println("Error the graph is not in the list");
-            return -1;
-        }
-
-        IO.println("OK " + graphName + " available");
-        return 0;
-    }
+public class UseCommand implements Runnable {
 
     @Parameters(index = "0", arity = "0..1", description = "Nombre del grafo a usar")
     private String graphName;
 
     @Override
-    public Integer call() throws Exception {
+    public void run() {
         if(graphName == null){
-            printGrafosDisponibles();
-            return 0;
+            // printGrafosDisponibles();
         }
-        return conectarConGrafo(graphName);
+        // return conectarConGrafo(graphName);
+
     }
 }

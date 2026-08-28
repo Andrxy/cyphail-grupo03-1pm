@@ -18,18 +18,20 @@ import java.util.Scanner;
         }
 )
 public class Repl {
-    private final Session session = new Session();
+    private Session session = new Session();
 
     public void open() {
         CommandLine dispatcher = new CommandLine(this);
         Scanner scanner = new Scanner(System.in);
 
-        IO.print("""
+        IO.print(
+                """
                 Welcome to Cyphail-01-5pm v.0.1. August 2026. ESCINF/UNA EIF400-II-2026
                 Visit www.whatiscyphail.com for more information
                 Type ".help" for more information and commands
                 Type ".exit" to quit
-                """);
+                """
+        );
 
         while (session.isRunning()) {
             IO.print("cyphail>>> ");
