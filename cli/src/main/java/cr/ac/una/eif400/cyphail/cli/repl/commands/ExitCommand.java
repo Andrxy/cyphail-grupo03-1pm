@@ -1,6 +1,7 @@
 package cr.ac.una.eif400.cyphail.cli.repl.commands;
 
 import cr.ac.una.eif400.cyphail.cli.commands.ReplCommand;
+import cr.ac.una.eif400.cyphail.cli.repl.Repl;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ParentCommand;
 
@@ -23,7 +24,7 @@ import java.util.concurrent.Callable;
 public class ExitCommand implements Runnable {
 
     @ParentCommand
-    private ReplCommand parent;
+    private Repl repl;
 
     @Override
     public void run() {

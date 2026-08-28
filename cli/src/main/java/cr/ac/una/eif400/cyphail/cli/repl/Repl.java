@@ -18,7 +18,7 @@ import java.util.Scanner;
         }
 )
 public class Repl {
-    private Session session = new Session();
+    private boolean running = true;
 
     public void open() {
         CommandLine dispatcher = new CommandLine(this);
@@ -26,14 +26,14 @@ public class Repl {
 
         IO.print(
                 """
-                Welcome to Cyphail-01-5pm v.0.1. August 2026. ESCINF/UNA EIF400-II-2026
+                Welcome to Cyphail-03-1pm v.0.1. August 2026. ESCINF/UNA EIF400-II-2026
                 Visit www.whatiscyphail.com for more information
                 Type ".help" for more information and commands
                 Type ".exit" to quit
                 """
         );
 
-        while (session.isRunning()) {
+        while (running) {
             IO.print("cyphail>>> ");
 
             if (!scanner.hasNextLine()) {
@@ -54,5 +54,9 @@ public class Repl {
                 // procesar query
             }
         }
+    }
+
+    public void stop() {
+        running = false;
     }
 }

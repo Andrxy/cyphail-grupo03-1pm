@@ -10,6 +10,7 @@ import java.util.concurrent.Callable;
  * disponibles; con el nombre de un grafo lo selecciona para trabajar.
  *
  * @author Wilson Umaña - Grupo 03-1pm
+ * @author Andrey Solano
  * @version 1.0
  */
 

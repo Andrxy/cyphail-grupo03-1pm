@@ -17,7 +17,6 @@ import java.util.concurrent.Callable;
         name = ".about",
         description = "Muestra informacion sobre cyphail"
 )
-
 public class AboutCommand implements Runnable {
     public void run() {
         IO.println("cyphail - transpilador de consultas sobre grafos");
