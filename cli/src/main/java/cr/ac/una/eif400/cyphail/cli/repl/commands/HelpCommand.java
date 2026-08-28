@@ -25,58 +25,18 @@ import java.util.stream.Collectors;
         description = "Muestra la lista de comandos disponibles"
 )
 
-public class HelpCommand implements Callable<Integer> {
-
-    private static final int SEPARATION = 3;
-    private static final int MINIMUM_WIDTH = 6;
-    private static final String LAST_LISTED_COMMAND = ".exit";
-
-    @Spec
-    private CommandSpec spec;
-
+public class HelpCommand implements Runnable {
     @Override
-    public Integer call() {
-        Map<String, CommandLine> commands = availableCommands();
-        int width = longestNameLength(commands) + SEPARATION;
-
-        IO.println("Cyphail REPL - available commands:");
-        IO.println();
-
-        commands.forEach((name, command) ->
-                IO.println(String.format("  %-" + width + "s%s", name, descriptionOf(command))));
-
-        IO.println();
-        IO.println("Type a command starting with \".\" or a Cyphail statement.");
-
-        return 0;
-    }
-
-    private Map<String, CommandLine> availableCommands() {
-        CommandSpec parent = spec.parent() != null ? spec.parent() : spec;
-        return parent.subcommands().entrySet().stream()
-                .sorted(Map.Entry.comparingByKey(listingOrder()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (first, second) -> first,
-                        LinkedHashMap::new));
-    }
-
-    private Comparator<String> listingOrder() {
-        return Comparator
-                .<String, Boolean>comparing(LAST_LISTED_COMMAND::equals)
-                .thenComparing(Comparator.<String>naturalOrder());
-    }
-
-    private int longestNameLength(Map<String, CommandLine> commands) {
-        return commands.keySet().stream()
-                .mapToInt(String::length)
-                .max()
-                .orElse(MINIMUM_WIDTH);
-    }
-
-    private String descriptionOf(CommandLine command) {
-        String[] description = command.getCommandSpec().usageMessage().description();
-        return description.length > 0 ? description[0] : "";
+    public void run() {
+        IO.println(
+                """
+                Cyphail REPL - available commands:
+                - .help
+                - .exit
+                - .about
+                - .use
+                Type a command starting with "." or a Cyphail statement.
+                """
+        );
     }
 }
