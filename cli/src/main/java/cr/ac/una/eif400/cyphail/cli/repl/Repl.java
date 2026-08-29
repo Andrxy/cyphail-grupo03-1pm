@@ -36,7 +36,10 @@ public class Repl {
         );
 
         while (running) {
-            IO.print("cyphail>>> ");
+            String prompt = Broker.getGraph() != null
+                    ? "cyphail (" + Broker.getGraph() + ") >>> "
+                    : "cyphail>>> ";
+            IO.print(promt);
 
             if (!scanner.hasNextLine()) {
                 IO.println();
@@ -53,14 +56,19 @@ public class Repl {
                 dispatcher.execute(args);
             }
             else {
-                executeQuery(line);
+                Response response = executeQuery(Line);
+                if(response.ok)
+                    IO.println(format(response.data));
+                else{
+                    IO.println(format(response.msj));
+                }
             }
         }
     }
 
-    public void executeQuery(String sourceCode) {
+    public String executeQuery(String sourceCode) {
         try {
-            compile.compile(sourceCode);
+            Response = compile.compile(sourceCode);
         } catch () {
 
         }
