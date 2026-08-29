@@ -5,13 +5,19 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.cyphail</groupId>
-        <artifactId>cyphail-grupoXX-1pm</artifactId>
+        <artifactId>cyphail-grupo03-1pm</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
     <groupId>cr.ac.una.eif400</groupId>
     <artifactId>broker</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+    </dependencies>
     <properties>
         <maven.compiler.source>26</maven.compiler.source>
         <maven.compiler.target>26</maven.compiler.target>
