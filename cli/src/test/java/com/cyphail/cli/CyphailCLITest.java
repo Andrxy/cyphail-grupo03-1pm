@@ -1,15 +1,21 @@
 package com.cyphail.cli;
-import org.junit.jupiter.api.Disabled;
+import cr.ac.una.eif400.cyphail.cli.commands.CyphailCommand;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Pruebas del comando raiz del CLI de Cyphail.
+ *
+ * @author Andrey Solano - Grupo 03-1pm
+ * @version 1.0
+ */
 @DisplayName("Pruebas de la CLI")
 public class CyphailCLITest {
     @Test
     void testCyphailCommand() {
-        Cyphail cyphail = new Cyphail();
+        CyphailCommand cyphail = new CyphailCommand();
         CommandLine cmd = new CommandLine(cyphail);
 
         int exitCode = cmd.execute();

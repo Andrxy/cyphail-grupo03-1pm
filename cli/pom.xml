@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.cyphail</groupId>
-        <artifactId>cyphail-grupoXX-1pm</artifactId>
+        <artifactId>cyphail-grupo03-1pm</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
@@ -19,6 +19,11 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.freva</groupId>
+            <artifactId>ascii-table</artifactId>
+            <version>1.13.0</version>
         </dependency>
     </dependencies>
 
