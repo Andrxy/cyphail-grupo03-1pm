@@ -16,7 +16,49 @@ import java.util.Map;
  */
 public class FakeQueries {
     private static final Map<String, String> RESPUESTAS = Map.of(
-        // queries como las del correo
+            "MATCH (p:Persona) RETURN p.nombre, p.edad",
+            """
+            p.nombre   p.edad
+            ---------------------
+            "Ana"      28
+            "Luis"     31
+            "Carlos"   25
+            "Beatriz"  34
+            "David"    29
+            "Elena"    22
+            """,
+
+            "MATCH (p1:Persona)-[r:AMIGO_DE]->(p2:Persona) RETURN p1.nombre AS Persona, type(r) AS Relacion, p2.nombre AS AmigoDe",
+            """
+            Persona    Relacion       AmigoDe
+            -------------------------------------
+            "Ana"      "AMIGO_DE"     "Luis"
+            "Ana"      "AMIGO_DE"     "Beatriz"
+            "Luis"     "AMIGO_DE"     "Carlos"
+            "Luis"     "AMIGO_DE"     "David"
+            "Carlos"   "AMIGO_DE"     "Elena"
+            "Beatriz"  "AMIGO_DE"     "Elena"
+            """,
+
+            "MATCH (t:Tarea) RETURN t.titulo, t.estado",
+            """
+            t.titulo               t.estado
+            -----------------------------------
+            "Escribir README"      "pending"
+            "Implementar parser"   "pending"
+            "Setup Maven"          "done"
+            "Comandos REPL"        "in-progress"
+            """,
+
+            "MATCH (pl:Planeta) RETURN pl.nombre, pl.distanciaSolUA",
+            """
+            pl.nombre    pl.distanciaSolUA
+            -------------------------------
+            "Mercurio"   0.39
+            "Venus"      0.72
+            "Tierra"     1.0
+            "Marte"      1.52
+            """
     );
 
     private FakeQueries() {
