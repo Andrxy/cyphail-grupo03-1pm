@@ -10,6 +10,8 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>cli</module>
+        <module>compiler</module>
         <module>broker</module>
     </modules>
 
