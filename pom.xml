@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>cli</module>
+        <module>broker</module>
     </modules>
 
     <properties>
