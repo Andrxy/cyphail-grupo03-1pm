@@ -2,6 +2,7 @@ package cr.ac.una.eif400.broker;
 
 import cr.ac.una.eif400.broker.fake.FakeGraphs;
 import cr.ac.una.eif400.broker.fake.FakeQueries;
+import cr.ac.una.eif400.cyphail.common.QueryResponse;
 
 /**
  * Broker fake que hace de puente entre el Compiler y los datos
@@ -17,7 +18,6 @@ public class Broker {
     private String currentGraph;
 
     private Broker() {
-        // cosntructor privado
     }
 
     public static Broker getInstance() {
@@ -40,18 +40,11 @@ public class Broker {
         return currentGraph;
     }
 
-
     public void setCurrentGraph(String graphName) {
         this.currentGraph = graphName;
     }
 
-    /**
-     * Resuelve una fake query contra el catálogo alambrado.
-     *
-     * @param sourceCode texto de la query tal como lo compilo/reconocio el Compiler
-     * @return la tabla de resultado ya formateada, o null si la query no es conocida
-     */
-    public String resolveQuery(String sourceCode) {
-        return FakeQueries.resolve(sourceCode);
+    public QueryResponse resolveQuery(String target) {
+        return FakeQueries.resolve(target);
     }
 }
