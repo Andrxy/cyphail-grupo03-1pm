@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
 
 /**
  * @author Andrey Solano
- * @version 1.0
+ * @version P1.1
  */
 @Command(
         name = "compile"

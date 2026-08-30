@@ -27,7 +27,7 @@ public class ExitCommand implements Runnable {
     private Repl repl;
 
     /**
-     * Ejecuta la acción del comando .exit, mostrando un mensaje de despedida
+     * Ejecuta el comando .exit, mostrando un mensaje de despedida
      * y deteniendo la ejecución del REPL, esto invocando el metodo stop usando
      * el comando padre
      */

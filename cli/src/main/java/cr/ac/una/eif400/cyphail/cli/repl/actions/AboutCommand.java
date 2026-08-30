@@ -5,9 +5,9 @@ import picocli.CommandLine.Command;
 import java.util.concurrent.Callable;
 
 /**
- * Comando .about dentro del REPL
- * Su objetivo es proporcionar al usuario una descripción general del proyecto
- * de consultas sobre grafos y del equipo de trabajo
+ * Comando .about dentro del REPL.
+ * Proporciona al usuario una descripción general del proyecto,
+ * versión actual y equipo de trabajo
  *
  * <p>Implementa Runnable para cumplir con la interfaz requerida por Picocli, así, cuando
  * el usuario llame el comando desde el REPL se invoca su declaración del método run()</p>

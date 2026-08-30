@@ -4,17 +4,25 @@ import cr.ac.una.eif400.cyphail.cli.repl.Repl;
 import picocli.CommandLine.Command;
 
 /**
- * Implementación del subcomando repl encargado de cargar el shell
+ * Subcomando repl encargado de inicializar y lanzar la interfaz interactiva.
  *
- * @author Andrey Solano - Grupo 03-1pm
- * @version 1.1
+ * <p>Implementa Runnable para definir su acción por defecto mediante el método run() de la interfaz,
+ * además, delega la ejecución a la clase Repl para mantener la separación entre el subcomando
+ * y el ciclo de vida del repl</p>
+ *
+ * @author Andrey Solano
+ * @version P1.1
  */
-
 @Command(
         name = "repl",
-        description = "Carga el REPL interactico de cyphail"
+        description = "Launches the interactive REPL shell"
 )
 public class ReplCommand implements Runnable {
+
+    /**
+     * Acción del subcomando repl, crea una nueva instancia
+     * del shell e inicia su ejecución
+     */
     @Override
     public void run() {
         Repl repl = new Repl();
