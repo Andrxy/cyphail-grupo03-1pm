@@ -1,5 +1,5 @@
 package cr.ac.una.eif400.cyphail.cli.repl.actions;
-import com.github.freva.asciitable.AsciiTable;
+import cr.ac.una.eif400.cyphail.cli.output.Formatter;
 import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.Repl;
 import picocli.CommandLine.Command;
@@ -47,7 +47,7 @@ public class UseCommand implements Runnable {
             String[][] availableGraphs = broker.getAvailableGraphs();
             String[] graphsHeaders = broker.getGraphHeaders();
             
-            IO.println(AsciiTable.getTable(graphsHeaders, availableGraphs));
+            IO.println(Formatter.format(graphsHeaders, availableGraphs));
             IO.println("\nOK. Query available after 5 ms.");
         } else if (broker.graphExists(selectedGraphName)) {
             IO.println("OK. '" + selectedGraphName + "' graph available after 1ms");

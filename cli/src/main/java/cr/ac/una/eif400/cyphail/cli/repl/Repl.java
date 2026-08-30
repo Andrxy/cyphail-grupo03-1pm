@@ -1,6 +1,6 @@
 package cr.ac.una.eif400.cyphail.cli.repl;
 
-import com.github.freva.asciitable.AsciiTable;
+import cr.ac.una.eif400.cyphail.cli.output.Formatter;
 import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.AboutCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.ExitCommand;
@@ -70,7 +70,7 @@ public class Repl {
         QueryResponse response = compiler.compile(sourceCode);
 
         if (response.isOk()) {
-            IO.println(AsciiTable.getTable(response.getHeaders(), response.getRows()));
+            IO.println(Formatter.format(response.getHeaders(), response.getRows()));
             IO.println();
         }
 
