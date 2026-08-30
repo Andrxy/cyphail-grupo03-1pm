@@ -7,72 +7,87 @@ import java.util.Map;
 
  * Alambrado puro: el texto exacto de la
  * consulta (tal como lo compone el flujo Repl -> Compiler -> Broker) mapea
- * a una tabla de resultado ya formateada. No hay analisis sintáctico real
- * todavía, eso es justamente lo que el pipeline de compiler.* va a hacer
- * en un futuro (ver Compiler.compileWithFullPipeline())
+ * a un par {tabla de resultado ya formateada, mensaje de estado}. No hay
+ * analisis sintáctico real todavía, eso es justamente lo que el pipeline de
+ * compiler.* va a hacer en un futuro (ver Compiler.compileWithFullPipeline())
 
  * @author Sebastián González
- * @version 1.0
+ * @author Alejandro Miranda
+ * @version 2.0
  */
 public class FakeQueries {
-    private static final Map<String, String> RESPUESTAS = Map.of(
+    public static final String NOT_RESOLVED_MESSAGE =
+            "Error: invalid input. The given MATCH query could not be resolved against the current graph.";
+
+    private static final Map<String, String[]> RESPUESTAS = Map.of(
             "MATCH (p:Persona) RETURN p.nombre, p.edad",
-            """
-            p.nombre   p.edad
-            ---------------------
-            "Ana"      28
-            "Luis"     31
-            "Carlos"   25
-            "Beatriz"  34
-            "David"    29
-            "Elena"    22
-            """,
+            new String[]{
+                    """
+                    p.nombre   p.edad
+                    ---------------------
+                    "Ana"      28
+                    "Luis"     31
+                    "Carlos"   25
+                    "Beatriz"  34
+                    "David"    29
+                    "Elena"    22
+                    """,
+                    "OK. Query resolved after 666 ms."
+            },
 
             "MATCH (p1:Persona)-[r:AMIGO_DE]->(p2:Persona) RETURN p1.nombre AS Persona, type(r) AS Relacion, p2.nombre AS AmigoDe",
-            """
-            Persona    Relacion       AmigoDe
-            -------------------------------------
-            "Ana"      "AMIGO_DE"     "Luis"
-            "Ana"      "AMIGO_DE"     "Beatriz"
-            "Luis"     "AMIGO_DE"     "Carlos"
-            "Luis"     "AMIGO_DE"     "David"
-            "Carlos"   "AMIGO_DE"     "Elena"
-            "Beatriz"  "AMIGO_DE"     "Elena"
-            """,
+            new String[]{
+                    """
+                    Persona    Relacion       AmigoDe
+                    -------------------------------------
+                    "Ana"      "AMIGO_DE"     "Luis"
+                    "Ana"      "AMIGO_DE"     "Beatriz"
+                    "Luis"     "AMIGO_DE"     "Carlos"
+                    "Luis"     "AMIGO_DE"     "David"
+                    "Carlos"   "AMIGO_DE"     "Elena"
+                    "Beatriz"  "AMIGO_DE"     "Elena"
+                    """,
+                    "OK. Query resolved after 1274 ms."
+            },
 
             "MATCH (t:Tarea) RETURN t.titulo, t.estado",
-            """
-            t.titulo               t.estado
-            -----------------------------------
-            "Escribir README"      "pending"
-            "Implementar parser"   "pending"
-            "Setup Maven"          "done"
-            "Comandos REPL"        "in-progress"
-            """,
+            new String[]{
+                    """
+                    t.titulo               t.estado
+                    -----------------------------------
+                    "Escribir README"      "pending"
+                    "Implementar parser"   "pending"
+                    "Setup Maven"          "done"
+                    "Comandos REPL"        "in-progress"
+                    """,
+                    "OK. Query resolved after 312 ms."
+            },
 
             "MATCH (pl:Planeta) RETURN pl.nombre, pl.distanciaSolUA",
-            """
-            pl.nombre    pl.distanciaSolUA
-            -------------------------------
-            "Mercurio"   0.39
-            "Venus"      0.72
-            "Tierra"     1.0
-            "Marte"      1.52
-            """
+            new String[]{
+                    """
+                    pl.nombre    pl.distanciaSolUA
+                    -------------------------------
+                    "Mercurio"   0.39
+                    "Venus"      0.72
+                    "Tierra"     1.0
+                    "Marte"      1.52
+                    """,
+                    "OK. Query resolved after 87 ms."
+            }
     );
 
     private FakeQueries() {
-        // clase de utilidad, no se instancia
     }
 
     /**
      * Busca la respuesta fake de una query por texto exacto (recortando
      * espacios al inicio/final, sin normalizar nada más).
      *
-     * @param sourceCode texto tal como lo tecleo el usuario en el REPL
-     * @return la tabla ya formateada si la query es conocida, o null si no
+     * @param target texto tal como lo tecleo el usuario en el REPL
+     * @return par {tabla formateada, mensaje} si la query es conocida, o null si no
      */
-    public static String resolve(String sourceCode) {
-        return RESPUESTAS.get(sourceCode.trim());
+    public static String[] resolve(String target) {
+        return RESPUESTAS.get(target.trim());
     }
 }
