@@ -33,12 +33,7 @@ public class Broker {
     }
 
     public boolean graphExists(String name) {
-        for (String[] graph : FakeGraphs.availableGraphs) {
-            if (graph[0].equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        return false;
+        return FakeGraphs.exists(name);
     }
 
     public String getCurrentGraph() {
