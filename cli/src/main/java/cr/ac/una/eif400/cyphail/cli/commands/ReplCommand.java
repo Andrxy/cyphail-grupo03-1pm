@@ -1,6 +1,8 @@
 package cr.ac.una.eif400.cyphail.cli.commands;
 
+import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.Repl;
+import cr.ac.una.eif400.cyphail.compiler.Compiler;
 import picocli.CommandLine.Command;
 
 /**
@@ -25,7 +27,7 @@ public class ReplCommand implements Runnable {
      */
     @Override
     public void run() {
-        Repl repl = new Repl();
+        Repl repl = new Repl(Compiler.getInstance(), Broker.getInstance());
         repl.open();
     }
 }
