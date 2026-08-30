@@ -5,6 +5,8 @@ import cr.ac.una.eif400.cyphail.cli.repl.actions.AboutCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.ExitCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.HelpCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.UseCommand;
+import cr.ac.una.eif400.cyphail.common.QueryResponse;
+import cr.ac.una.eif400.cyphail.compiler.Compiler;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -20,7 +22,7 @@ import java.util.Scanner;
 )
 public class Repl {
     private final Broker broker = Broker.getInstance();
-//    private Compiler compiler;
+    private final Compiler compiler = Compiler.getInstance();
     private boolean running = true;
 
     public Broker getBroker() {
@@ -62,23 +64,19 @@ public class Repl {
                 dispatcher.execute(args);
             }
             else {
-//                Response response = executeQuery(Line);
-//                if(response.ok)
-//                    IO.println(format(response.data));
-//                else{
-//                    IO.println(format(response.msj));
-//                }
+                executeQuery(line);
             }
         }
     }
 
-    public String executeQuery(String sourceCode) {
-//        try {
-//            Response = compile.compile(sourceCode);
-//        } catch () {
-//
-//        }
-        return "";
+    public void executeQuery(String sourceCode) {
+        QueryResponse response = compiler.compile(sourceCode);
+
+        if (response.isOk()) {
+            IO.println(response.getData());
+        }
+
+        IO.println(response.getMessage());
     }
 
     public boolean isRunning() {
