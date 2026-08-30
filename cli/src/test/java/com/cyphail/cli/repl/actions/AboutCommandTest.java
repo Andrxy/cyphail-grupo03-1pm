@@ -26,6 +26,6 @@ public class AboutCommandTest extends CommandTestSupport {
     void describeLaHerramienta() {
         ejecutar(".about");
         assertTrue(salida().contains("cyphail"), "La salida menciona cyphail");
-        assertTrue(salida().contains("grafos"), "La salida menciona grafos");
+        assertTrue(salida().contains("graph"), "La salida menciona graphs");
     }
 }
