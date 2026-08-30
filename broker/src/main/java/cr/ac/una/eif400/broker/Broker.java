@@ -45,12 +45,6 @@ public class Broker {
     }
 
     public QueryResponse resolveQuery(String target) {
-        String[] resolved = FakeQueries.resolve(target);
-
-        if (resolved == null) {
-            return QueryResponse.error(FakeQueries.NOT_RESOLVED_MESSAGE);
-        }
-
-        return QueryResponse.ok(resolved[0], resolved[1]);
+        return FakeQueries.resolve(target);
     }
 }
