@@ -1,5 +1,6 @@
 package cr.ac.una.eif400.cyphail.cli.repl;
 
+import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.AboutCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.ExitCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.HelpCommand;
@@ -18,9 +19,13 @@ import java.util.Scanner;
         }
 )
 public class Repl {
-    private Broker broker;
-    private Compiler compiler;
+    private final Broker broker = Broker.getInstance();
+//    private Compiler compiler;
     private boolean running = true;
+
+    public Broker getBroker() {
+        return broker;
+    }
 
     public void open() {
         CommandLine dispatcher = new CommandLine(this);
@@ -36,10 +41,11 @@ public class Repl {
         );
 
         while (running) {
-            String prompt = Broker.getGraph() != null
-                    ? "cyphail (" + Broker.getGraph() + ") >>> "
+            String currentGraph = broker.getCurrentGraph();
+            String prompt = currentGraph != null
+                    ? "cyphail (" + currentGraph + ") >>> "
                     : "cyphail>>> ";
-            IO.print(promt);
+            IO.print(prompt);
 
             if (!scanner.hasNextLine()) {
                 IO.println();
@@ -56,22 +62,27 @@ public class Repl {
                 dispatcher.execute(args);
             }
             else {
-                Response response = executeQuery(Line);
-                if(response.ok)
-                    IO.println(format(response.data));
-                else{
-                    IO.println(format(response.msj));
-                }
+//                Response response = executeQuery(Line);
+//                if(response.ok)
+//                    IO.println(format(response.data));
+//                else{
+//                    IO.println(format(response.msj));
+//                }
             }
         }
     }
 
     public String executeQuery(String sourceCode) {
-        try {
-            Response = compile.compile(sourceCode);
-        } catch () {
+//        try {
+//            Response = compile.compile(sourceCode);
+//        } catch () {
+//
+//        }
+        return "";
+    }
 
-        }
+    public boolean isRunning() {
+        return running;
     }
 
     public void stop() {

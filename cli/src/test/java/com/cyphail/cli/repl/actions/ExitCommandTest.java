@@ -1,4 +1,4 @@
-package com.cyphail.cli.repl.commands;
+package com.cyphail.cli.repl.actions;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Pruebas del comando ".exit".
  *
  * @author Sebastian Gonzalez y Alejandro Miranda - Grupo 03-1pm
- * @version 1.0
+ * @version 1.1
  */
 @DisplayName("Pruebas del comando .exit")
 public class ExitCommandTest extends CommandTestSupport {
@@ -30,15 +30,15 @@ public class ExitCommandTest extends CommandTestSupport {
     }
 
     @Test
-    @DisplayName("La sesion arranca activa")
-    void laSesionArrancaActiva() {
-        assertTrue(repl.session().isRunning());
+    @DisplayName("El repl arranca activo")
+    void elReplArrancaActivo() {
+        assertTrue(repl.isRunning());
     }
 
     @Test
-    @DisplayName("Marca la sesion como terminada")
-    void detieneLaSesion() {
+    @DisplayName("Marca el repl como terminado")
+    void detieneElRepl() {
         ejecutar(".exit");
-        assertFalse(repl.session().isRunning(), "La sesion queda marcada para salir");
+        assertFalse(repl.isRunning(), "El repl queda marcado para salir");
     }
 }

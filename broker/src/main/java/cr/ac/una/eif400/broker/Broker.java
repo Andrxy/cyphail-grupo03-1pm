@@ -11,6 +11,7 @@ import cr.ac.una.eif400.broker.fake.FakeQueries;
  * @author Sebastián González
  * @version 2.0
  */
+
 public class Broker {
     private static final Broker INSTANCE = new Broker();
     private String currentGraph;
@@ -23,17 +24,16 @@ public class Broker {
         return INSTANCE;
     }
 
-    public String[][] getGraphs() {
-        return FakeGraphs.grafos_disponibles;
+    public String[][] getAvailableGraphs() {
+        return FakeGraphs.availableGraphs;
+    }
+
+    public String[] getGraphHeaders() {
+        return FakeGraphs.headers;
     }
 
     public boolean graphExists(String name) {
-        for (String[] graph : FakeGraphs.grafos_disponibles) {
-            if (graph[0].equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        return false;
+        return FakeGraphs.exists(name);
     }
 
     public String getCurrentGraph() {

@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.cyphail.cli.repl.commands;
+package cr.ac.una.eif400.cyphail.cli.repl.actions;
 
 import cr.ac.una.eif400.cyphail.cli.commands.ReplCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.Repl;
