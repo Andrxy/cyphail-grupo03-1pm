@@ -12,6 +12,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 import java.util.Scanner;
+import java.util.Set;
 
 @Command(
         subcommands = {
@@ -26,22 +27,17 @@ public class Repl {
     private final Compiler compiler = Compiler.getInstance();
     private boolean running = true;
 
+
     public Broker getBroker() {
         return broker;
     }
 
     public void open() {
         CommandLine dispatcher = new CommandLine(this);
+        Set<String> actionNames = dispatcher.getSubcommands().keySet();
         Scanner scanner = new Scanner(System.in);
 
-        IO.print(
-                """
-                Welcome to Cyphail-03-1pm v.0.1. August 2026. ESCINF/UNA EIF400-II-2026
-                Visit www.whatiscyphail.com for more information
-                Type ".help" for more information and commands
-                Type ".exit" to quit
-                """
-        );
+        printBanner();
 
         while (running) {
             String currentGraph = broker.getCurrentGraph();
@@ -61,10 +57,11 @@ public class Repl {
             String[] args = line.split("\\s+");
             String firstWord = args[0];
 
-            if (firstWord.startsWith(".")) {
+            if (actionNames.contains(firstWord)) {
                 dispatcher.execute(args);
-            }
-            else {
+            } else if (firstWord.startsWith(".")) {
+                IO.println("Error. Unknown command \"" + firstWord + "\". Type \".help\" for the available commands.");
+            } else {
                 executeQuery(line);
             }
         }
@@ -87,5 +84,16 @@ public class Repl {
 
     public void stop() {
         running = false;
+    }
+
+    private void printBanner() {
+        IO.print(
+                """
+                Welcome to Cyphail-03-1pm v.0.1. August 2026. ESCINF/UNA EIF400-II-2026
+                Visit www.whatiscyphail.com for more information
+                Type ".help" for more information and commands
+                Type ".exit" to quit
+                """
+        );
     }
 }
