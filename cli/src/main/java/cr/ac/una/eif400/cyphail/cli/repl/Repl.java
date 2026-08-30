@@ -17,8 +17,8 @@ import java.util.Set;
 @Command(
         subcommands = {
                 HelpCommand.class,
-                AboutCommand.class,
                 ExitCommand.class,
+                AboutCommand.class,
                 UseCommand.class
         }
 )
@@ -26,7 +26,6 @@ public class Repl {
     private final Broker broker = Broker.getInstance();
     private final Compiler compiler = Compiler.getInstance();
     private boolean running = true;
-
 
     public Broker getBroker() {
         return broker;
