@@ -13,7 +13,7 @@ import picocli.CommandLine.ParentCommand;
  * <p>Implementa Runnable para cumplir con la interfaz requerida por Picocli, así,
  * cuando el usuario llame el comando desde el REPL se invoca su declaración del método run()</p>
  *
- * @author Alejandro Miranda - Grupo 03-1pm
+ * @author Alejandro Miranda
  * @author Andrey Solano
  * @version P1.1
  */
