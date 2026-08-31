@@ -339,6 +339,7 @@ Summarized list of the consultations made to Claude during Sprint 1.1, grouped b
 17. How do I extract the name and description of each subcommand from Picocli's model? Why does `usageMessage().description()` return an array instead of a single string?
 18. In my REPL, the user can type either commands or MATCH queries. How do I tell them apart? What does `getSubcommands()` return, and why use `keySet()` on it?
 19. How do I split a user-typed line into words in Java? Review of my dispatch method — is the order of the conditions correct?
+20. Adding unit tests for compiler, CLI, broker, and common.
 
 ### Wilson Umaña
 
