@@ -101,7 +101,7 @@ There are two ways to obtain the project. Either one works — pick whichever fi
 
 ```powershell
 git clone <repository-url>
-cd cyphail-grupoXX-1pm
+cd cyphail-grupo03-1pm
 ```
 
 **Option B — Download as a ZIP** (no Git needed):
