@@ -43,11 +43,12 @@
     </dependencies>
 
     <build>
+        <finalName>cyphail</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.1</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -55,9 +56,9 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <!-- NOTA: Asegúrate de cambiar esto si tu clase Main está en otro paquete -->
                                     <mainClass>cr.ac.una.eif400.cyphail.cli.CyphailApp</mainClass>
                                 </transformer>
                             </transformers>
