@@ -61,4 +61,13 @@ public final class FlowLog {
             return new File("").getAbsoluteFile();
         }
     }
+
+    public static void startSession() {
+        File logFile = new File(resolveProjectRoot(), LOG_FILE_NAME);
+
+        try (FileWriter writer = new FileWriter(logFile, false)) {
+        } catch (IOException e) {
+            System.err.println("No se pudo reiniciar el registro del flujo: " + e.getMessage());
+        }
+    }
 }
