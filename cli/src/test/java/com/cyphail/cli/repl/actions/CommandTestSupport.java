@@ -2,6 +2,7 @@ package com.cyphail.cli.repl.actions;
 
 import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.Repl;
+import cr.ac.una.eif400.cyphail.compiler.Compiler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import picocli.CommandLine;
@@ -28,7 +29,7 @@ abstract class CommandTestSupport {
         System.setOut(new PrintStream(captured));
 
         Broker.getInstance().setCurrentGraph(null);
-        repl = new Repl();
+        repl = new Repl(Compiler.getInstance(), Broker.getInstance());
         commandLine = new CommandLine(repl);
     }
 
