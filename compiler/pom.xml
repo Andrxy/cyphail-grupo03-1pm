@@ -18,6 +18,10 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>cr.ac.una.eif400</groupId>
             <artifactId>broker</artifactId>
             <version>1.0-SNAPSHOT</version>
