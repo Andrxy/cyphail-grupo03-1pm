@@ -1,34 +1,12 @@
 # cyphail-grupo03-1pm
 
 Transpilador de consultas de grafos inspirado en el lenguaje Cypher.
-
-EIF400 Paradigmas de Programación — II Semestre 2026, Grupo 03-1pm.
-Escuela de Informática, Universidad Nacional de Costa Rica.
+EIF400 Paradigmas de Programación — II Semestre 2026, Grupo 03-1pm. ECI/UNA.
 
 ## Build
 
-### Requisitos
-
-**JDK 26 en el `PATH`.** Verificalo con:
-
-```
-java -version
-```
-
-Debe reportar la versión `26.x`. El proyecto compila con `<release>26</release>`,
-por lo que no funciona con versiones anteriores del JDK.
-
-Si tenés varios JDK instalados y `java -version` reporta otra versión, definí la
-variable de entorno `JAVA_HOME` apuntando al JDK 26 antes de compilar:
-
-```
-set JAVA_HOME=C:\Program Files\Java\jdk-26.0.2
-```
-
-**Maven no hace falta instalarlo.** El repositorio incluye el Maven Wrapper, que
-descarga Maven 3.9.11 automáticamente la primera vez que se ejecuta.
-
-### Compilar
+Requiere **JDK 26 en el `PATH`** (`java -version` debe reportar `26.x`).
+Maven no hace falta instalarlo: el wrapper lo descarga solo.
 
 Desde la raíz del repositorio:
 
@@ -36,22 +14,22 @@ Desde la raíz del repositorio:
 mvnw.cmd clean package
 ```
 
-En Linux o macOS:
+En Linux o macOS: `./mvnw clean package`
+
+Genera el jar ejecutable en `cli\target\cyphail.jar`.
+
+## Ejecución
+
+Desde la raíz del repositorio, en `cmd`:
 
 ```
-./mvnw clean package
+cyphail                              Muestra la ayuda inicial
+cyphail help                         Lista los comandos disponibles
+cyphail repl                         Abre la shell interactiva
+cyphail compile archivo.cy -o salida Compila un archivo
+cyphail run archivo.cy               Ejecuta un archivo
 ```
 
-Esto compila los cuatro módulos (`common`, `broker`, `compiler` y `cli`), ejecuta
-las pruebas unitarias y genera el jar ejecutable con todas las dependencias
-incluidas en:
+En PowerShell hay que anteponer `.\`, por ejemplo `.\cyphail.bat repl`.
 
-```
-cli\target\cyphail.jar
-```
-
-### Recompilar sin pruebas
-
-```
-mvnw.cmd -DskipTests package
-```
+Dentro del REPL: `.help`, `.about`, `.use`, `.exit` y consultas `MATCH`.
