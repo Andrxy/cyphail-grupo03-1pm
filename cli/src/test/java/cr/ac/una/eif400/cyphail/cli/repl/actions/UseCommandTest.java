@@ -1,4 +1,4 @@
-package com.cyphail.cli.repl.actions;
+package cr.ac.una.eif400.cyphail.cli.repl.actions;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
