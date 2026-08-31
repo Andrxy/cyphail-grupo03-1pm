@@ -2,6 +2,7 @@ package cr.ac.una.eif400.cyphail.cli.repl;
 
 import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
+import cr.ac.una.eif400.cyphail.compiler.support.FlowLog;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,23 +33,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ReplTest {
 
     private static final String TAREAS = "MATCH (t:Tarea) RETURN t.titulo, t.estado";
-    private static final Path LOG_FILE = Path.of("cyphail-flow.log");
+    private static final String LOG_FILE_NAME = "cyphail-flow.log";
 
     private PrintStream originalOut;
     private InputStream originalIn;
     private ByteArrayOutputStream captured;
-    private boolean habiaRegistro;
+    private String registroPrevio;
 
     private Repl repl;
 
     @BeforeEach
-    void prepararRepl() {
+    void prepararRepl() throws IOException {
         originalOut = System.out;
         originalIn = System.in;
         captured = new ByteArrayOutputStream();
         System.setOut(new PrintStream(captured));
 
-        habiaRegistro = Files.exists(LOG_FILE);
+        registroPrevio = Files.exists(archivoDeRegistro()) ? Files.readString(archivoDeRegistro()) : null;
 
         Broker.getInstance().setCurrentGraph(null);
         repl = new Repl(Compiler.getInstance(), Broker.getInstance());
@@ -59,8 +61,10 @@ public class ReplTest {
         System.setIn(originalIn);
         Broker.getInstance().setCurrentGraph(null);
 
-        if (!habiaRegistro) {
-            Files.deleteIfExists(LOG_FILE);
+        if (registroPrevio == null) {
+            Files.deleteIfExists(archivoDeRegistro());
+        } else {
+            Files.writeString(archivoDeRegistro(), registroPrevio);
         }
     }
 
@@ -175,5 +179,20 @@ public class ReplTest {
 
     private String salida() {
         return captured.toString();
+    }
+
+    /**
+     * Ubica el registro del flujo donde lo deja FlowLog, que lo reinicia cada
+     * vez que se abre el repl.
+     */
+    private static Path archivoDeRegistro() {
+        try {
+            Path ubicacion = Path.of(FlowLog.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            Path raiz = ubicacion.getParent().getParent().getParent();
+
+            return ((raiz != null && Files.exists(raiz)) ? raiz : Path.of("").toAbsolutePath()).resolve(LOG_FILE_NAME);
+        } catch (URISyntaxException | NullPointerException e) {
+            return Path.of("").toAbsolutePath().resolve(LOG_FILE_NAME);
+        }
     }
 }

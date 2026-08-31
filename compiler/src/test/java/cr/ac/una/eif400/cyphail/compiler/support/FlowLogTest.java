@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,6 +27,15 @@ public class FlowLogTest extends FlowLogTestSupport {
     }
 
     @Test
+    @DisplayName("Guarda el registro en la raiz del proyecto")
+    void guardaElRegistroEnLaRaizDelProyecto() {
+        FlowLog.write("una corrida\n");
+
+        assertTrue(Files.exists(archivoDeRegistro()),
+                "El archivo queda en " + archivoDeRegistro().toAbsolutePath());
+    }
+
+    @Test
     @DisplayName("Cada bloque se agrega al final, sin borrar los anteriores")
     void agregaAlFinalSinBorrar() throws IOException {
         FlowLog.write("primera corrida\n");
@@ -41,5 +51,23 @@ public class FlowLogTest extends FlowLogTestSupport {
         FlowLog.write("");
 
         assertEquals("una corrida\n", registro());
+    }
+
+    @Test
+    @DisplayName("Una sesion nueva descarta el registro de la anterior")
+    void unaSesionNuevaDescartaLaAnterior() throws IOException {
+        FlowLog.write("corrida de la sesion anterior\n");
+        FlowLog.startSession();
+
+        assertEquals("", registro(), "El registro arranca vacio");
+    }
+
+    @Test
+    @DisplayName("Despues de reiniciar la sesion se sigue escribiendo")
+    void despuesDeReiniciarSeSigueEscribiendo() throws IOException {
+        FlowLog.startSession();
+        FlowLog.write("corrida de la sesion nueva\n");
+
+        assertEquals("corrida de la sesion nueva\n", registro());
     }
 }
