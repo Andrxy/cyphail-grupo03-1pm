@@ -5,43 +5,39 @@ import picocli.CommandLine.Command;
 import java.util.concurrent.Callable;
 
 /**
- * Comando ".about": muestra una breve descripcion de que es Cyphail y para
- * que sirve, sin salir de la sesion del REPL.
+ * Comando .about dentro del REPL.
+ * Proporciona al usuario una descripción general del proyecto,
+ * versión actual y equipo de trabajo
+ *
+ * <p>Implementa Runnable para cumplir con la interfaz requerida por Picocli, así, cuando
+ * el usuario llame el comando desde el REPL se invoca su declaración del método run()</p>
  *
  * @author Wilson Umaña
  * @author Andrey Solano
- * @version 1.0
+ * @version P1.1
  */
-
 @Command(
         name = ".about",
-        description = "Muestra informacion sobre cyphail"
+        description = "Shows a general description and details of the Cyphail project"
 )
 public class AboutCommand implements Runnable {
+
+    /**
+     * Ejecuta la acción del comando, imprimiendo en la consola
+     * la información general, detalles académicos, versión y el equipo desarrollador
+     * específicados en el SPEC del P1.1
+     */
     public void run() {
         IO.println("""
-            cyphail
-            --------------------------------------------------------
-            A transpiler from a graph query language to SWI-Prolog,
-            bundled with its own execution engine.
-    
-            Supports building, modifying, and persisting in-memory
-            graphs (CREATE, SET, DELETE, SAVE, LOAD) as well as
-            querying them via node and relationship pattern-matching
-            (MATCH, WHERE, RETURN), executing queries directly on a
-            live SWI-Prolog process.
-    
-            Course Project for EIF400 - Programming Paradigms
-            School of Informatics, National University of Costa Rica (UNA)
-    
-            Group 03-1pm
-            Developed by the geaniouses:
-              - Andrey Jesus Solano Rojas
-              - Sebastian David Gonzalez Masis
-              - Alejandro Obed Miranda Gomez
-              - Wilson Jose Umaña Rios
-              
-            --------------------------------------------------------
-            """);
+                What is Cyphail?
+                It`s a graph query transpiler inspired by the Cypher language, focused on graph management 
+                where users can select graphs and execute query statements
+                
+                It`s still under developtment during Semester II, 2026 for EIF400: Paradigmas de Programaciòn 
+                by Group 03-1pm under Professor Carlos Loría-Sáenz
+                
+                Current Version: P1.1 (As of September 30, 2026)
+                Developed by the geniouses: Wilson Umaña, Andrey Solano, Sebastián González, and Alejandro Miranda
+                """);
     }
 }

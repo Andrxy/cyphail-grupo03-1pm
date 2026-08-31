@@ -6,35 +6,43 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Spec;
 
 /**
- * Comando ".help": muestra la lista de comandos punto disponibles en el REPL.
- * La lista se obtiene del modelo de picocli, leyendo los subcomandos
- * registrados en el comando padre y sus descripciones.
+ * Comando .help dentro del REPL.
+ * Muestra la lista de acciones disponibles dentro del REPL.
+ * Extrae la informaciòn dinámicamente del modelo de picocli,
+ * leyendo los subcomandos registrados en el comando padre y sus descripciones
  *
- * @author Sebastian Gonzalez - Grupo 03-1pm
- * @author Andrey Solano - Grupo 03-1pm
- * @author Alejandro Miranda - Grupo 03-1pm
- * @version 1.1
+ * <p>Implementa Runnable para cumplir con la interfaz requerida por Picocli, así,
+ * cuando el usuario llame el comando desde el REPL se invoca su declaración del método run().
+ * Además utiliza el CommandSpec para ver la lista de subdomandos</p>
+ *
+ * @author Sebastian Gonzalez
+ * @author Andrey Solano
+ * @author Alejandro Miranda
+ * @version P1.1
  */
-
 @Command(
         name = ".help",
-        description = "Muestra la lista de comandos disponibles"
+        description = "Shows the list of available actions and usage instructions"
 )
-
 public class HelpCommand implements Runnable {
 
     @Spec
     private CommandSpec spec;
 
+    /**
+     * Ejecuta el comando .help, imprimiendo en la consola el listado
+     * de todos los subcomandos disponibles que obtiene consultando
+     * el spec de su comando padre
+     */
     @Override
     public void run() {
-        IO.println("Cyphail REPL - available commands:");
-        IO.println();
+        IO.println("Cyphail REPL - available commands:\n");
+
         for (CommandLine subcommand : spec.parent().subcommands().values()) {
             CommandSpec command = subcommand.getCommandSpec();
             IO.println("  " + command.name() + " : " + String.join(" ", command.usageMessage().description()));
         }
-        IO.println();
-        IO.println("Type a command starting with \".\" or a Cyphail statement.");
+
+        IO.println("\nType a command starting with '.' or a Cyphail statement");
     }
 }
