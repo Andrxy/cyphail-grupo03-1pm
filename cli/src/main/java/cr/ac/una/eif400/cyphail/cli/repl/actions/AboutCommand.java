@@ -29,7 +29,7 @@ public class AboutCommand implements Runnable {
      */
     public void run() {
         IO.println("""
-                What is Cyphail?
+                What is cyphail?
                 It`s a graph query transpiler inspired by the Cypher language, focused on graph management 
                 where users can select graphs and execute query statements
                 
