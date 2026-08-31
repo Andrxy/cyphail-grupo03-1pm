@@ -302,5 +302,3 @@ Repositories used as reference for the structure of this README and of the proje
 - [cleishm/libcypher-parser](https://github.com/cleishm/libcypher-parser) — cross-platform (Linux/Mac/BSD) Cypher parser.
 - [remkop/picocli](https://github.com/remkop/picocli) — the CLI library used in this project.
 - [munificent/craftinginterpreters](https://github.com/munificent/craftinginterpreters) — classic reference for documenting a course-level programming-languages project.
-
-Engine assigned for the parallel research assignment: **ArcadeDB**.
