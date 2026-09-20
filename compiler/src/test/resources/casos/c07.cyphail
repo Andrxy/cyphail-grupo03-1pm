@@ -1,0 +1,5 @@
+MATCH (p:Person)
+WHERE p.age > 18
+CREATE (c:Certificate {issuedTo: "adult", year: 2026})
+RETURN p.name AS name,
+       p.age AS age

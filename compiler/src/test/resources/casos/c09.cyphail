@@ -1,0 +1,5 @@
+MATCH (p:Person), (o:Order {personId: p.id, status: "cancelled"})
+WHERE p.age > 60
+CREATE (a:Archive {id: o.id, name: "retired", year: 2026})
+DELETE o
+RETURN p.name AS name

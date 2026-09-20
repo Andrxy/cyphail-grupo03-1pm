@@ -1,0 +1,3 @@
+MATCH (p:Person), (o:Order {personId: p.id, status: "cancelled"})
+WHERE q.age > 60
+RETURN q AS name

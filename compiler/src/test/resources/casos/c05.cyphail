@@ -1,0 +1,4 @@
+MATCH (m:Movie), (p:Person)
+WHERE m.year <> p.age
+RETURN m.title AS title,
+       p.name AS name
