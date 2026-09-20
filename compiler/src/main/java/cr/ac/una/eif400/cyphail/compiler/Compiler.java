@@ -30,11 +30,6 @@ public class Compiler {
     private static final Compiler INSTANCE = new Compiler();
     private final Broker broker = Broker.getInstance();
 
-    private final Tokenizer tokenizer = new Tokenizer();
-    private final Parser parser = new Parser();
-    private final SemanticAnalyser semanticAnalyser = new SemanticAnalyser();
-    private final CodeGenerator codeGenerator = new CodeGenerator();
-
     private Compiler() {
     }
 

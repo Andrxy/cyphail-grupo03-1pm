@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.cyphail.compiler.tokenizer;
+package cr.ac.una.eif400.cyphail.compiler.lexer.token;
 
 public enum TokenType {
     ID,
