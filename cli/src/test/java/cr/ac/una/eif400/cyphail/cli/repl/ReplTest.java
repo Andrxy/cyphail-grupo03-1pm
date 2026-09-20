@@ -2,8 +2,6 @@ package cr.ac.una.eif400.cyphail.cli.repl;
 
 import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
-import cr.ac.una.eif400.cyphail.compiler.support.FlowLog;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,10 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -49,24 +44,10 @@ public class ReplTest {
         captured = new ByteArrayOutputStream();
         System.setOut(new PrintStream(captured));
 
-        registroPrevio = Files.exists(archivoDeRegistro()) ? Files.readString(archivoDeRegistro()) : null;
-
         Broker.getInstance().setCurrentGraph(null);
         repl = new Repl(Compiler.getInstance(), Broker.getInstance());
     }
 
-    @AfterEach
-    void restaurarEntorno() throws IOException {
-        System.setOut(originalOut);
-        System.setIn(originalIn);
-        Broker.getInstance().setCurrentGraph(null);
-
-        if (registroPrevio == null) {
-            Files.deleteIfExists(archivoDeRegistro());
-        } else {
-            Files.writeString(archivoDeRegistro(), registroPrevio);
-        }
-    }
 
     @Test
     @DisplayName("Arranca activo y guarda el broker recibido")
@@ -181,18 +162,4 @@ public class ReplTest {
         return captured.toString();
     }
 
-    /**
-     * Ubica el registro del flujo donde lo deja FlowLog, que lo reinicia cada
-     * vez que se abre el repl.
-     */
-    private static Path archivoDeRegistro() {
-        try {
-            Path ubicacion = Path.of(FlowLog.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-            Path raiz = ubicacion.getParent().getParent().getParent();
-
-            return ((raiz != null && Files.exists(raiz)) ? raiz : Path.of("").toAbsolutePath()).resolve(LOG_FILE_NAME);
-        } catch (URISyntaxException | NullPointerException e) {
-            return Path.of("").toAbsolutePath().resolve(LOG_FILE_NAME);
-        }
-    }
 }
