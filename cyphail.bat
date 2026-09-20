@@ -3,6 +3,9 @@ setlocal
 REM Lanzador de Cyphail para Windows.
 REM Ejecuta el jar ejecutable generado por "mvnw.cmd clean package".
 
+set "PROJECT_DIR=%~dp0"
+if "%PROJECT_DIR:~-1%"=="\" set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
+
 set "CYPHAIL_JAR=%~dp0cli\target\cyphail.jar"
 
 if not exist "%CYPHAIL_JAR%" (
@@ -11,4 +14,4 @@ if not exist "%CYPHAIL_JAR%" (
     exit /b 1
 )
 
-java -jar "%CYPHAIL_JAR%" %*
+java -Dcyphail.home="%PROJECT_DIR%" -jar "%CYPHAIL_JAR%" %*

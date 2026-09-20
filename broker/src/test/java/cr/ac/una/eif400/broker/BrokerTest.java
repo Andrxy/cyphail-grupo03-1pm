@@ -47,7 +47,7 @@ public class BrokerTest {
     @Test
     @DisplayName("Expone el catalogo de grafos disponibles")
     void exponeElCatalogoDeGrafos() {
-        assertArrayEquals(FakeGraphs.availableGraphs, broker.getAvailableGraphs());
+        assertArrayEquals(FakeGraphs.toRows(), broker.getAvailableGraphs());
     }
 
     @Test

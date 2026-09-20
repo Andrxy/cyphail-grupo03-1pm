@@ -8,7 +8,6 @@ import cr.ac.una.eif400.cyphail.cli.repl.actions.HelpCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.UseCommand;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
-import cr.ac.una.eif400.cyphail.compiler.support.FlowLog;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -87,7 +86,6 @@ public class Repl {
     public void open() {
         Scanner scanner = new Scanner(System.in);
 
-        FlowLog.startSession();
         printBanner();
 
         while (running) {

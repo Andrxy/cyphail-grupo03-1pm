@@ -26,13 +26,13 @@ public class FakeGraphsTest {
     @Test
     @DisplayName("El catalogo trae los cuatro grafos del sprint")
     void elCatalogoTraeLosCuatroGrafos() {
-        assertEquals(4, FakeGraphs.availableGraphs.length);
+        assertEquals(4, FakeGraphs.getAvailableGraphs().length);
     }
 
     @Test
     @DisplayName("Cada grafo tiene nombre y descripcion")
     void cadaGrafoTieneNombreYDescripcion() {
-        for (String[] graph : FakeGraphs.availableGraphs) {
+        for (String[] graph : FakeGraphs.toRows()) {
             assertEquals(2, graph.length, "El grafo tiene tantas columnas como cabeceras");
         }
     }

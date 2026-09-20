@@ -2,6 +2,7 @@ package cr.ac.una.eif400.broker;
 
 import cr.ac.una.eif400.broker.fake.FakeGraphs;
 import cr.ac.una.eif400.broker.fake.FakeQueries;
+import cr.ac.una.eif400.broker.model.Graph;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 
 /**
@@ -38,7 +39,7 @@ public class Broker {
      * @return una matriz bidimensional con los nombres y descripciones de los grafos
      */
     public String[][] getAvailableGraphs() {
-        return FakeGraphs.availableGraphs;
+        return FakeGraphs.toRows();
     }
 
     /**

@@ -1,0 +1,6 @@
+[
+  { "id": "Amigos", "description": "Social Network" },
+  { "id": "Tasks", "description": "Task and resources" },
+  { "id": "teams", "description": "Soccer Teams" },
+  { "id": "planets", "description": "Planets in Solar System" }
+]

@@ -1,5 +1,14 @@
 package cr.ac.una.eif400.broker.fake;
 
+import com.google.gson.Gson;
+import cr.ac.una.eif400.broker.model.Graph;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 /**
  * Proveedor que gestiona los grafos quemados para las pruebas
  *
@@ -10,29 +19,48 @@ package cr.ac.una.eif400.broker.fake;
  * Version 1.0
  */
 
+
 public class FakeGraphs {
+
+    private static final Graph[] AVAILABLE_GRAPHS = loadGraphs();
 
     public static String[] headers = {"Graph", "Description"};
 
-    public static String[][] availableGraphs = {
-            {"Amigos", "Social Network"},
-            {"Tasks", "Task and resources"},
-            {"teams",   "Soccer Teams"},
-            {"planets", "Planets in Solar System"}
-    };
+    private static Graph[] loadGraphs() {
+        String cyphailHome = System.getProperty("cyphail.home");
+        Path filePath = cyphailHome != null
+                ? Paths.get(cyphailHome, "broker", "data", "graphJ.json")
+                : Paths.get("data", "graphJ.json");
 
-    /**
-     * Verifica si un grafo específico existe dentro de los datos quemados
-     *
-     * @param name nombre del grafo a buscar
-     * @return trues i el grafo se encuentra registrado, si no false
-     */
+        try (Reader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
+            return new Gson().fromJson(reader, Graph[].class);
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo cargar graphJ.json", e);
+        }
+    }
+
+    public static Graph[] getAvailableGraphs() {
+        return AVAILABLE_GRAPHS;
+    }
+
+    public static String[][] toRows() {
+        Graph[] graphs = getAvailableGraphs();
+        String[][] rows = new String[graphs.length][2];
+        for (int i = 0; i < graphs.length; i++) {
+            rows[i][0] = graphs[i].id();
+            rows[i][1] = graphs[i].description();
+        }
+        return rows;
+    }
+
     public static boolean exists(String name) {
-        for (String[] graph : availableGraphs) {
-            if (graph[0].equalsIgnoreCase(name)) {
+        for (Graph graph : AVAILABLE_GRAPHS) {
+            if (graph.id().equalsIgnoreCase(name)) {
                 return true;
             }
         }
         return false;
     }
+
+
 }
