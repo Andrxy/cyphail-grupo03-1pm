@@ -2,11 +2,6 @@ package cr.ac.una.eif400.cyphail.compiler;
 
 import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
-import cr.ac.una.eif400.cyphail.compiler.ast.AST;
-import cr.ac.una.eif400.cyphail.compiler.codegen.CodeGenerator;
-import cr.ac.una.eif400.cyphail.compiler.parser.Parser;
-import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyser;
-import cr.ac.una.eif400.cyphail.compiler.tokenizer.Tokenizer;
 
 /**
  * Encargado de dirigir el flujo de compilación y ejecución.
@@ -50,14 +45,6 @@ public class Compiler {
      * @return el resultado de la ejecución envuelto en un QueryResponse.
      */
     public QueryResponse compile(String source) {
-        String tokens = tokenizer.tokenize(source);
-
-        AST ast = parser.parse(tokens);
-
-        semanticAnalyser.analyse(ast);
-
-        codeGenerator.generate(ast);
-
-        return broker.resolveQuery(tokens);
+        return null;
     }
 }
