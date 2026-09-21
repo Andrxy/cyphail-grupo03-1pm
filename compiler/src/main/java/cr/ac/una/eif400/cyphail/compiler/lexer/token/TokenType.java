@@ -5,6 +5,7 @@ public enum TokenType {
     INTEGER_LITERAL,
     STRING_LITERAL,
     KEYWORD,
+    OPERATOR,
 
     LPAR,
     RPAR,
@@ -35,5 +36,5 @@ public enum TokenType {
 
     RANGE,
 
-    EOF
+    Num, EOF
 }

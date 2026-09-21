@@ -5,6 +5,7 @@ import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.AboutCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.ExitCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.HelpCommand;
+import cr.ac.una.eif400.cyphail.cli.repl.actions.TreeCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.UseCommand;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
@@ -31,6 +32,7 @@ import java.util.Set;
                 HelpCommand.class,
                 ExitCommand.class,
                 AboutCommand.class,
+                TreeCommand.class,
                 UseCommand.class
         }
 )
