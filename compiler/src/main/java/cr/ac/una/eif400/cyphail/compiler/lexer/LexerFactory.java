@@ -128,13 +128,25 @@ public class LexerFactory {
         return lexer;
     }
 
-//    public static Lexer Labes() {
-//        var re_labes = Pattern.compile("\\s*(?<token>:\\w+)");
-//
-//        Lexer lexer = (InputString source) -> {
-//
-//        }
-//    }
+    public static Lexer Double() {
+        var re_double = Pattern.compile("\\s*(?<token>\\d+.\\d+)");
+
+        Lexer lexer = (InputString source) -> {
+            var input = source.input();
+            var index = source.index();
+
+            var matcher = re_double.matcher(input);
+            matcher.region(0, input.length());
+
+            if (!matcher.lookingAt())
+                return new Fail("No double could get matched");
+
+            var token = matcher.group("token");
+            return new Ok(new TokenString(TokenType.Num, token), new InputString(input, matcher.end()));
+        };
+
+        return lexer;
+    }
 
 
     /*
