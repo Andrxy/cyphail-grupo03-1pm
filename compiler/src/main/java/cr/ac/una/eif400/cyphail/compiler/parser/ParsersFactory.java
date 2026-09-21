@@ -10,19 +10,21 @@ import java.util.stream.Stream;
 public class ParsersFactory {
     @SafeVarargs
     public static <I, T, R> Parser<I, T, R> Or(Parser<I, T, R>... parsers) {
-        Parser<I, T, R> p = (I source) -> {
-            if (parsers == null || parsers.length == 0) {
+        return (I source) -> {
+
+            if (parsers == null || parsers.length == 0)
                 return new Fail<>(null);
+
+            for (Parser<I, T, R> parser : parsers) {
+
+                var result = parser.parse(source);
+
+                if (result instanceof Ok)
+                    return result;
             }
 
-            return Stream.of(parsers)
-                    .map(parser -> parser.parse(source))
-                    .filter(result -> result instanceof Ok)
-                    .findFirst()
-                    .orElseGet(() -> new Fail<>(null));
+            return new Fail<>(null);
         };
-
-        return p;
     }
 
     @SafeVarargs
