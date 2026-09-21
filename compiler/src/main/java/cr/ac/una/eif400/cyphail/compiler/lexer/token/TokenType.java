@@ -1,18 +1,20 @@
 package cr.ac.una.eif400.cyphail.compiler.lexer.token;
 
 public enum TokenType {
-    ID,
+    IDENTIFIER,
     INTEGER_LITERAL,
+    DOUBLE_LITERAL,
     STRING_LITERAL,
-    KEYWORD,
-    OPERATOR,
+    BOOLEAN_LITERAL,
+    NULL_LITERAL,
 
-    LPAR,
-    RPAR,
-    LBRACKET,
-    RBRACKET,
-    LBRACE,
-    RBRACE,
+    MATCH, WHERE, CREATE, SET, DETACH, DELETE, REMOVE,
+    RETURN, DISTINCT, AS, ORDER, BY, ASCENDING, DESCENDING,
+    SKIP, LIMIT, OR, AND, NOT, IS,
+
+    LPAR, RPAR,
+    LBRACKET, RBRACKET,
+    LBRACE, RBRACE,
     COMMA,
     COLON,
     DOT,
@@ -33,8 +35,7 @@ public enum TokenType {
 
     ARROW_RIGHT,
     ARROW_LEFT,
-
     RANGE,
 
-    Num, EOF
+    EOF
 }

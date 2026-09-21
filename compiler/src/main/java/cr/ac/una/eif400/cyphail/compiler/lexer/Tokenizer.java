@@ -16,7 +16,7 @@ public class Tokenizer {
         Parser<InputString, TokenString, String> tokenParser = ParsersFactory.Or(
                 LexerFactory.Keywords(),
                 LexerFactory.Identifier(),
-                LexerFactory.Operators(),
+                LexerFactory.ComparisonOperator(),
                 LexerFactory.Integer()
         );
 
