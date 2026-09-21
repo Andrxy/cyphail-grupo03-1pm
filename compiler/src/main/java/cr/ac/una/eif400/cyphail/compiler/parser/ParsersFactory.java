@@ -1,7 +1,5 @@
 package cr.ac.una.eif400.cyphail.compiler.parser;
 
-import cr.ac.una.eif400.cyphail.compiler.parser.input.Input;
-import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
 
@@ -11,7 +9,7 @@ import java.util.stream.Stream;
 
 public class ParsersFactory {
     @SafeVarargs
-    static <I, T, R> Parser<I, T, R> Or(Parser<I, T, R>... parsers) {
+    public static <I, T, R> Parser<I, T, R> Or(Parser<I, T, R>... parsers) {
         Parser<I, T, R> p = (I source) -> {
             if (parsers == null || parsers.length == 0) {
                 return new Fail<>(null);
@@ -25,6 +23,31 @@ public class ParsersFactory {
         };
 
         return p;
+    }
+
+    @SafeVarargs
+    public static <I, T, R> Parser <I, List<T>, R> Sequence(Parser<I, T, R>... parsers){
+
+        Parser<I, List<T>, R> parser = (I source) -> {
+            List<T> results = new ArrayList<>();
+            for (var p : parsers) {
+                var result = p.parse(source);
+                switch ( result ){
+                    case Fail(R reason) -> {
+                        return new Fail<I, List<T>, R>(reason);
+                    }
+                    case Ok(T token, I rest) -> {
+                        results.add( token );
+                        source = rest;
+                    }
+                };
+            }
+
+            return new Ok<I, List<T>, R>(results, source);
+
+        };
+
+        return parser;
     }
 
     public static <I, T, R> Parser<I, List<T>, R> Plus(Parser<I, T, R> parser) {
@@ -82,41 +105,4 @@ public class ParsersFactory {
 
         return p;
     }
-
-//    static <I, T, R> Parser<I, T, R> Optional(Parser<I, T, R> parser) {
-//        Parser<I, T, R> p = (I source) -> {
-//            var parseResult = parser.parse(source);
-//
-//            if (parseResult instanceof Ok)
-//                return parseResult;
-//
-//            return new Ok<>(null, source);
-//        };
-//
-//        return p;
-//    }
-
-
-    // Plus(Id)   ->     List<Tokens>
-
-    // Id +
-    // Plus(Id)
-
-//    function Star(parser, max: number = Infinity) {
-//        function parse(source: InputString, it: number = 0, tokens: Token[] = []) {
-//            if (it === max)
-//                return Ok(tokens, source)
-//
-//		const {input, index} = source
-//		const result = parser(source)
-//            if (isFail(result))
-//                return Ok(tokens, source)
-//
-//		const {token, rest} = result
-//
-//            return parse(InputString(input, rest.index), it + 1, [...tokens, token])
-//        }
-//
-//        return parse
-//    }
 }
