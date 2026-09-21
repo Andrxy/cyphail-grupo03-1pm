@@ -7,8 +7,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import static cr.ac.una.eif400.cyphail.compiler.lexer.LexerFactory.ComparisonOperator;
 import static cr.ac.una.eif400.cyphail.compiler.lexer.LexerFactory.Keywords;
-import static cr.ac.una.eif400.cyphail.compiler.lexer.LexerFactory.Operators;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,7 +36,7 @@ public class LexersTest {
     void testOperatorsExitosos(String texto) {
         InputString source = new InputString(texto, 0);
 
-        Lexer lexer = Operators();
+        Lexer lexer = ComparisonOperator();
         var resultado = lexer.parse(source);
 
         assertTrue(resultado instanceof Ok, "El lexer debió aceptar la keyword: " + texto);

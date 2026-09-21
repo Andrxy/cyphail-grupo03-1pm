@@ -137,6 +137,73 @@ public class LexerFactory {
         return lexer;
     }
 
+    public static Lexer ArithmeticOperators() {
+        var re_arithmetic = Pattern.compile("\\s*(?<token>[+\\-*/%])");
+
+        Map<String, TokenType> arithmetic_operators = Map.ofEntries(
+                Map.entry("+", TokenType.PLUS),
+                Map.entry("-", TokenType.MINUS),
+                Map.entry("*", TokenType.STAR),
+                Map.entry("/", TokenType.SLASH),
+                Map.entry("%", TokenType.PERCENT)
+        );
+
+        Lexer lexer = (InputString source) -> {
+            var input = source.input();
+            var index = source.index();
+
+            var matcher = re_arithmetic.matcher(input);
+            matcher.region(0, input.length());
+
+            if (!matcher.lookingAt())
+                return new Fail("No arithmetic operators could match");
+
+            var token = matcher.group("token");
+            TokenType tokenType = arithmetic_operators.get(token);
+
+            return new Ok<>(new TokenString(tokenType, token), new InputString(input, matcher.end()));
+        };
+
+        return lexer;
+    }
+
+    public static Lexer Delimiters() {
+        var re_delimiters = Pattern.compile("\\s*(?<token>[()\\[\\]{}.,:|])");
+
+        Map<String, TokenType> delimiters_map = Map.ofEntries(
+                Map.entry("(", TokenType.LPAR),
+                Map.entry(")", TokenType.RPAR),
+                Map.entry("[", TokenType.LBRACKET),
+                Map.entry("]", TokenType.RBRACKET),
+                Map.entry("{", TokenType.LBRACE),
+                Map.entry("}", TokenType.RBRACE),
+                Map.entry(",", TokenType.COMMA),
+                Map.entry(":", TokenType.COLON),
+                Map.entry(".", TokenType.DOT),
+                Map.entry("|", TokenType.PIPE)
+        );
+
+        Lexer lexer = (InputString source) -> {
+            var input = source.input();
+            var index = source.index();
+
+            var matcher = re_delimiters.matcher(input);
+            matcher.region(index, input.length()); // Usa 'index' para respetar la posición actual del cursor
+
+            if (!matcher.lookingAt())
+                return new Fail<>("No delimiter or punctuation could get matched");
+
+            var token = matcher.group("token");
+            TokenType tokenType = delimiters_map.get(token);
+
+            return new Ok<>(new TokenString(tokenType, token), new InputString(input, matcher.end()));
+        };
+
+        return lexer;
+    }
+
+
+
     public static Lexer Literal(String literalInput, TokenType tokenType) {
         var re_operators = Pattern.compile("\\s*(?<token>\\w+)");
 
