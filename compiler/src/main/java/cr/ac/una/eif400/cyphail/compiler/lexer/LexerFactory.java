@@ -32,7 +32,7 @@ public class LexerFactory {
     }
 
     public static Lexer Integer() {
-        var re_num = Pattern.compile("\\s*(?<token>\\d+)");
+        var re_num = Pattern.compile("\\s*(?<token>[+-]?\\d+)");
 
         Lexer lexer = (InputString source) -> {
             var input = source.input();
@@ -129,7 +129,7 @@ public class LexerFactory {
     }
 
     public static Lexer Double() {
-        var re_double = Pattern.compile("\\s*(?<token>\\d+.\\d+)");
+        var re_double = Pattern.compile("\\s*(?<token>[+-]?\\d+.\\d+)");
 
         Lexer lexer = (InputString source) -> {
             var input = source.input();
