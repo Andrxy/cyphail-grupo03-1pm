@@ -129,7 +129,7 @@ public class LexerFactory {
     }
 
     public static Lexer Double() {
-        var re_double = Pattern.compile("\\s*(?<token>[+-]?\\d+.\\d+)");
+        var re_double = Pattern.compile("\\s*(?<token>[+-]?\\d+\\.\\d+)");
 
         Lexer lexer = (InputString source) -> {
             var input = source.input();
