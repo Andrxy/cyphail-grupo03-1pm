@@ -2,8 +2,7 @@ package cr.ac.una.eif400.cyphail.compiler.lexer.token;
 
 public enum TokenType {
     IDENTIFIER,
-    INTEGER_LITERAL,
-    DOUBLE_LITERAL,
+    NUMBER_LITERAL,
     STRING_LITERAL,
     BOOLEAN_LITERAL,
     NULL_LITERAL,

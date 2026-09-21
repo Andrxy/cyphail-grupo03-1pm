@@ -16,8 +16,12 @@ public class Tokenizer {
         Parser<InputString, TokenString, String> tokenParser = ParsersFactory.Or(
                 LexerFactory.Keywords(),
                 LexerFactory.Identifier(),
+                LexerFactory.NumberLiteral(),
+                LexerFactory.StringLiteral(),
+                LexerFactory.RelationshipTokens(),
                 LexerFactory.ComparisonOperator(),
-                LexerFactory.Integer()
+                LexerFactory.ArithmeticOperators(),
+                LexerFactory.Delimiters()
         );
 
         Parser<InputString, List<TokenString>, String> fullTokenizer = ParsersFactory.Star(tokenParser);
