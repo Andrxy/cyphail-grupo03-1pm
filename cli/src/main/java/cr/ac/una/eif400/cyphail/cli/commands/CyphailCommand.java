@@ -13,9 +13,6 @@ import picocli.CommandLine.Command;
 @Command(
         name = "cyphail",
         subcommands = {
-                CompileCommand.class,
-                RunCommand.class,
-                CommandLine.HelpCommand.class,
                 ReplCommand.class,
         },
         version = "P1.1"

@@ -1,0 +1,5 @@
+MATCH (m:
+Movie {year: 1999}), (p:Person {age: 40})
+WHERE m.year <> p.age
+RETURN m.title AS title,
+       p.name AS name

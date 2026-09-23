@@ -1,0 +1,4 @@
+MATCH (b:Book)
+WHERE b.pages < 300
+RETURN b.title,
+       b.pages AS totalPages

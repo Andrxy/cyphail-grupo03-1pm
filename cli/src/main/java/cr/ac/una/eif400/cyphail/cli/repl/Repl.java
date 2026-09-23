@@ -5,6 +5,7 @@ import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.AboutCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.ExitCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.HelpCommand;
+import cr.ac.una.eif400.cyphail.cli.repl.actions.TreeCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.UseCommand;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
@@ -31,6 +32,7 @@ import java.util.Set;
                 HelpCommand.class,
                 ExitCommand.class,
                 AboutCommand.class,
+                TreeCommand.class,
                 UseCommand.class
         }
 )
@@ -156,6 +158,14 @@ public class Repl {
     private void dispatch(String line) {
         String[] args = line.split("\\s+");
         String firstWord = args[0];
+
+        // .tree recibe la consulta CRUDA: si pasa por picocli, los argumentos que
+        // empiezan con '-' (como -[r]->) se interpretan como opciones y se rechazan.
+        if (firstWord.equals(".tree")) {
+            TreeCommand.analizar(line.substring(firstWord.length()).trim());
+            return;
+        }
+
         Set<String> actionNames = dispatcher.getSubcommands().keySet();
 
         if (actionNames.contains(firstWord)) {
