@@ -45,6 +45,6 @@ public class Compiler {
      * @return el resultado de la ejecución envuelto en un QueryResponse.
      */
     public QueryResponse compile(String source) {
-        return null;
+        return broker.resolveQuery(source);
     }
 }
