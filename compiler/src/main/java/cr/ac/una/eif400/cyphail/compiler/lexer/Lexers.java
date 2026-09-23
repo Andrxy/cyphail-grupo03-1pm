@@ -47,10 +47,10 @@ public class Lexers {
 
     public static Lexer StringLiteral = createLexer("(?<token>\"[^\"]*\"|'[^']*')");
 
-    public static Lexer Whitespaces = createLexer("\\s*(?<token>)");
+    public static Lexer Whitespaces = createLexer("(?<token>\\s*)");
 
-    public static Lexer LineComment = createLexer("//[^\\r\\n]*");
+    public static Lexer LineComment = createLexer("(?<token>//[^\\r\\n]*)");
 
-    public static Lexer CommentBlock = createLexer("/\\*.*?\\*/");
+    public static Lexer CommentBlock = createLexer("(?<token>/\\*.*?\\*/)");
 
 }
