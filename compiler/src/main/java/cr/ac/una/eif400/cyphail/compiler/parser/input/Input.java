@@ -4,4 +4,3 @@ public interface Input<T>{
     T input();
     int index();
 }
-

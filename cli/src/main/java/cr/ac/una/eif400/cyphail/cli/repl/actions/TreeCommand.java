@@ -1,16 +1,12 @@
 package cr.ac.una.eif400.cyphail.cli.repl.actions;
 
 import cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer;
-import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-import java.util.List;
-
-
 @Command(
         name = ".tree",
-        description = "Muestra las keywords reconocidas en una consulta"
+        description = "Muestra los tokens reconocidos en una consulta"
 )
 public class TreeCommand implements Runnable {
 
@@ -19,12 +15,16 @@ public class TreeCommand implements Runnable {
 
     @Override
     public void run() {
-        if (queryWords == null) return;
+        analizar(queryWords == null ? "" : String.join(" ", queryWords));
+    }
 
-        String query = String.join(" ", queryWords);
-
-        List<TokenString> tokens = Tokenizer.tokenize(query);
-
-        for (var t : tokens) IO.println(t.toString());
+    /** Recibe la consulta cruda. El REPL debe llamar este metodo directamente
+     *  para que picocli no trate los guiones como opciones. */
+    public static void analizar(String query) {
+        try {
+            Tokenizer.tokenize(query).forEach(t -> IO.println(t.toString()));
+        } catch (RuntimeException e) {
+            IO.println("Error lexico: " + e.getMessage());
+        }
     }
 }
