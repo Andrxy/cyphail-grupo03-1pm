@@ -43,6 +43,4 @@ public class Lexers {
     public static Lexer Relationship = createLexer("\\s*(?<token>->|<-|\\.\\.)");
 
     public static Lexer StringLiteral = createLexer("\\s*(?<token>\"[^\"]*\"|'[^']*')");
-
-    public static Lexer Whitespace = createLexer("\\s*(?<token>)");
 }
