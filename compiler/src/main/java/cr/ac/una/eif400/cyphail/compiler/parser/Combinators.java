@@ -1,20 +1,22 @@
 package cr.ac.una.eif400.cyphail.compiler.parser;
 
+import cr.ac.una.eif400.cyphail.compiler.IParser;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Combinators {
 
     @SafeVarargs
-    public static <I, T> Parser<I, T> Or(Parser<I, T>... parsers) {
+    public static <I, T> IParser<I, T> Or(IParser<I, T>... parsers) {
         return (I source) -> {
             if (parsers == null || parsers.length == 0)
                 return new Fail<>(null);
 
-            for (Parser<I, T> parser : parsers) {
+            for (IParser<I, T> parser : parsers) {
                 var result = parser.parse(source);
                 if (result instanceof Ok<I, T> ok)
                     return ok;
@@ -24,7 +26,7 @@ public class Combinators {
     }
 
     @SafeVarargs
-    public static <I, T> Parser<I, List<T>> Sequence(Parser<I, T>... parsers) {
+    public static <I, T> IParser<I, List<T>> Sequence(IParser<I, T>... parsers) {
         return (I source) -> {
             List<T> results = new ArrayList<>();
             I currentSource = source;
@@ -45,7 +47,7 @@ public class Combinators {
         };
     }
 
-    public static <I, T> Parser<I, List<T>> Plus(Parser<I, T> parser) {
+    public static <I, T> IParser<I, List<T>> Plus(IParser<I, T> parser) {
         return (I source) -> {
             if (parser == null)
                 return new Fail<>(null);
@@ -75,7 +77,7 @@ public class Combinators {
         };
     }
 
-    public static <I, T> Parser<I, List<T>> Star(Parser<I, T> parser) {
+    public static <I, T> IParser<I, List<T>> Star(IParser<I, T> parser) {
         return (I source) -> {
             var plusResult = Plus(parser).parse(source);
 
@@ -86,14 +88,10 @@ public class Combinators {
         };
     }
 
-    public static <I, T> Parser<I, T> Optional(Parser<I, T> parser, T defaultValue) {
-        return (I source) -> {
-            var parseResult = parser.parse(source);
-
-            if (parseResult instanceof Ok<I, T> ok)
-                return ok;
-
-            return new Ok<>(source, defaultValue);
+    static <I, T> IParser<I, Optional<T>> Optional(IParser<I, T> parser) {
+        return (I source) -> switch (parser.parse(source)) {
+            case Ok(I rest, T token) -> new Ok<>(rest, Optional.of(token));
+            case Fail(String error) -> new Ok<>(source, Optional.empty());
         };
     }
 }

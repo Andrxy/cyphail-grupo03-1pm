@@ -1,8 +1,8 @@
 package cr.ac.una.eif400.cyphail.compiler.parser;
 
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Result;
+import cr.ac.una.eif400.cyphail.compiler.IParser;
+import cr.ac.una.eif400.cyphail.compiler.lexer.ast.ASTNode;
+import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
 
-@FunctionalInterface
-public interface Parser<I, O> {
-    Result<I, O> parse(I source);
+public interface Parser extends IParser<InputTokens, ASTNode> {
 }
