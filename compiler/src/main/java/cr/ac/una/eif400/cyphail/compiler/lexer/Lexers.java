@@ -6,8 +6,12 @@ import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 /*
 * @author Alejandro Miranda
 * @author Andrey Solano
@@ -19,7 +23,7 @@ public class Lexers {
             String source = input.input();
             int index = input.index();
 
-            var re_ = Pattern.compile(re);
+            var re_ = Pattern.compile("(?<token>" + re + ")");
             var matcher = re_.matcher(source);
             matcher.region(index, source.length());
 
@@ -31,29 +35,39 @@ public class Lexers {
         };
     }
 
-    public static Lexer Identifier = createLexer("(?<token>[a-zA-Z_]\\w*)", TokenType.IDENTIFIER);
+    private static final  List<String> KEYWORDS = List.of(
+            "MATCH", "WHERE", "CREATE", "SET", "DETACH", "DELETE", "REMOVE", "RETURN",
+            "DISTINCT", "AS", "ORDER", "BY", "ASCENDING", "DESCENDING", "SKIP", "LIMIT",
+            "OR", "AND", "NOT", "IS"
+    );
 
-    public static Lexer Number = createLexer("(?<token>[+-]?\\d+)", TokenType.NUMBER);
+    private static String keywordsMegaOr() {
+        return KEYWORDS.stream().collect(Collectors.joining("|"));
+    }
+
+    public static Lexer Identifier = createLexer("[a-zA-Z_]\\w*", TokenType.IDENTIFIER);
+
+    public static Lexer Number = createLexer("[+-]?\\d+", TokenType.NUMBER);
 
     public static Lexer Keywords = createLexer(
-            "(?i)(?<token>MATCH|WHERE|CREATE|SET|DETACH|DELETE|REMOVE|RETURN|DISTINCT|AS|ORDER|BY|ASCENDING|DESCENDING|SKIP|LIMIT|OR|AND|NOT|IS)\\b",
+            "(?i)" + keywordsMegaOr() + "\\b",
             TokenType.KEYWORD
     );
 
-    public static Lexer Comparison = createLexer("(?<token><=|>=|<>|[=<>])", TokenType.COMPARISON_OPERATOR);
+    public static Lexer Comparison = createLexer("<=|>=|<>|[=<>]", TokenType.COMPARISON_OPERATOR);
 
-    public static Lexer Arithmetic = createLexer("(?<token>[+\\-*/%])", TokenType.ARITHMETIC_OPERATOR);
+    public static Lexer Arithmetic = createLexer("[+\\-*/%]", TokenType.ARITHMETIC_OPERATOR);
 
-    public static Lexer Delimiters = createLexer("(?<token>[()\\[\\]{}.,:|;])", TokenType.DELIMITER);
+    public static Lexer Delimiters = createLexer("[()\\[\\]{}.,:|;]", TokenType.DELIMITER);
 
-    public static Lexer Relationship = createLexer("(?<token>->|<-|\\.\\.)", TokenType.RELATIONSHIP);
+    public static Lexer Relationship = createLexer("->|<-|\\.\\.", TokenType.RELATIONSHIP);
 
-    public static Lexer StringLiteral = createLexer("(?<token>\"[^\"]*\"|'[^']*')", TokenType.STRING_LITERAL);
+    public static Lexer StringLiteral = createLexer("\"[^\"]*\"|'[^']*'", TokenType.STRING_LITERAL);
 
-    public static Lexer Whitespaces = createLexer("(?<token>\\s+)", TokenType.WHITESPACE);
+    public static Lexer Whitespaces = createLexer("\\s+", TokenType.WHITESPACE);
 
-    public static Lexer LineComment = createLexer("(?<token>//[^\\r\\n]*)", TokenType.LINECOMMENT);
+    public static Lexer LineComment = createLexer("//[^\\r\\n]*", TokenType.LINECOMMENT);
 
-    public static Lexer CommentBlock = createLexer("(?<token>/\\*.*?\\*/)", TokenType.BLOCKCOMMENT);
+    public static Lexer CommentBlock = createLexer("/\\*.*?\\*/", TokenType.BLOCKCOMMENT);
 
 }
