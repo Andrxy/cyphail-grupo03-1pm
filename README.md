@@ -4,7 +4,7 @@
 
 Project developed for the course **Paradigmas de Programación (EIF400-II-2026)**, Escuela de Ciencias de la Computación e Informática, Universidad Nacional de Costa Rica. Professor: **Carlos Loría-Sáenz**. Group 03, 1:00pm section.
 
-> **This README describes the project's state during Sprint 1.1 only.** The full vision of Cyphail includes a real parser and a real Prolog execution engine — neither exists yet. See the [Project Status](#project-status) section for the exact scope of what is built today.
+> **This README describes the project's state during Sprint P1.** The full vision of Cyphail includes a Prolog execution engine, which is the scope of later sprints. See the [Project Status](#project-status) section for the exact scope of what is built today.
 
 ---
 
@@ -15,24 +15,30 @@ Project developed for the course **Paradigmas de Programación (EIF400-II-2026)*
 - [Prerequisites](#prerequisites)
 - [How to Run It](#how-to-run-it)
 - [Using the REPL](#using-the-repl)
-- [Sprint 1.1 Submission Snapshot](#sprint-11-submission-snapshot)
-- [Execution Log](#execution-log)
+- [Test Cases](#test-cases)
+- [Locating a Sprint Submission](#locating-a-sprint-submission)
 - [Project Status](#project-status)
 - [AI Usage Declaration](#ai-usage-declaration)
-- [AI Prompts Used in This Sprint](#ai-prompts-used-in-this-sprint)
+- [AI Prompts Used](#ai-prompts-used)
 - [References](#references)
 
 ---
 
 ## Project Description
 
-Cyphail is a compiler/transpiler for a custom query language, inspired by Cypher, targeting the SWI-Prolog execution engine. The core idea: instead of reinventing a graph engine from scratch, Cyphail delegates traversal, unification, and backtracking logic to a mature logic-programming engine, and focuses on the language side — parsing Cypher-like syntax, generating the equivalent Prolog code, and presenting results in a readable way.
+Cyphail is a compiler/transpiler for a custom query language, inspired by Cypher, targeting the SWI-Prolog execution engine. The core idea: instead of reinventing a graph engine from scratch, Cyphail delegates traversal, unification, and backtracking logic to a mature logic-programming engine, and focuses on the language side: parsing Cypher-like syntax, generating the equivalent Prolog code, and presenting results in a readable way.
 
-The project is designed as an exercise across the three major programming paradigms covered in the course (OOP, FP, LP), each solving the part of the problem where it fits best. This README documents specifically what was built for **Sprint 1.1**: the project setup and a REPL with faked commands and queries.
+The project is designed as an exercise across the three major programming paradigms covered in the course (OOP, FP, LP), each solving the part of the problem where it fits best.
+
+**Sprint P1** focuses on the front end of the compiler: a lexer and a parser built by hand with **parser combinators** (no parser generators such as ANTLR or JavaCC are used, as required by the project SPEC), and a broker that reads its data from JSON files instead of hardcoded values.
+
+The scope of P1, as defined by the course test cases, covers node patterns only (no relationship patterns), one or more node patterns per `MATCH`, comparisons with `<`, `>` and `<>`, and queries that always start with `MATCH`:
 
 ```cypher
-MATCH (p:Persona) RETURN p.nombre, p.edad
-MATCH (p1:Persona)-[r:AMIGO_DE]->(p2:Persona) RETURN p1.nombre AS Persona, type(r) AS Relacion, p2.nombre AS AmigoDe
+MATCH (m:Movie), (p:Person)
+WHERE m.year > 2000
+RETURN m.title AS title,
+       p.name AS actor
 ```
 
 ---
@@ -42,40 +48,51 @@ MATCH (p1:Persona)-[r:AMIGO_DE]->(p2:Persona) RETURN p1.nombre AS Persona, type(
 Cyphail is a **multi-module** Maven project, with 4 independent modules:
 
 ```
-cyphail-grupoXX-1pm/
+cyphail-grupo03-1pm/
 │
-├── common/      → Shared types across modules (query response contract; general-purpose
-│                  module, anything shared by two or more modules belongs here)
+├── common/      → Shared types across modules (query response contract)
 │
-├── broker/      → Bridge toward the execution engine (Prolog in the future, faked for now)
+├── broker/      → Bridge toward the execution engine. In P1 it reads graphs and
+│                  query answers from JSON files in broker/data/ (Prolog in later sprints)
 │
-├── compiler/    → Compilation pipeline scaffold (tokenizer, parser, AST, semantic analysis, codegen)
+├── compiler/    → Compilation pipeline: lexer and parser built with parser combinators,
+│                  and the abstract syntax tree (AST)
 │
 └── cli/         → Command-line interface and interactive REPL
 ```
 
-### Query flow (as it works in this sprint)
+### The combinator core
+
+Both the lexer and the parser are built on a single generic functional interface:
+
+```java
+public interface IParser<I, O> {
+    Result<I, O> parse(I source);
+}
+```
+
+A parser receives an input `I` and returns a `Result`, which is a sealed type with two cases: `Ok` (the value produced plus the remaining input) or `Fail` (the reason). The lexer is a parser from text to tokens; the parser is a parser from tokens to AST nodes. Small parsers are combined into larger ones with combinators such as `Or`, `Sequence`, `Plus`, `Star` and `Optional`.
+
+### Query flow
 
 ```
-User (REPL) → Compiler.compile() → Broker.resolveQuery() → wired (fake) catalog
-                                                                     │
-User (REPL) ← result table ← Broker ← Compiler ← ────────────────────┘
+User (REPL) → Compiler.compile() → Broker.resolveQuery() → JSON data (broker/data)
+                                                                   │
+User (REPL) ← result table ← Broker ← Compiler ← ──────────────────┘
 ```
-
-In this sprint, `Broker` and `Compiler` do not talk to any external engine — they resolve against a fixed, wired catalog of sample graphs and queries. There is no real parser, no real AST, and no network connection. The flow between the pieces (`Repl` → `Compiler` → `Broker`) is real and has been implemented and tested; only the content of the response is faked.
 
 ---
 
 ## Prerequisites
 
-Cyphail requires **JDK 26**. Maven does **not** need to be installed separately — the project ships with the **Maven Wrapper** (`mvnw.cmd` on Windows, `mvnw` on Linux), which downloads and uses the correct Maven version automatically.
+Cyphail requires **JDK 26**. Maven does **not** need to be installed separately: the project ships with the **Maven Wrapper** (`mvnw.cmd` on Windows, `mvnw` on Linux), which downloads and uses the correct Maven version automatically.
 
 ### Windows 11
 
 - [JDK 26](https://jdk.java.net/26/) installed, with `JAVA_HOME` configured and `java` available from the terminal.
-- **PowerShell** (the build and run instructions below assume PowerShell, not CMD).
+- Either **CMD** or **PowerShell**. The instructions below show both where the syntax differs.
 - Verify with:
-  ```powershell
+  ```
   java -version
   ```
 
@@ -87,7 +104,7 @@ Cyphail requires **JDK 26**. Maven does **not** need to be installed separately 
   java -version
   ```
 
-No IDE is required — the entire build and execution process happens from the terminal.
+No IDE is required. The entire build and execution process happens from the terminal.
 
 ---
 
@@ -95,44 +112,42 @@ No IDE is required — the entire build and execution process happens from the t
 
 ### 1. Get the project
 
-There are two ways to obtain the project. Either one works — pick whichever fits your situation.
+**Option A: Clone with Git** (requires Git installed):
 
-**Option A — Clone with Git** (requires Git installed):
-
-```powershell
+```
 git clone <repository-url>
 cd cyphail-grupo03-1pm
 ```
 
-**Option B — Download as a ZIP** (no Git needed):
+**Option B: Download as a ZIP** (no Git needed):
 
 1. On the repository page, click **Code → Download ZIP**.
 2. Extract the downloaded `.zip` to wherever you want the project to live.
-3. Open PowerShell and move into the extracted folder:
+3. Open a terminal and move into the extracted folder:
 
-```powershell
+```
 cd <path-to-extracted-folder>
 ```
 
-> **Note on the extracted folder name:** GitHub names the ZIP after the repository *and the branch*, so extracting it usually gives you a folder like `cyphail-grupoXX-1pm-main` rather than `cyphail-grupoXX-1pm`. Some tools also nest it one level deeper (a folder inside a folder of the same name). Use whatever name you actually see on disk.
+> **Note on the extracted folder name:** GitHub names the ZIP after the repository *and the branch*, so extracting it usually gives you a folder like `cyphail-grupo03-1pm-main` rather than `cyphail-grupo03-1pm`. Use whatever name you actually see on disk.
 
-**Either way, confirm you are standing in the project root before continuing.** The root is the folder that directly contains `pom.xml`, `mvnw.cmd` and `cyphail.bat`. Verify with:
+**Either way, confirm you are standing in the project root before continuing.** The root is the folder that directly contains `pom.xml`, `mvnw.cmd` and `cyphail.bat`, plus the four module folders (`common`, `broker`, `compiler`, `cli`). Verify with:
 
-```powershell
+```
 dir
 ```
 
-You should see `pom.xml`, `mvnw.cmd`, `cyphail.bat`, and the four module folders (`common`, `broker`, `compiler`, `cli`). If you don't, you are one level too high or too low — move into the folder that does.
-
 ### 2. Build the project
 
-From the project root, in PowerShell:
+From the project root:
 
-```powershell
-.\mvnw.cmd clean package
-```
+| Terminal | Command |
+|---|---|
+| CMD | `mvnw.cmd clean package` |
+| PowerShell | `.\mvnw.cmd clean package` |
+| Linux | `./mvnw clean package` |
 
-This builds all 4 modules (`common`, `broker`, `compiler`, `cli`) in the correct order, runs the tests, and produces the executable jar at:
+This builds all 4 modules in the correct order, runs the tests, and produces the executable jar at:
 
 ```
 cli\target\cyphail.jar
@@ -142,58 +157,45 @@ If it ends with `BUILD SUCCESS`, the project is ready to run.
 
 > To build without running the tests, add `-DskipTests`.
 
-### 3. Add Cyphail to your PATH
+### 3. Run the REPL
 
-So that the `cyphail` command works from any terminal, add the project root to your user `PATH`. Run this in PowerShell, **replacing `<project-root>` with the absolute path of the project folder on your machine** (for example `C:\Users\you\Cyphail\cyphail-grupo03-1pm`):
+From the project root, run the launcher:
+
+| Terminal | Command |
+|---|---|
+| CMD | `cyphail.bat repl` |
+| PowerShell | `.\cyphail.bat repl` |
+
+You should see Cyphail's welcome banner and the `cyphail>>>` prompt waiting for input. Inside the REPL, type `.exit` to close the session.
+
+Other launcher commands: `cyphail.bat help` shows the command help, and `cyphail.bat` with no arguments prints a short message pointing to the REPL.
+
+#### Running the jar directly
+
+The launcher is the recommended way to start Cyphail, because it tells the program where the project is located. The broker needs that location to find its JSON files in `broker/data/`. If you prefer to run the jar yourself, pass the project root explicitly with the `cyphail.home` property:
+
+```
+java -Dcyphail.home=<project-root> -jar cli\target\cyphail.jar repl
+```
+
+Without `-Dcyphail.home`, the broker looks for `data\` relative to the current directory, so the program fails to load its data when started from the project root.
+
+### 4. Optional: call `cyphail` from any folder
+
+This step is **not required**. It only lets you type `cyphail` instead of `cyphail.bat` from any directory, by adding the project root to your user `PATH`. In PowerShell, from the project root:
 
 ```powershell
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
-[Environment]::SetEnvironmentVariable("PATH", "$currentPath;<project-root>", "User")
+[Environment]::SetEnvironmentVariable("PATH", "$currentPath;$($PWD.Path)", "User")
 ```
 
-> If you are already standing in the project root, you can let PowerShell fill in the path for you by using `$PWD.Path` instead of typing it out:
->
-> ```powershell
-> $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
-> [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$($PWD.Path)", "User")
-> ```
-
-What these two lines do:
-
-- The first line reads the current value of your **user-level** `PATH` variable (the per-user one, not the system-wide one shared by all accounts) and stores it in `$currentPath`. Reading it first matters: if you skipped this and just assigned a new value, you would **erase every other entry** already in your `PATH`.
-- The second line writes back that same value plus `;<project-root>` appended at the end. The semicolon is the separator Windows uses between `PATH` entries.
-
-The result: Windows now also looks inside the project root when you type a command, so it finds `cyphail.bat` there and you can run `cyphail` from anywhere.
-
-This change is **permanent** for your user account, but it only takes effect in terminals opened **after** running it. Close your current PowerShell window and open a new one.
-
-> If you later move or rename the project folder, the `PATH` entry will point to a folder that no longer exists and `cyphail` will stop working. Re-run this step with the new path.
-
-### 4. Verify the installation
-
-```powershell
-cyphail
-```
-
-If everything is set up, this prints Cyphail's command help.
-
-### 5. Run the REPL
-
-```powershell
-cyphail repl
-```
-
-You should see Cyphail's welcome banner and the `cyphail>>>` prompt waiting for input.
-
-### 6. Exit
-
-Inside the REPL, type `.exit` to close the session.
+The first line reads your current user-level `PATH`; the second writes it back with the project root appended. Reading it first matters: assigning a new value directly would erase every other entry. The change only takes effect in terminals opened afterwards. If you later move or rename the project folder, repeat this step with the new path.
 
 ---
 
 ## Using the REPL
 
-Once inside the REPL, there are two kinds of input:
+Once inside the REPL, there are two kinds of input.
 
 **Dot commands** (start with `.`):
 
@@ -201,97 +203,99 @@ Once inside the REPL, there are two kinds of input:
 |---|---|
 | `.help` | Shows the list of available commands |
 | `.about` | Shows information about the project |
-| `.use` | With no argument: lists available graphs. With a name (e.g. `.use Amigos`): selects that graph |
+| `.use` | With no argument: lists the available graphs. With a name (e.g. `.use Amigos`): selects that graph |
+| `.tree` | Analyzes a query and shows the tokens recognized by the lexer, e.g. `.tree MATCH (m:Movie) RETURN m.title` |
 | `.exit` | Closes the REPL |
 
-**Cypher-like queries** (any line that doesn't start with `.`):
+**Cypher-like queries** (any line that does not start with `.`):
 
 ```
 cyphail>>> .use Amigos
 OK. 'Amigos' graph available after 1ms
 cyphail (Amigos) >>> MATCH (p:Persona) RETURN p.nombre, p.edad
-p.nombre   p.edad
-"Ana"      28
-"Luis"     31
-...
-OK. Query resolved after 666 ms.
 ```
+
+The graphs listed by `.use` and the answers to queries are read from `broker/data/graphJ.json` and `broker/data/queries.json`. To change the sample data, edit those files; no recompilation is needed.
 
 ---
 
-## Sprint 1.1 Submission Snapshot
+## Test Cases
 
-The deliverable for this sprint is the last commit pushed **before Sunday, August 30, 2026 at midnight (Costa Rica time, UTC−6)**. The commands below let you inspect and check out exactly that commit.
+The eleven course test cases for Sprint P1 are stored in:
 
-### Show the last commit within the deadline
+```
+compiler/src/test/resources/casos/c01.cyphail ... c11.cyphail
+```
 
-```powershell
+| Case | What it covers |
+|---|---|
+| C1 | One pattern, projection with an alias |
+| C2 | One pattern, `WHERE` with a comparison, projection with an alias |
+| C3 | One pattern with multiple labels |
+| C4 | Two disconnected patterns, projections with aliases |
+| C5 | Two patterns, comparison between attributes of different nodes |
+| C6 | Two patterns, each with its own property map |
+| C7 | `MATCH` of one pattern followed by `CREATE` |
+| C8 | Pattern whose property value is a simple expression (`{personId: p.id}`) |
+| C9 | `MATCH`, `CREATE` and `DELETE` in the same query |
+| C10 | Detection of an undefined variable |
+| C11 | Undefined variable caused by inverted order (`p.id` used before `p` is declared) |
+
+---
+
+## Locating a Sprint Submission
+
+Each sprint deliverable is the last commit pushed before that sprint's deadline. The commands below find and check out that commit, given the cutoff in Costa Rica time (UTC−6).
+
+Show the last commit before a cutoff:
+
+```
+git log -1 --before="<cutoff>" --date=iso-local --pretty=format:"%h  %ad  %an  %s"
+```
+
+For example, the Sprint P1.1 deadline was midnight at the end of Sunday, August 30, 2026, which is written as:
+
+```
 git log -1 --before="2026-08-31T00:00:00-06:00" --date=iso-local --pretty=format:"%h  %ad  %an  %s"
 ```
 
-This prints the short hash, author date, author, and message of the most recent commit made at or before the cutoff. The `--before` bound is written as `2026-08-31T00:00:00` because "midnight on August 30" means the *end* of that day — everything committed during August 30 is included; anything from August 31 onward is not. The explicit `-06:00` offset pins the cutoff to Costa Rica time regardless of the machine's local timezone.
+The bound is written as `2026-08-31T00:00:00` because "midnight on August 30" means the end of that day. The explicit `-06:00` pins the cutoff to Costa Rica time regardless of the machine's timezone.
 
-To see a bit more context — for example the last five commits before the deadline — drop the `-1` and use `-5` instead.
+Check out that commit to review it, and return to development afterwards:
 
-### Check out that commit
-
-```powershell
-git checkout $(git rev-list -1 --before="2026-08-31T00:00:00-06:00" HEAD)
 ```
-
-`git rev-list -1` resolves the same commit as above and returns only its hash, which is then handed to `git checkout`. Alternatively, copy the hash printed by the previous command and check it out directly:
-
-```powershell
 git checkout <commit-hash>
-```
-
-This leaves the repository in a **detached HEAD** state — you are viewing a snapshot rather than working on a branch, which is exactly what is wanted for reviewing a deliverable. To return to normal development afterwards:
-
-```powershell
 git checkout develop
 ```
 
-> After checking out an older commit, re-run `.\mvnw.cmd clean package` before testing, so the jar matches the checked-out sources rather than a previous build.
-
----
-
-## Execution Log
-
-Every time a query goes through the compilation pipeline, Cyphail appends a trace of the simulated flow (tokenizer → parser → semantic analysis → code generation) to a file named `cyphail-flow.log`.
-
-**The log is always written to the project root**, regardless of which directory the terminal session was started from. Since `cyphail` can be invoked from anywhere once it is on the `PATH`, resolving the log path relative to the current working directory would scatter log files across arbitrary folders. Instead, `FlowLog` asks the JVM for the physical location of its own compiled code (via `getProtectionDomain().getCodeSource()`) and walks up from there to the project root — so the destination depends on where the project lives on disk, not on where the user happened to be standing.
-
-Example content of `cyphail-flow.log`:
-
-```
-[Tokenizer] Iniciando el proceso de tokenizacion...
-[Tokenizer] Tokenizacion finalizada con exito.
-[Parser] Iniciando el proceso de parseo...
-[Parser] Parseo finalizado con exito.
-[Analisis Semantico] Iniciando el proceso de analisis semantico...
-[Analisis Semantico] Analisis semantico finalizado con exito.
-[Generacion de codigo] Iniciando el proceso de generacion de codigo...
-[Generacion de codigo] Generacion de codigo finalizada con exito.
-```
+> After checking out an older commit, rebuild with `mvnw.cmd clean package` before testing, so the jar matches the checked-out sources.
 
 ---
 
 ## Project Status
 
-**Current sprint: P1.1** — project setup and a REPL with faked commands.
+**Current sprint: P1.**
 
 What exists today:
-- Multi-module Maven project structure, quasi-professional.
-- Full interactive REPL, with all 4 dot commands (`.exit`, `.help`, `.about`, `.use`) working.
-- Working `Repl → Compiler → Broker → Repl` flow, backed by a wired catalog of sample graphs and queries.
-- At least 4 recognized `MATCH ... RETURN ...`-style queries, with table output.
-- Executable jar plus a `cyphail.bat` launcher, runnable from any directory once added to `PATH`.
-- Plain-text execution log of the simulated compilation pipeline, always written to the project root.
 
-What does **not** exist yet (intentionally, as it is the scope of future sprints P1/P2):
-- A real Cyphail parser (query recognition today is exact-text matching against a fixed catalog).
+- Everything from Sprint P1.1: multi-module Maven project, interactive REPL, and the `.help`, `.about`, `.use` and `.exit` commands.
+- **Data read from JSON, not hardcoded.** The graph catalog and the query answers are loaded with Gson from `broker/data/`.
+- **A lexer built with parser combinators**, recognizing keywords, identifiers, integers, string literals, comparison and arithmetic operators, delimiters and relationship symbols, and skipping whitespace and comments.
+- A generic combinator core (`IParser`, `Result`, `Ok`, `Fail`) shared by the lexer and the parser.
+- The `.tree` command, which shows the tokens of a query.
+- The eleven course test cases as source files.
+
+In progress during this sprint:
+
+- The parser that builds the AST from the token stream, following the course grammar.
+- The symbol table, used to detect undefined variables (cases C10 and C11).
+- `.tree` output showing the syntax tree.
+
+Out of scope for P1 (later sprints):
+
+- Relationship patterns.
 - A real connection to a Prolog engine.
-- Real Prolog code generation.
+- Prolog code generation.
 
 ---
 
@@ -299,26 +303,37 @@ What does **not** exist yet (intentionally, as it is the scope of future sprints
 
 Per the project SPEC (Section "Uso de IA"): the use of agentic AI that generates the project with zero coding (e.g. Claude Code or similar) is prohibited and considered plagiarism. The use of AI to understand and study the project is authorized and encouraged, provided the team can defend any product of the group's work as its own. Authorized use may require showing the prompts used and the LLM model.
 
-In line with this, **Claude (Anthropic)** was used during this sprint as a study, design-consultation, and documentation aid: understanding the SPEC and the assigned architecture, learning the libraries and tooling used (Picocli, Maven, JUnit, ascii-table), reviewing design decisions, diagnosing build and compilation errors, and drafting documentation including this README. No agentic AI tool was used to generate the project.
+In line with this, **Claude (Anthropic)** was used as a study, design-consultation, and documentation aid: understanding the SPEC and the assigned architecture, learning the libraries and tooling used (Picocli, Maven, JUnit, ascii-table, Gson), reviewing design decisions, diagnosing build and compilation errors, and drafting documentation including this README. No agentic AI tool was used to generate the project.
 
-Where AI assistance contributed directly to a source file, that file carries an attribution note in its Javadoc header (see `FlowLog.java`). Every team member can individually explain and defend each part of the project as their own.
+Where AI assistance contributes directly to a source file, that file carries an attribution note in its Javadoc header. Every team member can individually explain and defend each part of the project as their own.
 
-The prompts used are listed below, grouped by team member.
+The prompts used are listed below, grouped by sprint and team member.
 
 ---
 
-## AI Prompts Used in This Sprint
+## AI Prompts Used
 
-Summarized list of the consultations made to Claude during Sprint 1.1, grouped by team member. Duplicates and minor follow-ups have been omitted.
+Summarized list of the consultations made to Claude. Duplicates and minor follow-ups have been omitted.
 
-### Andrey Solano
+### Sprint P1
+
+#### Sebastián González
+
+1. Analysis of the team's progress on the `develop` branch against the Sprint P1 Review Criteria Guide, as a context summary after time away from the project.
+2. Preparation of a short briefing for a team meeting about the state of the compiler module.
+3. Analysis of the current code against the course grammar and the P1 test cases specification, verified by compiling the modules and running the lexer on the eleven test cases.
+4. Update of this README for Sprint P1.
+
+### Sprint P1.1
+
+#### Andrey Solano
 
 1. Analyze this code and suggest how to refactor it toward the DRY principle and Knuth's principle (writing code with future maintainers in mind).
-2. Request for three in-depth technical masterclasses covering: (a) Picocli internals — reflection, annotation processing, `CommandSpec`, the decorator pattern via annotations, exit-code handling and nested subcommands; (b) the Maven lifecycle and multi-module builds — `dependencyManagement` vs `dependencies`, transitive dependency resolution, fat-JARs/Shade, console-only reproducible builds, and `maven-javadoc-plugin`; (c) professional testing strategy with JUnit 5 — test lifecycle annotations, isolating CLI commands without triggering a real `System.exit()`, capturing `System.out`/`System.err`, and designing edge-case tests. Explicitly requested minimal illustrative snippets only, keeping a zero-coding rule for the actual project solution.
-3. For a compiler project in a Programming Paradigms course, I need to build the CLI submodule with Picocli. Explain exactly how Picocli works — the annotation system, reflection, and code injection — so I can build it up step by step.
+2. Request for three in-depth technical masterclasses covering: (a) Picocli internals: reflection, annotation processing, `CommandSpec`, the decorator pattern via annotations, exit-code handling and nested subcommands; (b) the Maven lifecycle and multi-module builds: `dependencyManagement` vs `dependencies`, transitive dependency resolution, fat-JARs/Shade, console-only reproducible builds, and `maven-javadoc-plugin`; (c) professional testing strategy with JUnit 5: test lifecycle annotations, isolating CLI commands without triggering a real `System.exit()`, capturing `System.out`/`System.err`, and designing edge-case tests. Explicitly requested minimal illustrative snippets only, keeping a zero-coding rule for the actual project solution.
+3. For a compiler project in a Programming Paradigms course, I need to build the CLI submodule with Picocli. Explain exactly how Picocli works (the annotation system, reflection, and code injection) so I can build it up step by step.
 4. Search the web for professional CS-related projects on GitHub, to see how they handle submodules, READMEs, unit test cases, and Javadoc comments.
 
-### Alejandro Miranda
+#### Alejandro Miranda
 
 1. How do I run a Java Maven project from the Windows console?
 2. What options are there for packaging a Java project into something executable? What is a fat jar and what is it for?
@@ -338,19 +353,19 @@ Summarized list of the consultations made to Claude during Sprint 1.1, grouped b
 16. How does a subcommand access information from its parent command?
 17. How do I extract the name and description of each subcommand from Picocli's model? Why does `usageMessage().description()` return an array instead of a single string?
 18. In my REPL, the user can type either commands or MATCH queries. How do I tell them apart? What does `getSubcommands()` return, and why use `keySet()` on it?
-19. How do I split a user-typed line into words in Java? Review of my dispatch method — is the order of the conditions correct?
+19. How do I split a user-typed line into words in Java? Review of my dispatch method: is the order of the conditions correct?
 20. Adding unit tests for compiler, CLI, broker, and common.
 
-### Wilson Umaña
+#### Wilson Umaña
 
 1. How can I make a Picocli command optionally receive a parameter?
 2. How do I build my project from the console?
 3. Explain how Freva's ascii-table library works.
-4. I need to produce a log simulating a system's flow — which Java libraries/tools can I use? How does `StringBuilder` work?
+4. I need to produce a log simulating a system's flow. Which Java libraries/tools can I use? How does `StringBuilder` work?
 5. Generate the class that creates the log from a `StringBuilder`.
 6. The log file is being created wherever the console was started, instead of in the project root. How do I make it always resolve to the project root?
 
-### Sebastián González
+#### Sebastián González
 
 1. Explanation of the Cyphail project based on the SPEC, the research SPEC, the architecture diagram, and the transcript of the professor's Q&A session.
 2. Clarification of the specific requirements of Sprint 1.1 (dates, SETUP checklist, evaluation criteria) based on the official course communication and the Review Criteria Guide.
@@ -368,8 +383,9 @@ Summarized list of the consultations made to Claude during Sprint 1.1, grouped b
 
 Repositories used as reference for the structure of this README and of the project in general:
 
-- [microsoft/openCypherTranspiler](https://github.com/microsoft/openCypherTranspiler) — transpiles openCypher to T-SQL; direct reference for documenting a transpilation pipeline.
-- [opencypher/front-end](https://github.com/opencypher/front-end) — reference implementation of a parser/AST/semantic analyzer for Cypher.
-- [cleishm/libcypher-parser](https://github.com/cleishm/libcypher-parser) — cross-platform (Linux/Mac/BSD) Cypher parser.
-- [remkop/picocli](https://github.com/remkop/picocli) — the CLI library used in this project.
-- [munificent/craftinginterpreters](https://github.com/munificent/craftinginterpreters) — classic reference for documenting a course-level programming-languages project.
+- [microsoft/openCypherTranspiler](https://github.com/microsoft/openCypherTranspiler): transpiles openCypher to T-SQL; direct reference for documenting a transpilation pipeline.
+- [opencypher/front-end](https://github.com/opencypher/front-end): reference implementation of a parser/AST/semantic analyzer for Cypher.
+- [cleishm/libcypher-parser](https://github.com/cleishm/libcypher-parser): cross-platform (Linux/Mac/BSD) Cypher parser.
+- [remkop/picocli](https://github.com/remkop/picocli): the CLI library used in this project.
+- [google/gson](https://github.com/google/gson): the JSON library used by the broker to read its data files.
+- [munificent/craftinginterpreters](https://github.com/munificent/craftinginterpreters): classic reference for documenting a course-level programming-languages project.
