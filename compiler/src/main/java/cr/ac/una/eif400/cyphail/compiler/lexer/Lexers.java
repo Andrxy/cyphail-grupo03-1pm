@@ -26,8 +26,7 @@ public class Lexers {
             var re_ = Pattern.compile("(?<token>" + re + ")");
             var matcher = re_.matcher(source);
             matcher.region(index, source.length());
-
-            if (!matcher.lookingAt())
+       if (!matcher.lookingAt())
                 return new Fail<>("No token was found at index " + index);
 
             var token = matcher.group("token");
@@ -42,7 +41,7 @@ public class Lexers {
     );
 
     private static String keywordsMegaOr() {
-        return KEYWORDS.stream().collect(Collectors.joining("|"));
+        return KEYWORDS.stream().collect(Collectors.joining("|", "(", ")"));
     }
 
     public static Lexer Identifier = createLexer("[a-zA-Z_]\\w*", TokenType.IDENTIFIER);
@@ -69,5 +68,4 @@ public class Lexers {
     public static Lexer LineComment = createLexer("//[^\\r\\n]*", TokenType.LINECOMMENT);
 
     public static Lexer CommentBlock = createLexer("/\\*.*?\\*/", TokenType.BLOCKCOMMENT);
-
 }
