@@ -1,16 +1,53 @@
 package cr.ac.una.eif400.cyphail.compiler.lexer.token;
 
+/**
+ *
+ *
+ * @author Andrey Solano
+ * @author Alejandro Miranda
+ * @version P1
+ */
 public enum TokenType {
+    /**
+     * Identifiers and literals
+     */
     IDENTIFIER,
-    BLOCKCOMMENT,
-    LINECOMMENT,
-    WHITESPACE,
-    RELATIONSHIP,
-    ARITHMETIC_OPERATOR,
-    DELIMITER,
     NUMBER,
-    KEYWORD,
-    COMPARISON_OPERATOR,
-    EOF,
-    STRING_LITERAL
+    STRING_LITERAL,
+
+    /**
+     * Comparison operators
+     */
+    EQUALS, NOTEQUALS, LESS_THAN, GREATER_THAN,
+    LESS_THAN_OR_EQUAL, GREATER_THAN_OR_EQUAL,
+
+    /**
+     * Arithmetic operators
+     */
+    PLUS, MINUS, MULTIPLY,
+    DIVIDE, MODULO,
+
+    /**
+     * Delimiters and punctuation
+     */
+    LPAREN, RPAREN,
+    LBRACKET, RBRACKET,
+    LBRACE, RBRACE,
+    DOT, COMMA, COLON,
+    PIPE, SEMICOLON,
+
+    /**
+     * Relationship stuff
+     */
+    RIGHT_ARROW, LEFT_ARROW, RANGE_DOTS,
+
+    /**
+     * Keywords
+     */
+    MATCH, WHERE, CREATE, SET, DETACH, DELETE,
+    REMOVE, RETURN, DISTINCT, AS, ORDER, BY,
+    ASCENDING, DESCENDING, SKIP, LIMIT, OR,
+    AND, NOT, IS, TRUE, FALSE, NULL,
+
+    EOF
 }
