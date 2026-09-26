@@ -159,13 +159,6 @@ public class Repl {
         String[] args = line.split("\\s+");
         String firstWord = args[0];
 
-        // .tree recibe la consulta CRUDA: si pasa por picocli, los argumentos que
-        // empiezan con '-' (como -[r]->) se interpretan como opciones y se rechazan.
-        if (firstWord.equals(".tree")) {
-            TreeCommand.analizar(line.substring(firstWord.length()).trim());
-            return;
-        }
-
         Set<String> actionNames = dispatcher.getSubcommands().keySet();
 
         if (actionNames.contains(firstWord)) {
