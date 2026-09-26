@@ -116,4 +116,7 @@ public class Combinators {
             case Fail(List<R> reason) -> new Fail<>(concat.apply(reason));
         };
     }
+
+    public static Function<List<String>, String> concatStringList = (List<String> list) -> String.join(" & ", list);
+
 }
