@@ -1,39 +1,47 @@
 package cr.ac.una.eif400.cyphail.compiler.lexer;
 
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
-import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
-import cr.ac.una.eif400.cyphail.compiler.IParser;
-import cr.ac.una.eif400.cyphail.compiler.parser.Combinators;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
+import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
+import cr.ac.una.eif400.cyphail.compiler.parser.response.Result;
 
 import java.util.List;
 
+import static cr.ac.una.eif400.cyphail.compiler.lexer.Lexers.*;
+import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
+
 public class Tokenizer {
 
-    public static List<TokenString> tokenize(String sourceCode) {
-        InputString source = new InputString(sourceCode, 0);
-
-        IParser<InputString, TokenString> tokenParser = Combinators.Or(
-                Lexers.Whitespaces,
-                Lexers.LineComment,
-                Lexers.CommentBlock,
-                Lexers.StringLiteral,
-                Lexers.Keywords,
-                Lexers.Identifier,
-                Lexers.Number,
-                Lexers.Relationship,
-                Lexers.Comparison,
-                Lexers.Arithmetic,
-                Lexers.Delimiters
+    public static Result<InputString, List<TokenString>, String> tokenize(String sourceCode) {
+        var anyToken = RFlat(
+                Or(
+                        Relationship,
+                        Comparison,
+                        Keywords,
+                        Identifier,
+                        StringLiteral,
+                        Numbers,
+                        Arithmetic,
+                        Delimiter
+                ),
+                concatStringList
         );
 
-        IParser<InputString, List<TokenString>> fullTokenizer = Combinators.Star(tokenParser);
+        var fullTokenizer = Star(anyToken);
+        var result = fullTokenizer.parse(new InputString(sourceCode));
 
-        var re = fullTokenizer.parse(source);
-        if (re instanceof Ok<InputString, List<TokenString>>(InputString input, List<TokenString> tokens)) {
-            return tokens.stream().filter(x -> x.type() != TokenType.WHITESPACE && x.type() != TokenType.LINECOMMENT && x.type() != TokenType.BLOCKCOMMENT ).toList();
+        if (result instanceof Ok(var rest, var tokens)) {
+            if (rest.index() < sourceCode.length()) {
+                return new Fail<>("Lexical Error: Unexpected character at index " + rest.index());
+            }
+            return new Ok<>(rest, tokens);
         }
-        throw new RuntimeException("Lexical analysis failed");
+
+        if (result instanceof Fail(var error)) {
+            return new Fail<>(error);
+        }
+
+        throw new RuntimeException("Error");
     }
 }

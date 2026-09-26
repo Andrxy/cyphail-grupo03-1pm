@@ -1,12 +1,15 @@
 package cr.ac.una.eif400.cyphail.compiler.parser;
 
-import cr.ac.una.eif400.cyphail.compiler.IParser;
+import cr.ac.una.eif400.cyphail.compiler.ast.ASTNode;
+import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
+import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
+import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
+import cr.ac.una.eif400.cyphail.compiler.parser.response.Result;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -118,5 +121,31 @@ public class Combinators {
     }
 
     public static Function<List<String>, String> concatStringList = (List<String> list) -> String.join(" & ", list);
+
+    /**
+     * Sugerigo por Claude con el fin que el codigo sea mas dry
+     * @param concat
+     * @param parsers
+     * @return
+     * @param <I>
+     * @param <T>
+     * @param <E>
+     */
+    @SafeVarargs
+    public static <I, T, E> IParser<I, T, E> OrFlat(Function<List<E>, E> concat, IParser<I, T, E>...  parsers) {
+        return RFlat(Or(parsers), concat);
+    }
+
+    public static <I, T, R> IParser<I, T, R> JustGetRight(IParser<I, T, R> left, IParser<I, T, R> right) {
+        return TFlat(Sequence(left, right), list -> list.get(1));
+    }
+
+    public static <I, T, R> IParser<I, T, R> JustGetLeft(IParser<I, T, R> left, IParser<I, T, R> right) {
+        return TFlat(Sequence(left, right), list -> list.get(0));
+    }
+
+    public static <I, T, R> IParser<I, T, R> JustGetMiddle(IParser<I, T, R> left, IParser<I, T, R> middle, IParser<I, T, R> right) {
+        return TFlat(Sequence(left, middle, right), list -> list.get(1));
+    }
 
 }
