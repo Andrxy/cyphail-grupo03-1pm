@@ -12,60 +12,71 @@ import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-/*
-* @author Alejandro Miranda
-* @author Andrey Solano
-* */
+/**
+ * @author Andrey Solano
+ * @author Alejandro Miranda
+ */
 public class Lexers {
 
-    private static Lexer createLexer(String re, TokenType type) {
-        return (InputString input) -> {
-            String source = input.input();
-            int index = input.index();
+    private static Lexer specificLexer(String regex, TokenType type) {
+        return (InputString source) -> {
+            var sourceString = source.source();
+            var index = source.index();
 
-            var re_ = Pattern.compile("(?<token>" + re + ")");
-            var matcher = re_.matcher(source);
-            matcher.region(index, source.length());
-       if (!matcher.lookingAt())
-                return new Fail<>("No token was found at index " + index);
+            var regularExpr = Pattern.compile("\\s*(?<token>" + regex + ")");
+            var matcher = regularExpr.matcher(sourceString);
+            matcher.region(index, sourceString.length());
+
+            if (!matcher.lookingAt())
+                return new Fail<>("Error at index " + index);
 
             var token = matcher.group("token");
-            return new Ok<>(new InputString(source, matcher.end()), new TokenString(type, token));
+
+            return new Ok<>(
+                    new InputString(sourceString, matcher.end()),
+                    new TokenString(type, token)
+            );
         };
     }
 
-    private static final  List<String> KEYWORDS = List.of(
-            "MATCH", "WHERE", "CREATE", "SET", "DETACH", "DELETE", "REMOVE", "RETURN",
-            "DISTINCT", "AS", "ORDER", "BY", "ASCENDING", "DESCENDING", "SKIP", "LIMIT",
-            "OR", "AND", "NOT", "IS"
-    );
+    private static Lexer sneakyLexer(String regex, Map<String, TokenType> map) {
+        return (InputString source) -> {
+            var sourceString = source.source();
+            var index = source.index();
 
-    private static String keywordsMegaOr() {
-        return KEYWORDS.stream().collect(Collectors.joining("|", "(", ")"));
+            var regularExpr = Pattern.compile("\\s*(?<token>" + regex + ")");
+            var matcher = regularExpr.matcher(sourceString);
+            matcher.region(index, sourceString.length());
+
+            if (!matcher.lookingAt())
+                return new Fail<>("Error at index " + index);
+
+            var token = matcher.group("token");
+
+            TokenType type = map.get(token.toUpperCase());
+            if (type == null) {
+                return new Fail<>("Unexpected token '" + token + "' at index " + index);
+            }
+
+            return new Ok<>(new InputString(sourceString, matcher.end()),
+                            new TokenString(type, token));
+        };
     }
 
-    public static Lexer Identifier = createLexer("[a-zA-Z_]\\w*", TokenType.IDENTIFIER);
+    public static Lexer Keywords = sneakyLexer("(?i)[a-z]+", KEYWORDS);
 
-    public static Lexer Number = createLexer("[+-]?\\d+", TokenType.NUMBER);
+    public static Lexer Arithmetic = sneakyLexer("[+\\-*/%]", ARITHMETIC);
 
-    public static Lexer Keywords = createLexer(
-            "(?i)" + keywordsMegaOr() + "\\b",
-            TokenType.KEYWORD
-    );
+    public static Lexer Comparison = sneakyLexer("<=|>=|<>|[=<>]", COMPARISON);
 
-    public static Lexer Comparison = createLexer("<=|>=|<>|[=<>]", TokenType.COMPARISON_OPERATOR);
+    public static Lexer Delimiter = sneakyLexer("[()\\[\\]{}.,:|;]", DELIMITER);
 
-    public static Lexer Arithmetic = createLexer("[+\\-*/%]", TokenType.ARITHMETIC_OPERATOR);
+    public static Lexer Relationship = sneakyLexer("->|<-|\\.\\.", RELATIONSHIP);
 
-    public static Lexer Delimiters = createLexer("[()\\[\\]{}.,:|;]", TokenType.DELIMITER);
+    public static Lexer StringLiteral = specificLexer("\"[^\"]*\"|'[^']*'", TokenType.STRING_LITERAL);
 
-    public static Lexer Relationship = createLexer("->|<-|\\.\\.", TokenType.RELATIONSHIP);
+    public static Lexer Identifier = specificLexer("[a-zA-Z_]\\w*", TokenType.IDENTIFIER);
 
-    public static Lexer StringLiteral = createLexer("\"[^\"]*\"|'[^']*'", TokenType.STRING_LITERAL);
-
-    public static Lexer Whitespaces = createLexer("\\s+", TokenType.WHITESPACE);
-
-    public static Lexer LineComment = createLexer("//[^\\r\\n]*", TokenType.LINECOMMENT);
-
-    public static Lexer CommentBlock = createLexer("/\\*.*?\\*/", TokenType.BLOCKCOMMENT);
+    public static Lexer Numbers = specificLexer("\\d+(\\.\\d+)?", TokenType.NUMBER);
 }
+

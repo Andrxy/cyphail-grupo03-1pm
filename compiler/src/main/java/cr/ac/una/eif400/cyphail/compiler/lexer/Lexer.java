@@ -4,4 +4,7 @@ import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.IParser;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 
-public interface Lexer extends IParser<InputString, TokenString> {}
+/**
+ * @author Andrey Solano
+ */
+public interface Lexer extends IParser<InputString, TokenString, String> {}
