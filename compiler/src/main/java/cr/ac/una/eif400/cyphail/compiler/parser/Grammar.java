@@ -59,38 +59,42 @@ public final class Grammar {
         return new Ok<>(source.next(), token);
     }
 
-    private static IParser<InputTokens, TokenString, String> parsify(TokenType type){
+    private static IParser<InputTokens, ASTNode, String> parsify(TokenType type){
         return (InputTokens source) -> switch (eat(type, source)) {
             case Fail(String reason) -> new Fail<>(reason);
-            case Ok(TokenString token, InputTokens rest) -> new Ok<>(new ASTNode.Leaf(token), rest);
+            case Ok(InputTokens rest, TokenString token) -> new Ok<>(rest, new ASTNode.Leaf(token));
         };
     }
 
     // NOMBRES
 
-    private static IParser<InputTokens, TokenString, String> symbolicName = parsify(TokenType.IDENTIFIER);
+    private static IParser<InputTokens, ASTNode, String> symbolicName = parsify(TokenType.IDENTIFIER);
 
-    private static IParser<InputTokens, TokenString, String> variable = symbolicName;
+    private static IParser<InputTokens, ASTNode, String> variable = symbolicName;
 
-    private static IParser<InputTokens, TokenString, String> labelName = symbolicName;
+    private static IParser<InputTokens, ASTNode, String> labelName = symbolicName;
 
-    private static IParser<InputTokens, TokenString, String> propertyKeyName = symbolicName;
+    private static IParser<InputTokens, ASTNode, String> propertyKeyName = symbolicName;
+
+    private static IParser<InputTokens, ASTNode, String> functionName = symbolicName;
 
     // LITERALES
 
-    private static IParser<InputTokens, TokenString, String> integerLiteral = parsify(TokenType.NUMBER);
+    private static IParser<InputTokens, ASTNode, String> integerLiteral = parsify(TokenType.NUMBER);
 
-    private static IParser<InputTokens, TokenString, String> numberLiteral = integerLiteral;
+    private static IParser<InputTokens, ASTNode, String> numberLiteral = integerLiteral;
 
-    private static IParser<InputTokens, TokenString, String> booleanLiteral = OrFlat(concatStringList, parsify(TokenType.TRUE), parsify(TokenType.FALSE));
+    private static IParser<InputTokens, ASTNode, String> booleanLiteral = OrFlat(concatStringList, parsify(TokenType.TRUE), parsify(TokenType.FALSE));
 
-    private static IParser<InputTokens, TokenString, String> literal = OrFlat(concatStringList, numberLiteral, parsify(TokenType.STRING_LITERAL), booleanLiteral, parsify(TokenType.NULL));
+    private static IParser<InputTokens, ASTNode, String> literal = OrFlat(concatStringList, numberLiteral, parsify(TokenType.STRING_LITERAL), booleanLiteral, parsify(TokenType.NULL));
 
-    private static IParser<InputTokens, TokenString, String> atom = OrFlat(concatStringList, literal,
+    private static IParser<InputTokens, ASTNode, String> atom = OrFlat(concatStringList, literal,
                                                                            JustGetMiddle(parsify(TokenType.LBRACE), expression, parsify(TokenType.RBRACE)),
                                                                            functionInvocation, variable);
 
-    private static IParser<InputTokens, TokenString, String> propertyLookup = JustGetRight(parsify(TokenType.DOT), propertyKeyName);
+    private static IParser<InputTokens, ASTNode, String> propertyLookup = JustGetRight(parsify(TokenType.DOT), propertyKeyName);
+
+    private static IParser<InputTokens, ASTNode, String> mapLiteral = JustGetMiddle(parsify(TokenType.LBRACE), Optional(Sequence(propertyKeyName, parsify(TokenType.COLON), expression, Star(Sequence(parsify(TokenType.COMMA), propertyKeyName, parsify(TokenType.COLON), expression)))), parsify(TokenType.LBRACE));
 
 
 
