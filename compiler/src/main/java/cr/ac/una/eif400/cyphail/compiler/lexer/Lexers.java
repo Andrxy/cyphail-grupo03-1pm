@@ -6,11 +6,10 @@ import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
 
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
+
+import static cr.ac.una.eif400.cyphail.compiler.lexer.TokenMaps.*;
 
 /**
  * @author Andrey Solano
@@ -20,7 +19,7 @@ public class Lexers {
 
     private static Lexer specificLexer(String regex, TokenType type) {
         return (InputString source) -> {
-            var sourceString = source.source();
+            var sourceString = source.input();
             var index = source.index();
 
             var regularExpr = Pattern.compile("\\s*(?<token>" + regex + ")");
@@ -41,7 +40,7 @@ public class Lexers {
 
     private static Lexer sneakyLexer(String regex, Map<String, TokenType> map) {
         return (InputString source) -> {
-            var sourceString = source.source();
+            var sourceString = source.input();
             var index = source.index();
 
             var regularExpr = Pattern.compile("\\s*(?<token>" + regex + ")");
