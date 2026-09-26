@@ -7,91 +7,113 @@ import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
+/**
+ * @author Andrey Solano
+ * @author Alejandro Miranda
+ */
 public class Combinators {
 
     @SafeVarargs
-    public static <I, T> IParser<I, T> Or(IParser<I, T>... parsers) {
+    public static <I, T, R> IParser<I, T, List<R>> Or(IParser<I, T, R>... parsers) {
         return (I source) -> {
-            if (parsers == null || parsers.length == 0)
-                return new Fail<>(null);
+            var reasons = new ArrayList<R>();
 
-            for (IParser<I, T> parser : parsers) {
-                var result = parser.parse(source);
-                if (result instanceof Ok<I, T> ok)
-                    return ok;
+            for (var p : parsers) {
+                switch (p.parse(source)) {
+                    case Ok(I rest, T value) -> {
+                        return new Ok<>(rest, value);
+                    }
+                    case Fail(R reason) -> {
+                        reasons.add(reason);
+                    }
+                }
             }
-            return new Fail<>(null);
+
+            return new Fail<>(reasons);
         };
     }
 
     @SafeVarargs
-    public static <I, T> IParser<I, List<T>> Sequence(IParser<I, T>... parsers) {
+    public static <I, T, R> IParser<I, List<T>, R> Sequence(IParser<I, T, R>... parsers) {
         return (I source) -> {
-            List<T> results = new ArrayList<>();
-            I currentSource = source;
+            var allValues = new ArrayList<T>();
 
             for (var p : parsers) {
-                var result = p.parse(currentSource);
-
-                if (result instanceof Fail<I, T> fail) {
-                    return new Fail<>(fail.reason());
-                } else if (result instanceof Ok<I, T> ok) {
-                    // ok.rest() es el Input restante (I), ok.value() es el Token obtenido (T)
-                    currentSource = ok.rest();
-                    results.add(ok.value());
-                }
-            }
-            // Calza con Ok<I, List<T>> -> (I rest, List<T> value)
-            return new Ok<>(currentSource, results);
-        };
-    }
-
-    public static <I, T> IParser<I, List<T>> Plus(IParser<I, T> parser) {
-        return (I source) -> {
-            if (parser == null)
-                return new Fail<>(null);
-
-            List<T> tokens = new ArrayList<>();
-            I currentSource = source;
-            String lastError = null;
-
-            while (true) {
-                var result = parser.parse(currentSource);
-
-                if (result instanceof Fail<I, T> fail) {
-                    lastError = fail.reason();
-                    break;
-                } else if (result instanceof Ok<I, T> ok) {
-                    // ok.rest() es el Input restante (I), ok.value() es el Token obtenido (T)
-                    currentSource = ok.rest();
-                    tokens.add(ok.value());
+                switch (p.parse(source)) {
+                    case Ok(I rest, T value) -> {
+                        allValues.add(value);
+                        source = rest;
+                    }
+                    case Fail(R reason) -> {
+                        return new Fail<>(reason);
+                    }
                 }
             }
 
-            if (tokens.isEmpty()) {
-                return new Fail<>(lastError);
-            }
-            // Calza con Ok<I, List<T>> -> (I rest, List<T> value)
-            return new Ok<>(currentSource, tokens);
+            return new Ok<>(source, allValues);
         };
     }
 
-    public static <I, T> IParser<I, List<T>> Star(IParser<I, T> parser) {
+    public static <I, T, R> IParser<I, List<T>, R> Star(IParser<I, T, R> parser){
         return (I source) -> {
-            var plusResult = Plus(parser).parse(source);
+            var allValues = new ArrayList<T>();
 
-            if (plusResult instanceof Ok<I, List<T>> ok)
-                return ok;
+            var result = parser.parse(source);
+            while (result instanceof Ok<I, T, R>(I rest, T value)) {
+                allValues.add(value);
+                source = rest;
+                result = parser.parse(source);
+            }
 
-            return new Ok<>(source, new ArrayList<>());
+            return new Ok<>(source, allValues);
         };
     }
 
-    static <I, T> IParser<I, Optional<T>> Optional(IParser<I, T> parser) {
+    public static <I, T, R> IParser<I, List<T>, R> Plus(IParser<I, T, R> parser) {
+        return (I source) -> {
+            var allValues = new ArrayList<T>();
+
+            switch (parser.parse(source)) {
+                case Fail<I, T, R>(R reason) -> {
+                    return new Fail<>(reason);
+                }
+                case Ok<I, T, R>(I rest, T value) -> {
+                    allValues.add(value);
+                    source = rest;
+                }
+            }
+
+            var result = parser.parse(source);
+            while (result instanceof Ok<I, T, R>(I rest, T value)) {
+                allValues.add(value);
+                source = rest;
+                result = parser.parse(source);
+            }
+
+            return new Ok<>(source, allValues);
+        };
+    }
+
+    public static <I, T, R> IParser<I, List<T>, R> Optional(IParser<I, T, R> parser) {
         return (I source) -> switch (parser.parse(source)) {
-            case Ok(I rest, T token) -> new Ok<>(rest, Optional.of(token));
-            case Fail(String error) -> new Ok<>(source, Optional.empty());
+            case Ok(I rest, T value) -> new Ok<>(rest, List.of(value));
+            case Fail(R _) -> new Ok<>(source, List.of());
+        };
+    }
+
+    public static <I, T, R> IParser<I, T, R> TFlat(IParser<I, List<T>, R> parser, Function<List<T>, T> mapper) {
+        return (I source) -> switch (parser.parse(source)) {
+            case Ok(I rest, List<T> value) -> new Ok<>(rest, mapper.apply(value));
+            case Fail(R reason) -> new Fail<>(reason);
+        };
+    }
+
+    public static <I, T, R> IParser<I, T, R> RFlat(IParser<I, T, List<R>> parser, Function<List<R>, R> concat) {
+        return (I source) -> switch (parser.parse(source)) {
+            case Ok(I rest, T value) -> new Ok<>(rest, value);
+            case Fail(List<R> reason) -> new Fail<>(concat.apply(reason));
         };
     }
 }
