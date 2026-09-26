@@ -48,7 +48,9 @@ import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
  * <p>Escrita por el Grupo 03-1pm con la asistencia de Claude (Anthropic),
  * segun lo declarado en el README.</p>
  */
-public final class Grammar {
+public class Grammar {
+    /*
+
 
     private static Result<InputTokens, TokenString, String> eat(TokenType type, InputTokens source){
         if (source.isEmpty())
@@ -97,6 +99,7 @@ public final class Grammar {
     private static IParser<InputTokens, ASTNode, String> mapLiteral = JustGetMiddle(parsify(TokenType.LBRACE), Optional(Sequence(propertyKeyName, parsify(TokenType.COLON), expression, Star(Sequence(parsify(TokenType.COMMA), propertyKeyName, parsify(TokenType.COLON), expression)))), parsify(TokenType.LBRACE));
 
 
-
+ */
 
 }
+

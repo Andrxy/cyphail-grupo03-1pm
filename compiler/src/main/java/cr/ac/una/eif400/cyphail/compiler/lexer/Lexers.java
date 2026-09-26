@@ -52,7 +52,7 @@ public class Lexers {
 
             var token = matcher.group("token");
 
-            TokenType type = map.get(token.toUpperCase());
+            TokenType type = map.get(token);
             if (type == null) {
                 return new Fail<>("Unexpected token '" + token + "' at index " + index);
             }
@@ -62,7 +62,7 @@ public class Lexers {
         };
     }
 
-    public static Lexer Keywords = sneakyLexer("(?i)[a-z]+", KEYWORDS);
+    public static Lexer Keywords = sneakyLexer("(?i)[a-zA-Z]\\w*", KEYWORDS);
 
     public static Lexer Arithmetic = sneakyLexer("[+\\-*/%]", ARITHMETIC);
 

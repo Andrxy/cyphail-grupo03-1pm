@@ -1,7 +1,15 @@
 package cr.ac.una.eif400.cyphail.cli.repl.actions;
 
+import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
+import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
+import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
+import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
+
+import java.util.List;
+
+import static cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer.tokenize;
 
 /**
  * Comando {@code .tree}: tokeniza y parsea una consulta, y muestra su arbol de sintaxis
@@ -18,10 +26,26 @@ import picocli.CommandLine.Parameters;
 )
 public class TreeCommand implements Runnable {
 
-    @Parameters(arity = "0..1", description = "Query to analyze")
-    private String queryWords;
+    @Parameters(arity = "0..*", description = "Query to analyze")
+    private String[] queryWords;
 
     @Override
     public void run() {
+        if (queryWords == null || queryWords.length == 0) {
+            IO.println("No query provided");
+            return;
+        }
+
+        String query = String.join(" ", queryWords);
+
+        var result = tokenize(query);
+        if (result instanceof Ok(var rest, var value)) {
+            for (var v : value) {
+                IO.println(v);
+            }
+        } else if (result instanceof Fail(var reason)) {
+            IO.print("Error léxico: " + reason);
+        }
+
     }
 }

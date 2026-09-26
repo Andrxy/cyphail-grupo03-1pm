@@ -6,7 +6,7 @@ import java.util.List;
 
 public sealed interface ASTNode {
     record Leaf(TokenString token) implements ASTNode {}
-    record Group(List<ASTNode> items) implements ASTNode {}
+    record Node(List<ASTNode> items) implements ASTNode {}
 
     record Query(List<Match> matches, List<ASTNode> updates, List<Return> ret) implements ASTNode {}
     record Match(List<NodePattern> patterns, List<Where> where) implements ASTNode {}
