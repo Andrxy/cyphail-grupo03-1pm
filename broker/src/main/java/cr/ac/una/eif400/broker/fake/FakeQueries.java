@@ -10,8 +10,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FakeQueries {
 
@@ -27,10 +29,12 @@ public class FakeQueries {
 
         try (Reader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
             QueryEntry[] entries = new Gson().fromJson(reader, QueryEntry[].class);
-            Map<String, QueryResponse> respuestas = new HashMap<>();
-            for (QueryEntry entry : entries) {
-                respuestas.put(entry.query(), QueryResponse.ok(entry.headers(), entry.rows(), OK_RESOLVED_MESSAGE));
-            }
+
+            Map<String, QueryResponse> respuestas = Arrays.stream(entries)
+                    .collect(Collectors.toMap(
+                            entry -> entry.query(),
+                            entry -> QueryResponse.ok(entry.headers(), entry.rows(), OK_RESOLVED_MESSAGE)
+                    ));
             return respuestas;
         } catch (IOException e) {
             throw new RuntimeException("No se pudo cargar queries.json", e);

@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 /**
  * Proveedor que gestiona los grafos quemados para las pruebas
@@ -41,22 +42,15 @@ public class FakeGraphs {
     }
 
     public static String[][] toRows() {
-        Graph[] graphs = getAvailableGraphs();
-        String[][] rows = new String[graphs.length][2];
-        for (int i = 0; i < graphs.length; i++) {
-            rows[i][0] = graphs[i].id();
-            rows[i][1] = graphs[i].description();
-        }
-        return rows;
+        return Arrays.stream(getAvailableGraphs())
+                .map(graph -> new String[]{ graph.id(), graph.description() })
+                .toList()
+                .toArray(new String[0][]);
     }
 
     public static boolean exists(String name) {
-        for (Graph graph : AVAILABLE_GRAPHS) {
-            if (graph.id().equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(AVAILABLE_GRAPHS)
+                .anyMatch(graph -> graph.id().equalsIgnoreCase(name));
     }
 
 
