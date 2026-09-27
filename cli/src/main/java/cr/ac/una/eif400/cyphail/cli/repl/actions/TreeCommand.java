@@ -1,9 +1,11 @@
 package cr.ac.una.eif400.cyphail.cli.repl.actions;
 
-import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
-import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
+import cr.ac.una.eif400.cyphail.compiler.ast.PrettyPrinter;
+import cr.ac.una.eif400.cyphail.compiler.ast.specializations.Query;
+import cr.ac.una.eif400.cyphail.compiler.parser.grammar.Grammar;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
+import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyzer;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
@@ -40,12 +42,23 @@ public class TreeCommand implements Runnable {
 
         var result = tokenize(query);
         if (result instanceof Ok(var rest, var value)) {
-            for (var v : value) {
-                IO.println(v);
+            var ast = Grammar.parse(value);
+
+            if (ast instanceof Ok(var rest2, var valu2)) {
+                List<String> reasons = SemanticAnalyzer.check(valu2);
+                if(reasons.isEmpty()){
+                    IO.println(PrettyPrinter.print(valu2));
+                }
+                else {
+                    IO.println(reasons);
+                }
             }
+            else if (ast instanceof Fail(var reason)) {
+                IO.print("Error de parseo: " + reason);
+            }
+
         } else if (result instanceof Fail(var reason)) {
             IO.print("Error léxico: " + reason);
         }
-
     }
 }
