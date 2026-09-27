@@ -1,26 +1,16 @@
 package cr.ac.una.eif400.cyphail.cli.repl.actions;
 
-import cr.ac.una.eif400.cyphail.compiler.ast.PrettyPrinter;
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.Query;
-import cr.ac.una.eif400.cyphail.compiler.parser.grammar.Grammar;
-import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
-import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
-import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyzer;
+import cr.ac.una.eif400.cyphail.compiler.Compiler;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-import java.util.List;
-
-import static cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer.tokenize;
-
 /**
- * Comando {@code .tree}: tokeniza y parsea una consulta, y muestra su arbol de sintaxis
- * o el error encontrado.
+ * Comando {@code .tree}: muestra el árbol de sintaxis de una consulta, o el error encontrado.
  *
- * <p>El dibujo del arbol usa solo caracteres ASCII para que se vea bien en la consola CMD.</p>
+ * <p>El comando no analiza nada por su cuenta: le pasa la consulta al {@link Compiler}
+ * y escribe lo que este devuelve.</p>
  *
- * <p>El dibujo del arbol fue escrito por el Grupo 03-1pm con la asistencia de
- * Claude (Anthropic), segun lo declarado en el README.</p>
+ * @author Grupo 03-1pm
  */
 @Command(
         name = ".tree",
@@ -28,37 +18,17 @@ import static cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer.tokenize;
 )
 public class TreeCommand implements Runnable {
 
+    /**
+     * La consulta llega partida en palabras porque el REPL divide la línea por espacios
+     * antes de entregarla a picocli.
+     */
     @Parameters(arity = "0..*", description = "Query to analyze")
+    @SuppressWarnings("unused") // Silencia la advertencia de IntelliJ ya que Picocli lo asigna vía reflexión
     private String[] queryWords;
 
     @Override
     public void run() {
-        if (queryWords == null || queryWords.length == 0) {
-            IO.println("No query provided");
-            return;
-        }
-
-        String query = String.join(" ", queryWords);
-
-        var result = tokenize(query);
-        if (result instanceof Ok(var rest, var value)) {
-            var ast = Grammar.parse(value);
-
-            if (ast instanceof Ok(var rest2, var valu2)) {
-                List<String> reasons = SemanticAnalyzer.check(valu2);
-                if(reasons.isEmpty()){
-                    IO.println(PrettyPrinter.print(valu2));
-                }
-                else {
-                    IO.println(reasons);
-                }
-            }
-            else if (ast instanceof Fail(var reason)) {
-                IO.print("Error de parseo: " + reason);
-            }
-
-        } else if (result instanceof Fail(var reason)) {
-            IO.print("Error léxico: " + reason);
-        }
+        String query = queryWords == null ? "" : String.join(" ", queryWords);
+        IO.println(Compiler.getInstance().tree(query));
     }
 }
