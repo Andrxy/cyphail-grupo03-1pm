@@ -24,7 +24,7 @@ import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
 public class GrammarHelpers {
 
     /**
-     * Se come el primer token de la entrada si coincide con el tipo esperado.
+     * Se come el primer token de la entrada si coincide con el tipo esperado. <br>
      * Tomado del archivo Work.java de la sesión del del 22 de setiembre
      *
      * @author Carlos Loría-Sáenz
@@ -44,7 +44,8 @@ public class GrammarHelpers {
 
     /**
      * Crea un parser que come un token de un tipo específico y devuelve, ya sea {@link Fail} con un
-     * error o {@link Result} con el el resto y el nodo hoja del AST. Tomado del archivo Work.java de la sesión
+     * error o {@link Result} con el el resto y el nodo hoja del AST.<br>
+     * Tomado del archivo Work.java de la sesión
      * del del 22 de setiembre
      *
      * @author Carlos Loría-Sáenz
