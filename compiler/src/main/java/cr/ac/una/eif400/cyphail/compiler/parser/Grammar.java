@@ -3,6 +3,7 @@ package cr.ac.una.eif400.cyphail.compiler.parser;
 import cr.ac.una.eif400.cyphail.compiler.ast.ASTNode;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
+import cr.ac.una.eif400.cyphail.compiler.parser.input.Input;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType.*;
 import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
 
 /**
@@ -49,8 +51,8 @@ import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
  * segun lo declarado en el README.</p>
  */
 public class Grammar {
-    /*
 
+    public static Parser parse = (InputTokens source) -> cyphail.parse();
 
     private static Result<InputTokens, TokenString, String> eat(TokenType type, InputTokens source){
         if (source.isEmpty())
@@ -68,38 +70,27 @@ public class Grammar {
         };
     }
 
-    // NOMBRES
+    // variable, labelName, propertyKeyName : symbolicName (IDENTIFIER)
+    private static IParser<InputTokens, ASTNode, String> variable = parsify(IDENTIFIER);
+    private static IParser<InputTokens, ASTNode, String> labelName = parsify(IDENTIFIER);
+    private static IParser<InputTokens, ASTNode, String> propertyKeyName = parsify(IDENTIFIER);
 
-    private static IParser<InputTokens, ASTNode, String> symbolicName = parsify(TokenType.IDENTIFIER);
+    // literal : integerLiteral | StringLiteral          P1: sin double, boolean ni NULL
+    private static IParser<InputTokens, ASTNode, String> literal = OrFlat(concatStringList, parsify(NUMBER), parsify(STRING_LITERAL));
 
-    private static IParser<InputTokens, ASTNode, String> variable = symbolicName;
+    // atom : literal | variable                         P1: sin "(" expression ")" ni funciones
+    private static IParser<InputTokens, ASTNode, String> atom = OrFlat(concatStringList, literal, variable);
 
-    private static IParser<InputTokens, ASTNode, String> labelName = symbolicName;
+    // propertyLookup : "." propertyKeyName
+    private static IParser<InputTokens, ASTNode, String> propertyLookup = JustGetRight(parsify(DOT), propertyKeyName);
 
-    private static IParser<InputTokens, ASTNode, String> propertyKeyName = symbolicName;
+    // propertyOrLabelsExpression : atom propertyLookup?  P1: ? en vez de (propertyLookup | nodeLabels)*
+    throw new RuntimeException("FALTA");
 
-    private static IParser<InputTokens, ASTNode, String> functionName = symbolicName;
-
-    // LITERALES
-
-    private static IParser<InputTokens, ASTNode, String> integerLiteral = parsify(TokenType.NUMBER);
-
-    private static IParser<InputTokens, ASTNode, String> numberLiteral = integerLiteral;
-
-    private static IParser<InputTokens, ASTNode, String> booleanLiteral = OrFlat(concatStringList, parsify(TokenType.TRUE), parsify(TokenType.FALSE));
-
-    private static IParser<InputTokens, ASTNode, String> literal = OrFlat(concatStringList, numberLiteral, parsify(TokenType.STRING_LITERAL), booleanLiteral, parsify(TokenType.NULL));
-
-    private static IParser<InputTokens, ASTNode, String> atom = OrFlat(concatStringList, literal,
-                                                                           JustGetMiddle(parsify(TokenType.LBRACE), expression, parsify(TokenType.RBRACE)),
-                                                                           functionInvocation, variable);
-
-    private static IParser<InputTokens, ASTNode, String> propertyLookup = JustGetRight(parsify(TokenType.DOT), propertyKeyName);
-
-    private static IParser<InputTokens, ASTNode, String> mapLiteral = JustGetMiddle(parsify(TokenType.LBRACE), Optional(Sequence(propertyKeyName, parsify(TokenType.COLON), expression, Star(Sequence(parsify(TokenType.COMMA), propertyKeyName, parsify(TokenType.COLON), expression)))), parsify(TokenType.LBRACE));
+    // comparisonOperator : "<" | ">" | "<>"             P1: sin "=", "<=", ">="
+    private static IParser<InputTokens, ASTNode, String> comparisonOperator = OrFlat(concatStringList, parsify(LESS_THAN), parsify(GREATER_THAN), parsify(EQUALS), parsify((NOTEQUALS)), parsify(LESS_THAN_OR_EQUAL), parsify(GREATER_THAN_OR_EQUAL));
 
 
- */
 
 }
 
