@@ -1,5 +1,5 @@
 package cr.ac.una.eif400.cyphail.cli.commands;
-import picocli.CommandLine;
+
 import picocli.CommandLine.Command;
 
 /**
@@ -8,14 +8,15 @@ import picocli.CommandLine.Command;
  * los subcomandos disponibles del cli.
  *
  * @author Andrey Solano
- * @version P1.1
+ * @author Sebastián Gonzalez
+ * @version P1
  */
 @Command(
         name = "cyphail",
         subcommands = {
                 ReplCommand.class,
         },
-        version = "P1.1"
+        version = "P1"
 )
 public class CyphailCommand implements Runnable {
 
@@ -25,6 +26,6 @@ public class CyphailCommand implements Runnable {
      */
     @Override
     public void run() {
-        IO.println("Cyphail CLI (vP1.1). Type 'cyphail repl' to open the repl shell");
+        IO.println("Cyphail CLI (vP1). Type 'cyphail repl' to open the repl shell");
     }
 }

@@ -13,7 +13,8 @@ import picocli.CommandLine.Command;
  * y el ciclo de vida del repl</p>
  *
  * @author Andrey Solano
- * @version P1.1
+ * @author Sebastian Gonzalez
+ * @version P1
  */
 @Command(
         name = "repl",
