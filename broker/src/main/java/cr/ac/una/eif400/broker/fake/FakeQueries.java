@@ -15,15 +15,30 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Simula consultas que carga y resuelve con respuestas predefinidas
+ * desde un archivo JSON para el P1
+ *
+ * @author Wilson Umaña
+ * @author Alejandro Miranda
+ * @author Sebastián González
+ */
 public class FakeQueries {
 
-    public static final String NOT_RESOLVED_MESSAGE =
+    public static String NOT_RESOLVED_MESSAGE =
             "Error: invalid input. The given MATCH query could not be resolved against the current graph.";
 
-    public static final String OK_RESOLVED_MESSAGE = "OK. Query resolved after 666 ms.";
+    public static String OK_RESOLVED_MESSAGE = "OK. Query resolved after 666 ms.";
 
-    private static final Map<String, QueryResponse> RESPUESTAS = loadQueries();
+    private static Map<String, QueryResponse> RESPUESTAS = loadQueries();
 
+    /**
+     * Carga el archivo {@code queries.json} desde la ruta configurada (usando la propiedad del sistema
+     * {@code cyphail.home}= y mapea cada consulta con su respuesta predefinida (esto para efectos del P1)
+     *
+     * @return un mapa con las consultas y sus respuestas simuladas
+     * @throws RuntimeException si ocurre un error de lectura o el archivo no se encuentra
+     */
     private static Map<String, QueryResponse> loadQueries() {
         String cyphailHome = System.getProperty("cyphail.home");
         Path filePath = cyphailHome != null
@@ -44,9 +59,15 @@ public class FakeQueries {
         }
     }
 
-    public static QueryResponse resolve(String target) {
+    /**
+     * Intenta resolver una consulta buscándola en los datos quemados
+     *
+     * @param query la sentencia de la consulta a resolver
+     * @return un {@link QueryResponse} exitoso con los datos si existe, o un error en caso contrario
+     */
+    public static QueryResponse resolve(String query) {
         return RESPUESTAS.getOrDefault(
-                target.trim(),
+                query.trim(),
                 QueryResponse.error(NOT_RESOLVED_MESSAGE));
     }
 }
