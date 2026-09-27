@@ -3,8 +3,8 @@ package cr.ac.una.eif400.cyphail.compiler.lexer;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -15,6 +15,7 @@ import static cr.ac.una.eif400.cyphail.compiler.lexer.TokenMaps.*;
  * @author Andrey Solano
  * @author Alejandro Miranda
  */
+
 public class Lexers {
 
     private static Lexer specificLexer(String regex, TokenType type) {
@@ -57,8 +58,9 @@ public class Lexers {
                 return new Fail<>("Unexpected token '" + token + "' at index " + index);
             }
 
-            return new Ok<>(new InputString(sourceString, matcher.end()),
-                            new TokenString(type, token));
+            return new Ok<>(
+                    new InputString(sourceString, matcher.end()),
+                    new TokenString(type, token));
         };
     }
 

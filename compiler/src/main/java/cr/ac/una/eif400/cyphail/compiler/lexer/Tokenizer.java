@@ -2,9 +2,9 @@
 
     import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
     import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
-    import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
-    import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
-    import cr.ac.una.eif400.cyphail.compiler.parser.response.Result;
+    import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
+    import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
+    import cr.ac.una.eif400.cyphail.compiler.parser.result.Result;
 
     import java.util.List;
 

@@ -17,7 +17,6 @@ public record InputTokens(List<TokenString> input, int index) implements Input<L
     public InputTokens next(){
         return new InputTokens(input, index + 1);
     }
-
     public boolean isEmpty(){
         return index() >= input().size();
     }

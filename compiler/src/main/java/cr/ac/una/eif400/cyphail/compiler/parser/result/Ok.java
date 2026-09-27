@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.cyphail.compiler.parser.response;
+package cr.ac.una.eif400.cyphail.compiler.parser.result;
 
 /**
  * @author Alejandro Mirando

@@ -1,21 +1,18 @@
 package cr.ac.una.eif400.cyphail.compiler.parser;
 
-import cr.ac.una.eif400.cyphail.compiler.ast.ASTNode;
-import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
-import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
-import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Fail;
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Ok;
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Result;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author Andrey Solano
  * @author Alejandro Miranda
  */
+
 public class Combinators {
 
     @SafeVarargs
@@ -146,6 +143,10 @@ public class Combinators {
 
     public static <I, T, R> IParser<I, T, R> JustGetMiddle(IParser<I, T, R> left, IParser<I, T, R> middle, IParser<I, T, R> right) {
         return TFlat(Sequence(left, middle, right), list -> list.get(1));
+    }
+
+    public static <I, T, R> IParser<I, T, R> Lazy(Supplier<IParser<I, T, R>> rule) {
+        return source -> rule.get().parse(source);
     }
 
 }

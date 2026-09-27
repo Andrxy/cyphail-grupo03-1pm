@@ -1,6 +1,6 @@
 package cr.ac.una.eif400.cyphail.compiler.parser;
 
-import cr.ac.una.eif400.cyphail.compiler.parser.response.Result;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Result;
 
 /**
  * @author Andrey Solano
