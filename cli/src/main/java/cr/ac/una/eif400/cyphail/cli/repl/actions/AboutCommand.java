@@ -2,8 +2,6 @@ package cr.ac.una.eif400.cyphail.cli.repl.actions;
 
 import picocli.CommandLine.Command;
 
-import java.util.concurrent.Callable;
-
 /**
  * Comando .about dentro del REPL.
  * Proporciona al usuario una descripción general del proyecto,
@@ -14,7 +12,8 @@ import java.util.concurrent.Callable;
  *
  * @author Wilson Umaña
  * @author Andrey Solano
- * @version P1.1
+ * @author Seb Gonzalez
+ * @version P1
  */
 @Command(
         name = ".about",
@@ -25,19 +24,17 @@ public class AboutCommand implements Runnable {
     /**
      * Ejecuta la acción del comando, imprimiendo en la consola
      * la información general, detalles académicos, versión y el equipo desarrollador
-     * específicados en el SPEC del P1.1
+     * específicados en el SPEC del P1
      */
     public void run() {
         IO.println("""
-                What is cyphail?
-                It`s a graph query transpiler inspired by the Cypher language, focused on graph management 
-                where users can select graphs and execute query statements
-                
-                It`s still under developtment during Semester II, 2026 for EIF400: Paradigmas de Programaciòn 
-                by Group 03-1pm under Professor Carlos Loría-Sáenz
-                
-                Current Version: P1.1 (As of September 30, 2026)
-                Developed by the geniouses: Wilson Umaña, Andrey Solano, Sebastián González, and Alejandro Miranda
-                """);
+            What is cyphail?
+            It's a graph query transpiler inspired by the Cypher language, focused on graph management where users can select graphs and execute query statements
+            
+            It's still under development during Semester II, 2026 for EIF400: Paradigmas de Programación by Group 03-1pm under Professor Carlos Loría-Sáenz
+            
+            Current Version: P1 (As of September 27, 2026)
+            Developed by the geniuses: Wilson Umaña, Andrey Solano, Sebastián González, and Alejandro Miranda
+            """);
     }
 }
