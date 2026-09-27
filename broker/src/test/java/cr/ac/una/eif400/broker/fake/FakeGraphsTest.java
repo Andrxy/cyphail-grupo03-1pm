@@ -24,9 +24,9 @@ public class FakeGraphsTest {
     }
 
     @Test
-    @DisplayName("El catalogo trae los cuatro grafos del sprint")
-    void elCatalogoTraeLosCuatroGrafos() {
-        assertEquals(4, FakeGraphs.getAvailableGraphs().length);
+    @DisplayName("El catalogo trae los cinco grafos del sprint")
+    void elCatalogoTraeLosCincoGrafos() {
+        assertEquals(5, FakeGraphs.getAvailableGraphs().length);
     }
 
     @Test

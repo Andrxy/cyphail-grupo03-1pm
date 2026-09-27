@@ -23,10 +23,7 @@ public class FakeQueries {
     private static final Map<String, QueryResponse> RESPUESTAS = loadQueries();
 
     private static Map<String, QueryResponse> loadQueries() {
-        String cyphailHome = System.getProperty("cyphail.home");
-        Path filePath = cyphailHome != null
-                ? Paths.get(cyphailHome, "broker", "data", "queries.json")
-                : Paths.get("data", "queries.json");
+        Path filePath = DataFileLocator.resolveDataFile("queries.json");
 
         try (Reader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
             QueryEntry[] entries = new Gson().fromJson(reader, QueryEntry[].class);
