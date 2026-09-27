@@ -1,4 +1,1 @@
-MATCH (a:Person:Employee {id: 1})
-WHERE a.age > 30
-RETURN a.name AS name,
-       a.age AS age
+MATCH (a:Person:Employee {id: 1}) WHERE a.age > 30 RETURN a.name AS name, a.age AS age

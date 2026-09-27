@@ -1,4 +1,1 @@
-MATCH (m:Movie), (p:Person)
-WHERE m.year > 2000
-RETURN m.title AS title,
-       p.name AS actor
+MATCH (m:Movie), (p:Person) WHERE m.year > 2000 RETURN m.title AS title, p.name AS actor
