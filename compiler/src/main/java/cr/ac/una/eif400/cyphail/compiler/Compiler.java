@@ -73,11 +73,29 @@ public class Compiler {
      * @param source código fuente de la consulta.
      * @return el árbol como texto, o el mensaje de error.
      */
+
     public String tree(String source) {
-        return switch (analyze(source)) {
-            case Ok(InputTokens _, AstNode ast) -> PrettyPrinter.print(ast);
-            case Fail(String reason) -> reason;
-        };
+        switch (Tokenizer.tokenize(source)) {
+            case Fail(String reason) -> {
+                return reason;
+            }
+            case Ok(InputString _, List<TokenString> tokens) -> {
+                switch (Grammar.parse(tokens)) {
+                    case Fail(String reason) -> {
+                        return "Syntax error: " + reason;
+                    }
+                    case Ok(InputTokens _, AstNode ast) -> {
+                        String treeStr = PrettyPrinter.print(ast);
+                        List<String> errors = SemanticAnalyzer.check(ast);
+
+                        if (!errors.isEmpty()) {
+                            return treeStr + "\nSemantic error: " + String.join("; ", errors);
+                        }
+                        return treeStr + "\nSuccess";
+                    }
+                }
+            }
+        }
     }
 
     /**

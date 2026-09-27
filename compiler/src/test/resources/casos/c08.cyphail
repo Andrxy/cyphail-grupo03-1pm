@@ -1,3 +1,1 @@
-MATCH (p:Person {id: 1}), (o:Order {personId: p.id})
-RETURN p.name AS name,
-       o.total AS total
+MATCH (p:Person {id: 1}), (o:Order {personId: p.id}) RETURN p.name AS name, o.total AS total
