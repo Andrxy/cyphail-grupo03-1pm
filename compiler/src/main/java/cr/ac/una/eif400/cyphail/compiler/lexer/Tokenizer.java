@@ -30,7 +30,7 @@
             var result = fullTokenizer.parse(new InputString(sourceCode));
 
             if (result instanceof Ok(var rest, var tokens)) {
-                if (rest.index() < sourceCode.length()) {
+                if (!sourceCode.substring(rest.index()).isBlank()) {
                     return new Fail<>("Lexical Error: Unexpected character at index " + rest.index());
                 }
                 return new Ok<>(rest, tokens);
