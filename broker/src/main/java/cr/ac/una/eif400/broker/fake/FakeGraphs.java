@@ -28,7 +28,10 @@ public class FakeGraphs {
     public static String[] headers = {"Graph", "Description"};
 
     private static Graph[] loadGraphs() {
-        Path filePath = DataFileLocator.resolveDataFile("graphJ.json");
+        String cyphailHome = System.getProperty("cyphail.home");
+        Path filePath = cyphailHome != null
+                ? Paths.get(cyphailHome, "broker", "data", "graphJ.json")
+                : Paths.get("data", "graphJ.json");
 
         try (Reader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
             return new Gson().fromJson(reader, Graph[].class);
