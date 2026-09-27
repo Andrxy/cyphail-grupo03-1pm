@@ -10,7 +10,7 @@ import picocli.CommandLine.Parameters;
  * <p>El comando no analiza nada por su cuenta: le pasa la consulta al {@link Compiler}
  * y escribe lo que este devuelve.</p>
  *
- * @author Grupo 03-1pm
+ * @author Andrey Solano
  */
 @Command(
         name = ".tree",
@@ -21,11 +21,15 @@ public class TreeCommand implements Runnable {
     /**
      * La consulta llega partida en palabras porque el REPL divide la línea por espacios
      * antes de entregarla a picocli.
+     * No funciona de momento con queries multilínea
      */
     @Parameters(arity = "0..*", description = "Query to analyze")
-    @SuppressWarnings("unused") // Silencia la advertencia de IntelliJ ya que Picocli lo asigna vía reflexión
     private String[] queryWords;
 
+    /**
+     * Implementación del {@code run()} del {@code Runnable}, recibe las consulta
+     * y como es un "flujo alterno" se lo delega al {@code .tree()} del {@link Compiler}
+     */
     @Override
     public void run() {
         String query = queryWords == null ? "" : String.join(" ", queryWords);
