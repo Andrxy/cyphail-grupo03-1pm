@@ -136,7 +136,7 @@ public class Combinators {
     }
 
     /**
-     * Transforma el resultado exitoso de un parser usando una función mapeadora.
+     * Transforma el resultado exitoso de un parser usando una función mapeadora. <br>
      * Tomado del documento Work de la sesión del 22 de setiembre
      *
      * @author Carlos Loría-Sáenz
@@ -152,7 +152,7 @@ public class Combinators {
     }
 
     /**
-     * Aplana y combina los errores de un parser cuando falla.
+     * Aplana y combina los errores de un parser cuando falla. <br>
      * Tomado del documento Work de la sesión del 22 de setiembre
      *
      * @author Carlos Loría-Sáenz
@@ -168,7 +168,8 @@ public class Combinators {
     }
 
     /**
-     * Une las listas de mensajes de error. Tomado del documento Work de la sesión del 22 de setiembre
+     * Une las listas de mensajes de error. <br>
+     * Tomado del documento Work de la sesión del 22 de setiembre
      *
      * @author Carlos Loría-Sáenz
      */
