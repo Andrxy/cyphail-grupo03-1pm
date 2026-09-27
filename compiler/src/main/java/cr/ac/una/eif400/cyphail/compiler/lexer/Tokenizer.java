@@ -25,7 +25,7 @@ public class Tokenizer {
      * caracteres van antes que los de uno solo, para que {@code ->} no se lea como
      * {@code -} seguido de {@code >}.
      */
-    private static final IParser<InputString, TokenString, String> ANY_TOKEN = OrFlat(
+    private static IParser<InputString, TokenString, String> ANY_TOKEN = OrFlat(
             concatStringList,
             Relationship,
             Comparison,
