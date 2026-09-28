@@ -46,7 +46,7 @@ public class Compiler {
     }
 
     /**
-     * Proporciona la instancia única del compilador siguiendo el patrón Singleton.
+     * Proporciona la instancia única del compilador siguiendo el patrón Singleton
      *
      * @return la instancia global de Compiler.
      */
