@@ -140,6 +140,10 @@ public class AstBuilders {
 
     /**
      * Convierte y proyecta los elementos contenidos en un nodo genérico hacia una lista de un tipo específico.
+     * <br>
+     * <b>Se le pidió a Claude:</b> Crea un método en Java que reciba un AstNode que en realidad es un Node,
+     * que adentro tiene una lista items, y que me devuelva esa lista pero convertida al tipo que se indique
+     * por parametro
      *
      * @param node el nodo contenedor del cual se extraerán los ítems
      * @param type la clase del tipo de nodo esperado
