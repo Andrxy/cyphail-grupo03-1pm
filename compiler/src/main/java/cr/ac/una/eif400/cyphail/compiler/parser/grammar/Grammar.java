@@ -69,7 +69,7 @@ public class Grammar {
     private static IParser<InputTokens, AstNode, String> singlePartQuery() {
         return TFlat(
                 Sequence(
-                        asNode(Plus(readingClause())),
+                        asNode(Star(readingClause())),
                         asNode(Star(updatingClause())),
                         asNode(Optional(returnClause()))),
                 parts -> toQuery(parts));
