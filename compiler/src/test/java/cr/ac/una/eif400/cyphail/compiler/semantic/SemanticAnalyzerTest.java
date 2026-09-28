@@ -1,6 +1,6 @@
 package cr.ac.una.eif400.cyphail.compiler.semantic;
 
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.AstNode;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.AstNode;
 import cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer;
 import cr.ac.una.eif400.cyphail.compiler.parser.grammar.Grammar;
 import org.junit.jupiter.api.DisplayName;

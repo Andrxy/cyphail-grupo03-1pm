@@ -1,6 +1,6 @@
 package cr.ac.una.eif400.cyphail.compiler.ast;
 
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.*;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 import org.junit.jupiter.api.DisplayName;

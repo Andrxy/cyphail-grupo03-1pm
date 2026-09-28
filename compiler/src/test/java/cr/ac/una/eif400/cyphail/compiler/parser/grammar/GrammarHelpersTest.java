@@ -1,8 +1,8 @@
 package cr.ac.una.eif400.cyphail.compiler.parser.grammar;
 
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.AstNode;
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.Leaf;
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.Node;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.AstNode;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.Leaf;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.Node;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
