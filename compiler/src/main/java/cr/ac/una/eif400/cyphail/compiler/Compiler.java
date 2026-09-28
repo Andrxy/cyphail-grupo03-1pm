@@ -3,7 +3,7 @@ package cr.ac.una.eif400.cyphail.compiler;
 import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import cr.ac.una.eif400.cyphail.compiler.ast.PrettyPrinter;
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.AstNode;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.AstNode;
 import cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.parser.grammar.Grammar;
