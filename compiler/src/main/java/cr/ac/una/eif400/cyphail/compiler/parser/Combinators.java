@@ -4,9 +4,11 @@ import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Clase auxiliar que agrupa los diferentes combinadores
@@ -51,22 +53,29 @@ public class Combinators {
      */
     @SafeVarargs
     public static <I, T, R> IParser<I, List<T>, R> Sequence(IParser<I, T, R>... parsers) {
+        record State<I, T, R>(List<T> tokens, I source, boolean isOk, R reason, boolean trying) {}
+
         return (I source) -> {
-            var allValues = new ArrayList<T>();
+            var seed = new State<I, T, R>(List.<T>of(), source, true, null, true);
 
-            for (var p : parsers) {
-                switch (p.parse(source)) {
-                    case Ok(I rest, T value) -> {
-                        allValues.add(value);
-                        source = rest;
-                    }
-                    case Fail(R reason) -> {
-                        return new Fail<>(reason);
-                    }
-                }
-            }
+            var iterator = Arrays.stream(parsers).iterator();
 
-            return new Ok<>(source, allValues);
+            var finalState = Stream
+                    .iterate(seed, acc -> {
+                        if (!acc.isOk || !iterator.hasNext())
+                            return new State<I, T, R>(acc.tokens, acc.source, acc.isOk, acc.reason, false);
+                        return switch (iterator.next().parse(acc.source)) {
+                            case Ok(I rest, T token) -> new State<I, T, R>(append(acc.tokens, token), rest, true, null, true);
+                            case Fail(R reason) -> new State<I, T, R>(acc.tokens, acc.source, false, reason, true);
+                        };
+                    })
+                    .takeWhile(acc -> acc.trying)
+                    .reduce((acc, curr) -> curr)
+                    .orElse(seed);
+
+            return finalState.isOk
+                    ? new Ok<>(finalState.source, finalState.tokens)
+                    : new Fail<>(finalState.reason);
         };
     }
 
@@ -77,17 +86,23 @@ public class Combinators {
      * @return un parser con una lista de todos los elementos que logró recolectar
      */
     public static <I, T, R> IParser<I, List<T>, R> Star(IParser<I, T, R> parser){
+        record State<I, T>(List<T> tokens, I source, boolean trying) {}
+
         return (I source) -> {
-            var allValues = new ArrayList<T>();
 
-            var result = parser.parse(source);
-            while (result instanceof Ok<I, T, R>(I rest, T value)) {
-                allValues.add(value);
-                source = rest;
-                result = parser.parse(source);
-            }
+            var seed = new State<I, T>(List.<T>of(), source, true);
 
-            return new Ok<>(source, allValues);
+            var finalState = Stream.iterate(seed, acc ->
+                        switch (parser.parse(acc.source)){
+                            case Ok(I rest, T token) -> new State<I, T>(append(acc.tokens, token), rest, true);
+                            case Fail(R reason) -> new State<I, T>(acc.tokens, acc.source, false);
+                        }
+                    )
+                    .takeWhile(acc -> acc.trying())
+                    .reduce((acc, curr) -> curr)
+                    .orElse(seed);
+
+            return new Ok<>(finalState.source, finalState.tokens);
         };
     }
 
@@ -98,27 +113,13 @@ public class Combinators {
      * @return un parser con la lista de elementos encontrados (mínimo uno)
      */
     public static <I, T, R> IParser<I, List<T>, R> Plus(IParser<I, T, R> parser) {
-        return (I source) -> {
-            var allValues = new ArrayList<T>();
-
-            switch (parser.parse(source)) {
-                case Fail<I, T, R>(R reason) -> {
-                    return new Fail<>(reason);
-                }
-                case Ok<I, T, R>(I rest, T value) -> {
-                    allValues.add(value);
-                    source = rest;
-                }
-            }
-
-            var result = parser.parse(source);
-            while (result instanceof Ok<I, T, R>(I rest, T value)) {
-                allValues.add(value);
-                source = rest;
-                result = parser.parse(source);
-            }
-
-            return new Ok<>(source, allValues);
+        return (I source) -> switch (parser.parse(source)) {
+            case Fail(R reason) -> new Fail<>(reason);
+            case Ok(I rest, T first) -> switch (Star(parser).parse(rest)) {
+                case Ok(I restAfterStar, List<T> others) ->
+                        new Ok<>(restAfterStar, Stream.concat(Stream.of(first), others.stream()).toList());
+                case Fail(R reason) -> new Fail<>(reason);
+            };
         };
     }
 
@@ -241,4 +242,7 @@ public class Combinators {
         return source -> rule.get().parse(source);
     }
 
+    private static <T> List<T> append(List<T> values, T value) {
+        return Stream.concat(values.stream(), Stream.of(value)).toList();
+    }
 }
