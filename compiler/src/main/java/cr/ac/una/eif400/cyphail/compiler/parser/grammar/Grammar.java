@@ -54,18 +54,38 @@ public class Grammar {
         return cyphail().parse(new InputTokens(source));
     }
 
+    /**
+     * <pre>{@code
+     * cyphail : regularQuery EOF
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> cyphail() {
         return JustGetLeft(regularQuery(), EOF());
     }
 
+    /**
+     * <pre>{@code
+     * regularQuery : singleQuery
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> regularQuery() {
         return singleQuery();
     }
 
+    /**
+     * <pre>{@code
+     * singleQuery : singlePartQuery
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> singleQuery() {
         return singlePartQuery();
     }
 
+    /**
+     * <pre>{@code
+     * singlePartQuery : readingClause* updatingClause* returnClause?
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> singlePartQuery() {
         return TFlat(
                 Sequence(
@@ -75,22 +95,42 @@ public class Grammar {
                 parts -> toQuery(parts));
     }
 
+    /**
+     * <pre>{@code
+     * readingClause : matchClause
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> readingClause() {
         return matchClause();
     }
 
+    /**
+     * <pre>{@code
+     * matchClause : "MATCH" pattern whereClause?
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> matchClause() {
         return TFlat(
                 Sequence(parsify(MATCH), pattern(), asNode(Optional(whereClause()))),
                 parts -> toMatch(parts));
     }
 
+    /**
+     * <pre>{@code
+     * whereClause : "WHERE" expression
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> whereClause() {
         return TFlat(
                 Sequence(parsify(WHERE), expression()),
                 parts -> toWhere(parts));
     }
 
+    /**
+     * <pre>{@code
+     * createClause : "CREATE" pattern
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> createClause() {
         return TFlat(
                 Sequence(parsify(CREATE), pattern()),
@@ -98,6 +138,11 @@ public class Grammar {
         );
     }
 
+    /**
+     * <pre>{@code
+     * pattern : patternElement ("," patternElement)*
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> pattern() {
         return TFlat(
                 Sequence(
@@ -106,6 +151,13 @@ public class Grammar {
                 parts -> toPatterns(parts));
     }
 
+    /**
+     * <pre>{@code
+     * patternElement : nodePattern (relationshipPattern nodePattern)?
+     *                | LPAREN patternElement RPAREN
+     * }</pre>
+     * Implementado: {@code path | nodePattern | "(" patternElement ")"}
+     */
     private static IParser<InputTokens, AstNode, String> patternElement() {
         return OrFlat(concatStringList,
                 path(),
@@ -113,12 +165,23 @@ public class Grammar {
                 JustGetMiddle(parsify(TokenType.LPAREN), Lazy(() -> patternElement()), parsify(TokenType.RPAREN)));
     }
 
+    /**
+     * <pre>{@code
+     * path : nodePattern relationshipPattern nodePattern
+     * }</pre>
+     * Primera alternativa de {@code patternElement}, separada como regla propia.
+     */
     private static IParser<InputTokens, AstNode, String> path() {
         return TFlat(
                 Sequence(nodePattern(), relationshipPattern(), nodePattern()),
                 parts -> toPath(parts));
     }
 
+    /**
+     * <pre>{@code
+     * nodePattern : "(" variable? nodeLabels? properties? ")"
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> nodePattern() {
         return TFlat(
            Sequence(
@@ -130,14 +193,31 @@ public class Grammar {
                 parts -> toPattern(parts));
     }
 
+    /**
+     * <pre>{@code
+     * nodeLabels : (":" labelName)+
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> nodeLabels() {
         return asNode(Plus(JustGetRight(parsify(TokenType.COLON), labelName())));
     }
 
+    /**
+     * <pre>{@code
+     * properties : mapLiteral
+     * }</pre>
+     * Usada en {@code nodePattern} pero no definida en el .g4.
+     */
     private static IParser<InputTokens, AstNode, String> properties() {
         return mapLiteral();
     }
 
+    /**
+     * <pre>{@code
+     * mapLiteral : "{" (propertyKeyName ":" expression ("," propertyKeyName ":" expression)*)? "}"
+     * }</pre>
+     * Implementado: {@code "{" (propertyEntry ("," propertyEntry)*)? "}"}
+     */
     private static IParser<InputTokens, AstNode, String> mapLiteral() {
         return JustGetMiddle(
                 parsify(TokenType.LBRACE),
@@ -149,32 +229,74 @@ public class Grammar {
                 parsify(TokenType.RBRACE));
     }
 
+    /**
+     * <pre>{@code
+     * propertyEntry : propertyKeyName ":" expression
+     * }</pre>
+     * Fragmento de {@code mapLiteral}, separado como regla propia.
+     */
     private static IParser<InputTokens, AstNode, String> propertyEntry() {
         return TFlat(
                 Sequence(propertyKeyName(), parsify(TokenType.COLON), expression()),
                 parts -> toProperty(parts));
     }
 
+    /**
+     * <pre>{@code
+     * variable : symbolicName
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> variable() {
         return symbolicName();
     }
 
+    /**
+     * <pre>{@code
+     * labelName : symbolicName
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> labelName() {
         return symbolicName();
     }
 
+    /**
+     * <pre>{@code
+     * propertyKeyName : symbolicName
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> propertyKeyName() {
         return symbolicName();
     }
 
+    /**
+     * <pre>{@code
+     * symbolicName : IDENTIFIER
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> symbolicName() {
         return parsify(TokenType.IDENTIFIER);
     }
 
+    /**
+     * <pre>{@code
+     * relationshipPattern : "-" relationshipDetail? ("->" | "-")
+     *                     | "<-" relationshipDetail? "-"
+     * }</pre>
+     * Implementado: pendiente.
+     */
     private static IParser<InputTokens, AstNode, String> relationshipPattern() {
         return source -> new Fail<>("not implemented yet");
     }
 
+    /**
+     * <pre>{@code
+     * updatingClause : createClause
+     *                | setClause
+     *                | deleteClause
+     *                | removeClause
+     * }</pre>
+     * Implementado: {@code createClause | deleteClause}
+     */
     private static IParser<InputTokens, AstNode, String> updatingClause() {
         return OrFlat(concatStringList,
                 createClause(),
@@ -182,6 +304,12 @@ public class Grammar {
         );
     }
 
+    /**
+     * <pre>{@code
+     * returnClause : "RETURN" "DISTINCT"? projectionBody
+     * }</pre>
+     * Implementado: {@code "RETURN" projection ("," projection)*}
+     */
     private static IParser<InputTokens, AstNode, String> returnClause() {
         return TFlat(
                 Sequence(parsify(RETURN), projection(),
@@ -189,6 +317,13 @@ public class Grammar {
                 parts -> toReturn(parts));
     }
 
+    /**
+     * <pre>{@code
+     * projection : expression "AS" variable
+     *            | expression
+     * }</pre>
+     * Equivale a {@code projectionItem} del .g4.
+     */
     private static IParser<InputTokens, AstNode, String> projection() {
         return OrFlat(concatStringList,
                 TFlat(
@@ -202,6 +337,11 @@ public class Grammar {
         );
     }
 
+    /**
+     * <pre>{@code
+     * deleteClause : "DETACH"? "DELETE" expression ("," expression)*
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> deleteClause() {
         return TFlat(
                 Sequence(
@@ -210,6 +350,12 @@ public class Grammar {
         );
     }
 
+    /**
+     * <pre>{@code
+     * expression : orExpression
+     * }</pre>
+     * Implementado: {@code simple (comparisonOperator simple)?}
+     */
     private static IParser<InputTokens, AstNode, String> expression() {
         return TFlat(
                 Sequence(
@@ -220,6 +366,14 @@ public class Grammar {
         );
     }
 
+    /**
+     * <pre>{@code
+     * simple : variable "." name
+     *        | literal
+     *        | variable
+     * }</pre>
+     * Regla propia que reemplaza a {@code atom} y {@code propertyExpression} con un solo acceso a propiedad.
+     */
     private static IParser<InputTokens, AstNode, String> simple() {
         return OrFlat(concatStringList,
                 TFlat(
@@ -231,10 +385,25 @@ public class Grammar {
         );
     }
 
+    /**
+     * <pre>{@code
+     * name : symbolicName
+     * }</pre>
+     * Regla propia, equivale a {@code propertyKeyName}.
+     */
     private static IParser<InputTokens, AstNode, String> name() {
         return symbolicName();
     }
 
+    /**
+     * <pre>{@code
+     * literal : numberLiteral
+     *         | StringLiteral
+     *         | booleanLiteral
+     *         | "NULL"
+     * }</pre>
+     * Implementado: {@code NUMBER | STRING_LITERAL}
+     */
     private static IParser<InputTokens, AstNode, String> literal() {
         return OrFlat(concatStringList,
                 parsify(NUMBER),
@@ -242,6 +411,11 @@ public class Grammar {
         );
     }
 
+    /**
+     * <pre>{@code
+     * comparisonOperator : "=" | "<>" | "<" | ">" | "<=" | ">="
+     * }</pre>
+     */
     private static IParser<InputTokens, AstNode, String> comparisonOperator() {
         return OrFlat(concatStringList,
                 parsify(EQUALS),
@@ -251,146 +425,6 @@ public class Grammar {
                 parsify(LESS_THAN_OR_EQUAL),
                 parsify(GREATER_THAN_OR_EQUAL)
         );
-    }
-
-    private static IParser<InputTokens, AstNode, String> setClause() {
-        return source -> new Fail<>("'Set Clause' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> setItem() {
-        return source -> new Fail<>("'Set Item' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> removeClause() {
-        return source -> new Fail<>("'Remove Clause' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> removeItem() {
-        return source -> new Fail<>("'Remove Item' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> projectionBody() {
-        return source -> new Fail<>("'Projection Body' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> projectionItems() {
-        return source -> new Fail<>("'Projection Items' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> projectionItem() {
-        return source -> new Fail<>("'Projection Item' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> projectionModifiers() {
-        return source -> new Fail<>("'Projection Modifiers' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> order() {
-        return source -> new Fail<>("'Order' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> sortItem() {
-        return source -> new Fail<>("'Sort Item' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> skip() {
-        return source -> new Fail<>("'Skip' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> limit() {
-        return source -> new Fail<>("'Limit' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> relationshipDetail() {
-        return source -> new Fail<>("'Relationship Detail' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> relTypes() {
-        return source -> new Fail<>("'Rel Types' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> relTypeName() {
-        return source -> new Fail<>("'Rel Type Name' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> relRange() {
-        return source -> new Fail<>("'Rel Range' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> relProperties() {
-        return source -> new Fail<>("'Rel Properties' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> orExpression() {
-        return source -> new Fail<>("'Or Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> andExpression() {
-        return source -> new Fail<>("'And Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> notExpression() {
-        return source -> new Fail<>("'Not Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> comparisonExpression() {
-        return source -> new Fail<>("'Comparison Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> addOrSubtractExpression() {
-        return source -> new Fail<>("'Add Or Subtract Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> multiplyDivideModuloExpression() {
-        return source -> new Fail<>("'Multiply Divide Modulo Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> unaryAddOrSubtractExpression() {
-        return source -> new Fail<>("'Unary Add Or Subtract Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> nullTestExpression() {
-        return source -> new Fail<>("'Null Test Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> propertyOrLabelsExpression() {
-        return source -> new Fail<>("'Property Or Labels Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> propertyLookup() {
-        return source -> new Fail<>("'Property Lookup' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> propertyExpression() {
-        return source -> new Fail<>("'Property Expression' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> atom() {
-        return source -> new Fail<>("'Atom' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> functionInvocation() {
-        return source -> new Fail<>("'Function Invocation' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> functionName() {
-        return source -> new Fail<>("'Function Name' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> numberLiteral() {
-        return source -> new Fail<>("'Number Literal' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> doubleLiteral() {
-        return source -> new Fail<>("'Double Literal' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> booleanLiteral() {
-        return source -> new Fail<>("'Boolean Literal' is not implemented yet");
-    }
-
-    private static IParser<InputTokens, AstNode, String> integerLiteral() {
-        return source -> new Fail<>("'Integer Literal' is not implemented yet");
     }
 }
 
