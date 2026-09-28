@@ -7,7 +7,7 @@ import cr.ac.una.eif400.cyphail.compiler.parser.IParser;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.Result;
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.*;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
 
 import java.util.List;
 

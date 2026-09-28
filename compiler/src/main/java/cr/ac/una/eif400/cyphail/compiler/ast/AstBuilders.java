@@ -2,7 +2,7 @@ package cr.ac.una.eif400.cyphail.compiler.ast;
 
 import java.util.ArrayList;
 import java.util.List;
-import cr.ac.una.eif400.cyphail.compiler.ast.specializations.*;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
 
 public class AstBuilders {
 
