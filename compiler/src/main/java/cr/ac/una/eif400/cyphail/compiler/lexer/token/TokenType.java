@@ -1,10 +1,12 @@
 package cr.ac.una.eif400.cyphail.compiler.lexer.token;
 
 /**
- *
+ * Define los diferentes tipos de tokens reconocidos <br>
+ * <b>Sugerido por Claude en base a la gramática para generar los tipos de tokens</b>
  *
  * @author Andrey Solano
  * @author Alejandro Miranda
+ * @author
  * @version P1
  */
 public enum TokenType {

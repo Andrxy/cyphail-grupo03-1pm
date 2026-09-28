@@ -14,18 +14,20 @@ import static cr.ac.una.eif400.cyphail.compiler.lexer.Lexers.*;
 import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
 
 /**
- * Primera etapa del compilador: parte el código fuente en la lista de tokens.
+ * Convierte el código fuente a una lista de tokens
  *
- * @author Grupo 03-1pm
+ * @author Andrey Solano
+ * @author Sebastián González
+ * @version P1
  */
 public class Tokenizer {
 
     /**
-     * Reconoce un token de cualquier tipo. El orden importa: los operadores de varios
+     * Reconoce un token de cualquier tipo. El orden importa (greedy), los operadores de varios
      * caracteres van antes que los de uno solo, para que {@code ->} no se lea como
      * {@code -} seguido de {@code >}.
      */
-    private static final IParser<InputString, TokenString, String> ANY_TOKEN = OrFlat(
+    private static IParser<InputString, TokenString, String> ANY_TOKEN = OrFlat(
             concatStringList,
             Relationship,
             Comparison,
@@ -37,7 +39,7 @@ public class Tokenizer {
             Delimiter
     );
 
-    private static final IParser<InputString, List<TokenString>, String> TOKENIZER = Star(ANY_TOKEN);
+    private static IParser<InputString, List<TokenString>, String> TOKENIZER = Star(ANY_TOKEN);
 
     public static Result<InputString, List<TokenString>, String> tokenize(String sourceCode) {
         return switch (TOKENIZER.parse(new InputString(sourceCode))) {

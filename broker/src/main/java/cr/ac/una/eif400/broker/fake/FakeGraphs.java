@@ -17,10 +17,8 @@ import java.util.Arrays;
  * implementados temporalmente para efectos del primer sprint P1.1</p>
  *
  * @author Wilson Umaña
- * Version 1.0
+ * @version P1.1
  */
-
-
 public class FakeGraphs {
 
     private static final Graph[] AVAILABLE_GRAPHS = loadGraphs();
