@@ -6,6 +6,9 @@ import cr.ac.una.eif400.cyphail.compiler.parser.result.Result;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+/**
+ * @author Alejandro Miranda
+ */
 public final class ResultAssertions {
 
     private ResultAssertions() {

@@ -13,6 +13,9 @@ import java.util.List;
 import static cr.ac.una.eif400.cyphail.compiler.ResultAssertions.assertOk;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @author Alejandro Miranda
+ */
 @DisplayName("Pruebas del analizador semantico")
 public class SemanticAnalyzerTest {
 

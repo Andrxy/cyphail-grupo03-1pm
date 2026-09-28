@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Pruebas del formateo tabular que usa el REPL para mostrar resultados.
  *
- * @author Grupo 03-1pm
+ * @author Alejandro Miranda
  * @version P1.1
  */
 @DisplayName("Pruebas del Formatter")

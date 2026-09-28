@@ -64,22 +64,6 @@ cli  ->  compiler  ->  broker  ->  common
 
 `Compiler` is the only class that knows the compiler stages. The CLI asks it for results and never calls the tokenizer, the grammar or the analyzer on its own.
 
-### The combinator core
-
-Lexer and parser are built on one functional interface:
-
-```java
-public interface IParser<I, T, R> {
-    Result<I, T, R> parse(I source);
-}
-```
-
-`I` is the input, `T` what it produces on success, `R` the failure reason. `Result` is a sealed type with two cases: `Ok(rest, value)` and `Fail(reason)`. The `rest` is what allows chaining: each parser returns what it did not consume, and the next one starts there.
-
-A lexer reads text and produces tokens; a parser reads tokens and produces AST nodes. Both are `IParser`, so the combinators in `Combinators.java` (`Sequence`, `OrFlat`, `Star`, `Plus`, `Optional`, `TFlat`, `Lazy`) are written once and serve both stages.
-
-No parser generator is used, as the project SPEC requires.
-
 ---
 
 ## Requirements
@@ -126,16 +110,9 @@ To skip the tests, add `-DskipTests`.
 
 | Terminal | Command |
 |---|---|
-| CMD | `cyphail.bat repl` |
-| PowerShell | `.\cyphail.bat repl` |
+| CMD | `cyphail repl` |
+| PowerShell | `.\cyphail repl` |
 
-`cyphail.bat help` prints the command help.
-
-The launcher must be run from the project root because it passes the project location to the program, which the broker needs to find its JSON files in `broker/data/`. Running the jar directly requires passing that location by hand:
-
-```
-java -Dcyphail.home=<project-root> -jar cli\target\cyphail.jar repl
-```
 
 ---
 
@@ -196,48 +173,11 @@ propertyAccess : variable "." name
 
 ---
 
-## Test cases
-
-The eleven course test cases live in `compiler/src/test/resources/casos/`:
-
-| Case | Covers |
-|---|---|
-| C1 | One pattern, projection with an alias |
-| C2 | `WHERE` with a comparison |
-| C3 | Multiple labels on one node |
-| C4 | Two disconnected patterns |
-| C5 | Comparison between attributes of different nodes |
-| C6 | Two patterns, each with its own property map |
-| C7 | `MATCH` followed by `CREATE` |
-| C8 | Property whose value is an expression (`{personId: p.id}`) |
-| C9 | `MATCH`, `CREATE` and `DELETE` in one query |
-| C10 | Undefined variable |
-| C11 | Undefined variable caused by inverted declaration order |
-
-C1 to C9 produce a syntax tree. C10 and C11 also produce their tree, followed by the semantic error: they are syntactically valid, and the problem is that they use a variable that was never declared.
-
----
-
-## What is missing
-
-Out of scope for P1, and therefore not implemented:
-
-- **Relationship patterns** (`-[:REL]->`). The grammar rule is declared but returns `not implemented yet`.
-- **`SET` and `REMOVE`.**
-- **`AND`, `OR`, `NOT`, arithmetic, `IS NULL`.**
-- **`DISTINCT`, `ORDER BY`, `SKIP`, `LIMIT`.**
-- **Function calls** such as `type(r)`.
-- **Prolog code generation and the MQI connection.** The broker still answers from JSON.
-
-Known limitation: because the P1 grammar has no relationship patterns, the Sprint P1.1 sample query that used `-[:AMIGO_DE]->` no longer compiles. The other three P1.1 queries still work.
-
----
-
 ## AI usage declaration
 
 The project SPEC prohibits agentic AI that generates the project with zero coding, and authorizes AI for study and consultation provided the team can defend any product of its work as its own. It also requires showing the prompts used and the model.
 
-**Model used: Claude (Anthropic).**
+**Model used: Claude (Anthropic) and Gemini**
 
 The team used it in two different ways, declared separately because they are not equivalent.
 
@@ -251,9 +191,9 @@ Three files in the current code were written with AI assistance and then reviewe
 
 | File | Extent |
 |---|---|
-| `compiler/Compiler.java` | The `analyze()` and `validate()` methods, which chain the three stages |
-| `compiler/lexer/Tokenizer.java` | Initial version, later modified by the team |
-| `cli/repl/actions/TreeCommand.java` | Initial version, later modified by the team |
+| `Compiler.java` | The `analyze()` and `validate()` methods, which chain the three stages |
+| `Tokenizer.java` | Initial version, later modified by the team |
+| `TreeCommand.java` | Initial version, later modified by the team |
 
 Each of these files carries a note in its Javadoc marking the assistance and the prompt it came from.
 
@@ -277,6 +217,29 @@ Every member can explain and defend each part of the project.
 6. Diagnosis of a lexical bug: a query ending in a space or a newline produced a false error.
 7. Review of the project against the review criteria and the test cases, verified by compiling and running the pipeline.
 8. Update of this README for Sprint P1.
+
+**Andrey Solano**
+1. En base a la gramática, extraiga los tokens necesarios para armar un enumerador de TokenType
+2. Explíqueme qué es una tabla de símbolos y cómo sabe ella el scope de las cosas para hacer revisiones semánticas
+3. Deme una explicación de cómo funciona el patrón visitor y su doble despacho y cómo funciona con las interfaces selladas para efectos de un AST
+4. Analice constructivamente mis combinadores, a la hora de extender la gramática a futuro, qué otro combinador se podría hacer mezclando los míos con el fin que el código sea DRY
+5. De acuerdo a los siguientes Lexers que representan elementos del lenguaje cypher agrupados por "familias", por cada una cree un Map<String, TokenType>
+6. Tengo private static String listify(List<AstNode> items) { ... } y no compila, deme sugerencias para ver qué puedo hacer
+7. Cuál es la diferencia entre hacer <? extends AstNode> y <T extends AstNode>
+
+**Wilson Umaña**
+
+1. Explicame como funciona el proceso de la grammar con el arbol AST y sugiereme como es adecuado manejarlo, segun estos casos de prueba.
+2. Como paso de JSON a estructuras de java usando GSON
+3. Me recomiendas usar records para guardar los datos del JSON?
+4. En que parte de mi arquitectura me recomendarias guardar estos JSON y los records
+5. Como puedo conseguir el path físico de mis archivos JSON
+6. Modifica mi .bat para lograr eso
+7. Que combinators me recomiendas usar aparte de los que tengo para facilitar el desarrollo de esta gramática
+8. Que nodos nos recomiendas implementar en el AST segun este SPEC
+9. A nivel de diseño, cuáles son los nodos más representativos para la consturcción del AST
+
+****
 
 #### Sprint P1.1
 

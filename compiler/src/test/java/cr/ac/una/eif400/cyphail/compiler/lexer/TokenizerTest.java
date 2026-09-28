@@ -13,6 +13,9 @@ import static cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * @author Alejandro Miranda
+ */
 @DisplayName("Pruebas del Tokenizer")
 public class TokenizerTest {
 

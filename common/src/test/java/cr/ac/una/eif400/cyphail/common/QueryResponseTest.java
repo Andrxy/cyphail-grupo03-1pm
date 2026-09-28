@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Pruebas de la respuesta estandar que viaja entre el broker, el compilador y el CLI.
  *
- * @author Grupo 03-1pm
+ * @author Alejandro Miranda
  * @version P1.1
  */
 @DisplayName("Pruebas de QueryResponse")

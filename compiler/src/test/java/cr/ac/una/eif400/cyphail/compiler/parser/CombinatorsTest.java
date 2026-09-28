@@ -14,6 +14,9 @@ import static cr.ac.una.eif400.cyphail.compiler.ResultAssertions.assertOk;
 import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @author Alejandro Miranda
+ */
 @DisplayName("Pruebas de los combinadores")
 public class CombinatorsTest {
 

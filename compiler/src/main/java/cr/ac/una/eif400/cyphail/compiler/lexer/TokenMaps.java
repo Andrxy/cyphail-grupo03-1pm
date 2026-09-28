@@ -10,7 +10,7 @@ import static cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType.*;
  * Contiene los mapas que relacionan las string con sus respectivos
  * tokens ({@link TokenType}) agrupados por familias léxicas.
  * <br>
- * <b>Se le pidió a Gemini:</b> De acuerdo a los siguientes Lexers que representan elementos
+ * <b>Prompt:</b> De acuerdo a los siguientes Lexers que representan elementos
  * del lenguaje cypher agrupados por "familias", por cada una cree un {@code Map<String, TokenType>}
  *
  * @author Andrey Solano

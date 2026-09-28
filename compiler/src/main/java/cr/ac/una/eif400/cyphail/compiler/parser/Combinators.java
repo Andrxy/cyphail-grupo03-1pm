@@ -12,7 +12,9 @@ import java.util.stream.Stream;
 
 /**
  * Clase auxiliar que agrupa los diferentes combinadores
- * utilizados para la construcción del Grammar
+ * utilizados para la construcción del Grammar <br><br>
+ *
+ * Prompt: Analice constructivamente mis combinadores, a la hora de extender la gramática a futuro, qué otro combinador se podría hacer mezclando los míos con el fin que el código sea DRY
  *
  * @author Andrey Solano
  * @author Alejandro Miranda

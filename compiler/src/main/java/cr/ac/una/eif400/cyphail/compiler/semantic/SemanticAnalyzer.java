@@ -12,12 +12,14 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.joining;
 
 /**
- * A minimalist Semantic Analyzer for P1, later it will introduce
- * a more accurate one Mapping String with a Symbol and its values
+ * Un analizador semántico minimalista que ahorita solo verifica el uso de variables
+ * definidas con un Set con propósito del P1 <br><br>
  *
- * @author Anrdrey Solano
+ * Prompt: Explíqueme qué es una tabla de símbolos y cómo sabe ella el scope de las cosas para hacer revisiones semánticas
+ *
+ * @author Andrey Solano
+ * @version P1
  */
-
 public class SemanticAnalyzer {
     private Set<String> defined = new HashSet<>();
     private List<String> reasons = new ArrayList<>();
@@ -42,7 +44,7 @@ public class SemanticAnalyzer {
                 patterns.forEach(this::visit);
                 where.forEach(this::visit);
             }
-            case Pattern(var variable, var labels, var properties) -> {
+            case Pattern(var variable, var _, var properties) -> {
                 var name = variable.stream().map(SemanticAnalyzer::name).collect(joining());
                 properties.forEach(property -> use(property, "properties of (" + name + ")"));
                 variable.forEach(leaf -> defined.add(name(leaf)));
@@ -57,7 +59,7 @@ public class SemanticAnalyzer {
                 visit(to);
             }
             case Node(var items) -> items.forEach(this::visit);
-            // las expresiones se revisan completas con use(), no nodo por nodo
+
             case Leaf _, Property _, PropertyAccess _, Comparison _, SimpleProjection _, AliasedProjection _ -> {}
         }
     }

@@ -12,6 +12,9 @@ import static cr.ac.una.eif400.cyphail.compiler.ResultAssertions.assertFail;
 import static cr.ac.una.eif400.cyphail.compiler.ResultAssertions.assertOk;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @author Alejandro Miranda
+ */
 @DisplayName("Pruebas de los lexers individuales")
 public class LexersTest {
 

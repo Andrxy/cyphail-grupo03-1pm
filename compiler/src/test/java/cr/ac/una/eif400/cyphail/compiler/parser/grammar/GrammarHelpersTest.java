@@ -17,6 +17,9 @@ import static cr.ac.una.eif400.cyphail.compiler.ResultAssertions.assertOk;
 import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.Star;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @author Alejandro Miranda
+ */
 @DisplayName("Pruebas de GrammarHelpers")
 public class GrammarHelpersTest {
 

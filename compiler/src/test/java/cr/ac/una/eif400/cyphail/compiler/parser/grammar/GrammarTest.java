@@ -21,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * @author Alejandro Miranda
+ */
 @DisplayName("Pruebas de la gramatica")
 public class GrammarTest {
 
