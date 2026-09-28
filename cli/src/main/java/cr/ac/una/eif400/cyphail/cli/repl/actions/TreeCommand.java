@@ -10,6 +10,10 @@ import picocli.CommandLine.Parameters;
  * <p>El comando no analiza nada por su cuenta: le pasa la consulta al {@link Compiler}
  * y escribe lo que este devuelve.</p>
  *
+ * <p>La version inicial de este comando se escribio con la asistencia de Claude
+ * (Anthropic) y fue modificada e integrada por el equipo. Corresponde al prompt 5
+ * del Sprint P1 declarado en el README.</p>
+ *
  * @author Andrey Solano
  */
 @Command(

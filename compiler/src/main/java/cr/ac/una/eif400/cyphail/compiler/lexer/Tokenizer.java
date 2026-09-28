@@ -16,9 +16,16 @@ import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
 /**
  * Convierte el código fuente a una lista de tokens
  *
+ * <p>La version inicial de esta clase, incluida la correccion del reconocimiento
+ * de espacios al final del codigo fuente, se escribio con la asistencia de
+ * Claude (Anthropic) y fue modificada e integrada por el equipo. Corresponde al
+ * prompt 6 del Sprint P1 declarado en el README.</p>
+ * 
  * @author Andrey Solano
  * @author Sebastián González
  * @version P1
+ *
+ *
  */
 public class Tokenizer {
 

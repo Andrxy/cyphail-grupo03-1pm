@@ -30,6 +30,12 @@ import java.util.List;
  * @author Sebastian Gonzalez
  * @author Alejandro Miranda
  * @author Wilson Umaña
+ *
+ * <p>Los metodos {@code analyze()} y {@code validate()}, que encadenan las tres
+ * etapas del compilador, se escribieron con la asistencia de Claude (Anthropic)
+ * y fueron revisados e integrados por el equipo. Corresponde al prompt 5 del
+ * Sprint P1 declarado en el README.</p>
+ *
  * @version P1
  */
 public class Compiler {
