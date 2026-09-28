@@ -187,22 +187,6 @@ The larger part of the use. Understanding the SPEC and the assigned grammar, lea
 
 ### Assistance in implementation
 
-Three files in the current code were written with AI assistance and then reviewed, modified and integrated by the team:
-
-| File | Extent |
-|---|---|
-| `Compiler.java` | The `analyze()` and `validate()` methods, which chain the three stages |
-| `Tokenizer.java` | Initial version, later modified by the team |
-| `TreeCommand.java` | Initial version, later modified by the team |
-
-Each of these files carries a note in its Javadoc marking the assistance and the prompt it came from.
-
-Three further files were written with assistance and have since been **entirely replaced** by team implementations, so no assisted code from them remains: the first version of `Grammar.java` (rewritten by the team as `Grammar` plus `GrammarHelpers`), `AstPrinter.java` (replaced by `PrettyPrinter.java`), and a `Map` combinator (superseded by `TFlat`).
-
-Everything else is the team's own work: the lexers, the token maps, the combinator library, the parser result and input types, the current grammar, the fifteen AST records, `AstBuilders`, `PrettyPrinter`, the `SemanticAnalyzer`, the broker and the rest of the CLI.
-
-Every member can explain and defend each part of the project.
-
 ### Prompts
 
 #### Sprint P1
@@ -226,6 +210,20 @@ Every member can explain and defend each part of the project.
 5. De acuerdo a los siguientes Lexers que representan elementos del lenguaje cypher agrupados por "familias", por cada una cree un Map<String, TokenType>
 6. Tengo private static String listify(List<AstNode> items) { ... } y no compila, deme sugerencias para ver qué puedo hacer
 7. Cuál es la diferencia entre hacer <? extends AstNode> y <T extends AstNode>
+8. A nivel de diseño, cuáles son los nodos más representativos para la consturcción del AST
+9. Como solo tengo que revisar la definición de las variables, se puede de momento usar solo un Set?
+10. Proporcióneme un ejemplo de cómo funciona una verificación semántica básica en base a un AST de un lenguaje
+
+**Alejandro Miranda**
+1. Qué hace reduce en Java y cómo se usa para construir un parser?
+2. Qué significa el símbolo | dentro de una gramática tipo ANTLR?
+3. Cómo se traduce una regla de gramática con alternativas (|) a código, es un combinador OR?
+4. Cómo hace Picocli para bindear varios argumentos de la línea de comandos en un arreglo en vez de un solo String?
+5. Cómo funciona el pattern matching (instanceof y switch) en Java?
+6. Qué diferencia hay entre anotar un parámetro @Parameters como String[] o como String en Picocli?
+7. Cuál es la diferencia entre un tipo genérico sin límite (<T>) y uno acotado (<T extends X>)?
+8. Qué diferencia hay entre castear con (N) valor y con type.cast(valor)?
+
 
 **Wilson Umaña**
 
@@ -237,7 +235,6 @@ Every member can explain and defend each part of the project.
 6. Modifica mi .bat para lograr eso
 7. Que combinators me recomiendas usar aparte de los que tengo para facilitar el desarrollo de esta gramática
 8. Que nodos nos recomiendas implementar en el AST segun este SPEC
-9. A nivel de diseño, cuáles son los nodos más representativos para la consturcción del AST
 
 ****
 
