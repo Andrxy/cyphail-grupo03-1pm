@@ -62,6 +62,19 @@ public class PrettyPrinter {
             case SimpleProjection(var expression) -> print(expression);
 
             case AliasedProjection(var expression, var alias) -> "(as " + print(expression) + " " + print(alias) + ")";
+
+            case Relationship(var variable, var types, var _, var properties, var direction) -> block("Relationship:",
+                    "var: " + each(variable),
+                    "types: " + inline(types),
+                    "direction: " + direction,
+                    "properties: " + listify(properties));
+
+            case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _, FunctionCall _, LabelTest _ ->
+                    throw new UnsupportedOperationException("PrettyPrinter: expressions");
+
+            case SetClause _, SetProperty _, SetAllProperties _, SetLabels _,
+                 RemoveClause _, RemoveProperty _, RemoveLabels _ ->
+                    throw new UnsupportedOperationException("PrettyPrinter: clauses");
         };
     }
 

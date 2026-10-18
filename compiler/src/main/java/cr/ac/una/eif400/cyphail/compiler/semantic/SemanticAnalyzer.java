@@ -57,13 +57,20 @@ public class SemanticAnalyzer {
                 updates.forEach(this::visit);
                 ret.forEach(this::visit);
             }
+
             case Match(var patterns, var where) -> {
                 patterns.forEach(this::visit);
                 where.forEach(this::visit);
             }
+
             case Pattern(var variable, var _, var properties) -> {
-                var name = variable.stream().map(SemanticAnalyzer::name).collect(joining());
-                properties.forEach(property -> use(property, "properties of (" + name + ")"));
+                var name = variable.stream()
+                        .map(SemanticAnalyzer::name)
+                        .collect(joining());
+
+                properties.forEach(property ->
+                        use(property, "properties of (" + name + ")"));
+
                 variable.forEach(leaf -> defined.add(name(leaf)));
             }
 
@@ -71,9 +78,13 @@ public class SemanticAnalyzer {
 
             case Create(var patterns) -> patterns.forEach(this::visit);
 
-            case Delete(var targets) -> targets.forEach(target -> use(target, "DELETE"));
+            case Delete(var targets) ->
+                    targets.forEach(target -> use(target, "DELETE"));
 
-            case Return(var projections) -> projections.forEach(projection -> use(projection, "RETURN"));
+            case Return(var distinct, var projections, var modifiers) -> {
+                projections.forEach(projection -> use(projection, "RETURN"));
+                modifiers.forEach(this::visit);
+            }
 
             case Path(var from, var relationship, var to) -> {
                 visit(from);
@@ -83,7 +94,40 @@ public class SemanticAnalyzer {
 
             case Node(var items) -> items.forEach(this::visit);
 
-            case Leaf _, Property _, PropertyAccess _, Comparison _, SimpleProjection _, AliasedProjection _ -> {}
+            case SetClause(var items) -> items.forEach(this::visit);
+
+            case SetProperty(var target, var value) -> {
+                use(target, "SET target");
+                use(value, "SET value");
+            }
+
+            case SetAllProperties(var variable, var value) -> {
+                use(variable, "SET target");
+                use(value, "SET value");
+            }
+
+            case SetLabels(var variable, var labels) ->
+                    use(variable, "SET labels");
+
+            case RemoveClause(var items) -> items.forEach(this::visit);
+
+            case RemoveProperty(var target) ->
+                    use(target, "REMOVE property");
+
+            case RemoveLabels(var variable, var labels) ->
+                    use(variable, "REMOVE labels");
+
+            case Leaf _, Property _, PropertyAccess _, Comparison _,
+                 SimpleProjection _, AliasedProjection _ -> {}
+
+            case Relationship(var variable, var _, var _, var properties, var _) -> {
+                var name = variable.stream().map(SemanticAnalyzer::name).collect(joining());
+                properties.forEach(property -> use(property, "properties of [" + name + "]"));
+                variable.forEach(leaf -> defined.add(name(leaf)));
+            }
+
+            case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _,
+                 FunctionCall _, LabelTest _ -> {}
         }
     }
 
@@ -132,6 +176,13 @@ public class SemanticAnalyzer {
             case Node(var items) -> items.stream().flatMap(item -> variables(item).stream()).toList();
 
             case Query _, Match _, Where _, Create _, Delete _, Return _, Pattern _, Path _ -> List.of();
+
+            case Relationship _ -> List.of();
+
+            case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _, FunctionCall _, LabelTest _ -> List.of();
+
+            case SetClause _, SetProperty _, SetAllProperties _, SetLabels _,
+                 RemoveClause _, RemoveProperty _, RemoveLabels _ -> List.of();
         };
     }
 }
