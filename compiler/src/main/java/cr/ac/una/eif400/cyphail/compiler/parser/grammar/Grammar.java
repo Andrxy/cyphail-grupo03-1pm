@@ -5,9 +5,9 @@ import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 import cr.ac.una.eif400.cyphail.compiler.parser.Combinators;
 import cr.ac.una.eif400.cyphail.compiler.parser.IParser;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
-import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.Result;
 import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.Relationship.Direction;
 
 import java.util.List;
 
@@ -22,24 +22,6 @@ import static cr.ac.una.eif400.cyphail.compiler.parser.grammar.GrammarHelpers.*;
  * <p>Sigue la gramatica del curso (EIF400-II-2026-GrammarCypherSprint1.g4) recortada al
  * alcance del SPEC de casos de P1: solo patrones de nodo (sin relaciones), varios patrones
  * separados por coma, comparaciones entre expresiones simples, y toda consulta empieza con MATCH.</p>
- *
- * <pre>
- * query          : matchClause+ updatingClause* returnClause? EOF
- * matchClause    : MATCH pattern whereClause?
- * updatingClause : createClause | deleteClause
- * createClause   : CREATE pattern
- * deleteClause   : DETACH? DELETE expression ("," expression)*
- * returnClause   : RETURN projection ("," projection)*
- * projection     : expression (AS variable)?
- * whereClause    : WHERE expression
- * pattern        : nodePattern ("," nodePattern)*
- * nodePattern    : "(" variable? labels? properties? ")"
- * labels         : (":" name)+
- * properties     : "{" (property ("," property)*)? "}"
- * property       : name ":" expression
- * expression     : simple (comparisonOperator simple)?
- * simple         : variable "." name | literal | variable
- * </pre>
  *
  * <p>Cada regla es un parser construido con los combinadores de {@link Combinators}:
  * {@code Sequence} para el orden, {@code Or} para las alternativas, {@code Plus}/{@code Star}
@@ -106,6 +88,25 @@ public class Grammar {
 
     /**
      * <pre>{@code
+     * updatingClause : createClause
+     *                | setClause
+     *                | deleteClause
+     *                | removeClause
+     * }</pre>
+     * Implementado: {@code createClause | deleteClause}
+     */
+    private static IParser<InputTokens, AstNode, String> updatingClause() {
+        return OrFlat(concatStringList,
+                createClause(),
+                setClause(),
+                deleteClause(),
+                removeClause()
+        );
+    }
+
+
+    /**
+     * <pre>{@code
      * matchClause : "MATCH" pattern whereClause?
      * }</pre>
      */
@@ -140,6 +141,211 @@ public class Grammar {
 
     /**
      * <pre>{@code
+     * setClause
+     *     : "SET" setItem ("," setItem)*
+     *     ;
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> setClause() {
+        return TFlat(
+                Sequence(
+                        parsify(SET),
+                        setItem(),
+                        asNode(Star(JustGetRight(parsify(COMMA), setItem())))
+                ),
+                parts -> toSet(parts)
+        );
+    }
+
+    private static IParser <InputTokens, AstNode, String> setItem(){
+
+        return OrFlat(concatStringList,
+
+                TFlat(
+                        Sequence(propertyExpression(), parsify(EQUALS), expression()),
+                        parts -> toSetProperty(parts)
+                ),
+
+                TFlat(
+                        Sequence(variable(), parsify(EQUALS), expression()),
+                        parts -> toSetAllProperties(parts)
+                ),
+
+                TFlat(
+                        Sequence(variable(), nodeLabels()),
+                        parts -> toSetLabels(parts)
+                )
+        );
+    }
+
+    /**
+     * <pre>{@code
+     * deleteClause : "DETACH"? "DELETE" expression ("," expression)*
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> deleteClause() {
+        return TFlat(
+                Sequence(
+                        asNode(Optional(parsify(DETACH))), parsify(DELETE), expression(), asNode(Star(JustGetRight(parsify(COMMA), expression())))
+                ), parts -> toDelete(parts)
+        );
+    }
+
+    /**
+     * <pre>{@code
+     * removeClause
+     *     : "REMOVE" removeItem ("," removeItem)*
+     *     ;
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> removeClause() {
+        return TFlat(
+                Sequence(
+                        parsify(REMOVE),
+                        removeItem(),
+                        asNode(Star(
+                                JustGetRight(parsify(COMMA), removeItem())
+                        ))
+                ),
+                parts -> toRemove(parts)
+        );
+    }
+
+    /**
+     * <pre>{@code
+     * removeItem
+     *     : variable nodeLabels     # RemoveLabels
+     *     | propertyExpression      # RemoveProperty
+     *     ;
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> removeItem() {
+        return OrFlat(concatStringList,
+
+                TFlat(
+                        Sequence(variable(), nodeLabels()),
+                        parts->toRemoveLabels(parts)
+                ),
+                TFlat(
+                        Sequence(propertyExpression()),
+                        parts->toRemoveProperty(parts)
+                )
+        );
+    }
+
+    /**
+     * <pre>{@code
+     * returnClause : "RETURN" "DISTINCT"? projectionBody
+     * }</pre>
+     * Implementado: {@code "RETURN" projection ("," projection)*}
+     */
+    private static IParser<InputTokens, AstNode, String> returnClause() {
+        return TFlat(
+                Sequence(parsify(RETURN), projection(),
+                        asNode(Star(JustGetRight(parsify(COMMA), projection())))),
+                parts -> toReturn(parts));
+    }
+
+    /**
+     * <pre>{@code
+     * projectionBody
+     *     : projectionItems projectionModifiers
+     *     ;
+     * }</pre>
+     */
+    private static String projectionBody() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * projectionItems
+     *     : "*" ("," projectionItem)*
+     *     | projectionItem ("," projectionItem)*
+     *     ;
+     * }</pre>
+     */
+    private static String projectionItems() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * projection : expression "AS" variable
+     *            | expression
+     * }</pre>
+     * Equivale a {@code projectionItem} del .g4.
+     */
+    private static IParser<InputTokens, AstNode, String> projectionItem() {
+        return OrFlat(concatStringList,
+                TFlat(
+                        Sequence(expression(), parsify(AS), variable()),
+                        parts -> toProjection(parts)
+                ),
+                TFlat(
+                        Sequence(expression()),
+                        parts -> toProjection(parts)
+                )
+        );
+    }
+
+    /**
+     * <pre>{@code
+     * projectionModifiers
+     *     : order? skip_? limit_?
+     *     ;
+     * }</pre>
+     */
+    private static String projectionModifiers() {
+        return "TO DO";
+    }
+
+    /**
+     * <pre>{@code
+     * order
+     *     : "ORDER" "BY" sortItem ("," sortItem)*
+     *     ;
+     * }</pre>
+     */
+    private static String order() {
+        return "TO DO";
+    }
+
+    /**
+     * <pre>{@code
+     * sortItem
+     *     : expression ("ASCENDING" | "DESCENDING")?
+     *     ;
+     * }</pre>
+     */
+    private static String sortItem() {
+        return "TO DO";
+    }
+
+    /**
+     * <pre>{@code
+     * skip_
+     *     : "SKIP" expression
+     *     ;
+     * }</pre>
+     */
+    private static String skip_() {
+        return "TO DO";
+    }
+
+    /**
+     * <pre>{@code
+     * limit_
+     *     : "LIMIT" expression
+     *     ;
+     * }</pre>
+     */
+    private static String limit_() {
+        return "TO DO";
+    }
+
+    /**
+     * <pre>{@code
      * pattern : patternElement ("," patternElement)*
      * }</pre>
      */
@@ -149,6 +355,18 @@ public class Grammar {
                         patternElement(),
                         asNode(Star(JustGetRight(parsify(COMMA), patternElement())))),
                 parts -> toPatterns(parts));
+    }
+
+
+    /**
+     * <pre>{@code
+     * patternPart
+     *     :  patternElement     // No (variable "=")? patternElement
+     *     ;
+     * }</pre>
+     */
+    private static String patternPart() {
+        return "TODO";
     }
 
     /**
@@ -167,14 +385,13 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * path : nodePattern relationshipPattern nodePattern
+     * patternElementChain
+     *     : relationshipPattern nodePattern
+     *     ;
      * }</pre>
-     * Primera alternativa de {@code patternElement}, separada como regla propia.
      */
-    private static IParser<InputTokens, AstNode, String> path() {
-        return TFlat(
-                Sequence(nodePattern(), relationshipPattern(), nodePattern()),
-                parts -> toPath(parts));
+    private static String patternElementChain() {
+        return "TODO";
     }
 
     /**
@@ -184,9 +401,9 @@ public class Grammar {
      */
     private static IParser<InputTokens, AstNode, String> nodePattern() {
         return TFlat(
-           Sequence(
-              parsify(TokenType.LPAREN),
-                   asNode(Optional(variable())),
+                Sequence(
+                        parsify(TokenType.LPAREN),
+                        asNode(Optional(variable())),
                         orEmpty(nodeLabels()),
                         orEmpty(properties()),
                         parsify(TokenType.RPAREN)),
@@ -204,12 +421,296 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * properties : mapLiteral
+     * labelName : symbolicName
      * }</pre>
-     * Usada en {@code nodePattern} pero no definida en el .g4.
      */
-    private static IParser<InputTokens, AstNode, String> properties() {
-        return mapLiteral();
+    private static IParser<InputTokens, AstNode, String> labelName() {
+        return symbolicName();
+    }
+
+    /**
+     * <pre>{@code
+     * relationshipPattern : "-" relationshipDetail? ("->" | "-")
+     *                     | "<-" relationshipDetail? "-"
+     * }</pre>
+     * Cada forma produce un {@code Relationship} con su {@link Direction}: {@code -...->} es {@code OUT},
+     * {@code -...-} es {@code NONE} y {@code <-...-} es {@code IN}.
+     */
+    private static IParser<InputTokens, AstNode, String> relationshipPattern() {
+        return OrFlat(concatStringList,
+                TFlat(
+                        Sequence(parsify(MINUS), orEmpty(relationshipDetail()), parsify(RIGHT_ARROW)),
+                        parts -> toRelationship(parts, Direction.OUT)),
+                TFlat(
+                        Sequence(parsify(MINUS), orEmpty(relationshipDetail()), parsify(MINUS)),
+                        parts -> toRelationship(parts, Direction.NONE)),
+                TFlat(
+                        Sequence(parsify(LEFT_ARROW), orEmpty(relationshipDetail()), parsify(MINUS)),
+                        parts -> toRelationship(parts, Direction.IN)));
+    }
+
+    /**
+     * <pre>{@code
+     * relationshipDetail : "[" variable? relTypes? relRange? relProperties? "]"
+     * }</pre>
+     * Implementado: {@code "[" variable? relTypes? properties? "]"}. Todavía no admite {@code relRange}, y las
+     * propiedades usan la misma regla {@code properties} de {@code nodePattern} en lugar de {@code relProperties}.
+     */
+    private static IParser<InputTokens, AstNode, String> relationshipDetail() {
+        return TFlat(
+                Sequence(
+                        parsify(LBRACKET),
+                        asNode(Optional(variable())),
+                        orEmpty(relTypes()),
+                        orEmpty(properties()),
+                        parsify(RBRACKET)),
+                parts -> toRelationshipDetail(parts));
+    }
+
+
+    /**
+     * <pre>{@code
+     * relTypes : ":" relTypeName ("|" relTypeName)*
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> relTypes() {
+        return TFlat(
+                Sequence(
+                        parsify(COLON),
+                        relTypeName(),
+                        asNode(Star(JustGetRight(parsify(PIPE), relTypeName())))),
+                parts -> toRelTypes(parts));
+    }
+
+    /**
+     * <pre>{@code
+     * relTypeName : symbolicName
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> relTypeName() {
+        return symbolicName();
+    }
+
+    /**
+     * <pre>{@code
+     * relRange
+     *     : "*" (integerLiteral (".." integerLiteral?)? | ".." integerLiteral)?
+     *     ;
+     * }</pre>
+     */
+    private static String relRange() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * relProperties
+     *     : "{" (symbolicName ":" expression ("," symbolicName ":" expression)*)? "}"
+     *     ;
+     * }</pre>
+     */
+    private static String relProperties() {
+        return "TODO";
+    }
+
+
+    /**
+     * <pre>{@code
+     * expression : orExpression
+     * }</pre>
+     * Implementado: {@code simple (comparisonOperator simple)?}
+     */
+    private static IParser<InputTokens, AstNode, String> expression() {
+        return TFlat(
+                Sequence(
+                        simple(),
+                        asNode(Optional(asNode(Sequence(comparisonOperator(), simple()))))
+                ),
+                parts -> toExpression(parts)
+        );
+    }
+
+    /**
+     * <pre>{@code
+     * orExpression
+     *     : andExpression ("OR" andExpression)*
+     *     ;
+     * }</pre>
+     */
+    private static String orExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * andExpression
+     *     : notExpression ("AND" notExpression)*
+     *     ;
+     * }</pre>
+     */
+    private static String andExpression() {
+        return "TODO";
+    }
+
+
+    /**
+     * <pre>{@code
+     * notExpression
+     *     : "NOT"* comparisonExpression
+     *     ;
+     * }</pre>
+     */
+    private static String notExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * comparisonExpression
+     *     : addOrSubtractExpression (comparisonOperator addOrSubtractExpression)*
+     *     ;
+     * }</pre>
+     */
+    private static String comparisonExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * comparisonOperator : "=" | "<>" | "<" | ">" | "<=" | ">="
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> comparisonOperator() {
+        return OrFlat(concatStringList,
+                parsify(EQUALS),
+                parsify(NOTEQUALS),
+                parsify(LESS_THAN),
+                parsify(GREATER_THAN),
+                parsify(LESS_THAN_OR_EQUAL),
+                parsify(GREATER_THAN_OR_EQUAL)
+        );
+    }
+
+    /**
+     * <pre>{@code
+     * addOrSubtractExpression
+     *     : multiplyDivideModuloExpression (("+" | "-") multiplyDivideModuloExpression)*
+     *     ;
+     * }</pre>
+     */
+    private static String addOrSubtractExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * multiplyDivideModuloExpression
+     *     : unaryAddOrSubtractExpression (("*" | "/" | "%") unaryAddOrSubtractExpression)*
+     *     ;
+     * }</pre>
+     */
+    private static String multiplyDivideModuloExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * unaryAddOrSubtractExpression
+     *     : ("+" | "-")* nullTestExpression
+     *     ;
+     * }</pre>
+     */
+    private static String unaryAddOrSubtractExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * nullTestExpression
+     *     : propertyOrLabelsExpression ("IS" "NOT"? "NULL")?
+     *     ;
+     * }</pre>
+     */
+    private static String nullTestExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * propertyOrLabelsExpression
+     *     : atom (propertyLookup | nodeLabels)*
+     *     ;
+     * }</pre>
+     */
+    private static String propertyOrLabelsExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * propertyLookup
+     *     : "." propertyKeyName
+     *     ;
+     * }</pre>
+     */
+    private static String propertyLookup() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * propertyExpression
+     *     : atom propertyLookup+
+     *     ;
+     * }</pre>
+     */
+    private static String propertyExpression() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * propertyKeyName : symbolicName
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> propertyKeyName() {
+        return symbolicName();
+    }
+
+    /**
+     * <pre>{@code
+     * atom
+     *     : literal
+     *     | "(" expression ")"
+     *     | functionInvocation
+     *     | variable
+     *     ;
+     * }</pre>
+     */
+    private static String atom() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * functionInvocation
+     *     : functionName "(" (expression ("," expression)*)? ")"
+     *     ;
+     * }</pre>
+     */
+    private static String functionInvocation() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * functionName
+     *     : symbolicName
+     *     ;
+     * }</pre>
+     */
+    private static String functionName() {
+        return "TODO";
     }
 
     /**
@@ -231,18 +732,6 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * propertyEntry : propertyKeyName ":" expression
-     * }</pre>
-     * Fragmento de {@code mapLiteral}, separado como regla propia.
-     */
-    private static IParser<InputTokens, AstNode, String> propertyEntry() {
-        return TFlat(
-                Sequence(propertyKeyName(), parsify(TokenType.COLON), expression()),
-                parts -> toProperty(parts));
-    }
-
-    /**
-     * <pre>{@code
      * variable : symbolicName
      * }</pre>
      */
@@ -252,20 +741,53 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * labelName : symbolicName
+     * literal : numberLiteral
+     *         | StringLiteral
+     *         | booleanLiteral
+     *         | "NULL"
      * }</pre>
+     * Implementado: {@code NUMBER | STRING_LITERAL}
      */
-    private static IParser<InputTokens, AstNode, String> labelName() {
-        return symbolicName();
+    private static IParser<InputTokens, AstNode, String> literal() {
+        return OrFlat(concatStringList,
+                parsify(NUMBER),
+                parsify(STRING_LITERAL)
+        );
     }
 
     /**
      * <pre>{@code
-     * propertyKeyName : symbolicName
+     * numberLiteral
+     *     : doubleLiteral
+     *     | integerLiteral
+     *     ;
      * }</pre>
      */
-    private static IParser<InputTokens, AstNode, String> propertyKeyName() {
-        return symbolicName();
+    private static String numberLiteral() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * booleanLiteral
+     *     : "TRUE"
+     *     | "FALSE"
+     *     ;
+     * }</pre>
+     */
+    private static String booleanLiteral() {
+        return "TODO";
+    }
+
+    /**
+     * <pre>{@code
+     * integerLiteral
+     *     : DecimalInteger
+     *     ;
+     * }</pre>
+     */
+    private static String integerLiteral() {
+        return "TODO";
     }
 
     /**
@@ -277,94 +799,45 @@ public class Grammar {
         return parsify(TokenType.IDENTIFIER);
     }
 
-    /**
-     * <pre>{@code
-     * relationshipPattern : "-" relationshipDetail? ("->" | "-")
-     *                     | "<-" relationshipDetail? "-"
-     * }</pre>
-     * Implementado: pendiente.
-     */
-    private static IParser<InputTokens, AstNode, String> relationshipPattern() {
-        return source -> new Fail<>("not implemented yet");
-    }
+    // A PARTIR DE AQUI LOS DE ABAJO NO SALEN EN GRAMATICA OFICIAL
+
 
     /**
      * <pre>{@code
-     * updatingClause : createClause
-     *                | setClause
-     *                | deleteClause
-     *                | removeClause
+     * path : nodePattern relationshipPattern nodePattern
      * }</pre>
-     * Implementado: {@code createClause | deleteClause}
+     * Primera alternativa de {@code patternElement}, separada como regla propia.
      */
-    private static IParser<InputTokens, AstNode, String> updatingClause() {
-        return OrFlat(concatStringList,
-                createClause(),
-                deleteClause()
-        );
-    }
-
-    /**
-     * <pre>{@code
-     * returnClause : "RETURN" "DISTINCT"? projectionBody
-     * }</pre>
-     * Implementado: {@code "RETURN" projection ("," projection)*}
-     */
-    private static IParser<InputTokens, AstNode, String> returnClause() {
+    private static IParser<InputTokens, AstNode, String> path() {
         return TFlat(
-                Sequence(parsify(RETURN), projection(),
-                        asNode(Star(JustGetRight(parsify(COMMA), projection())))),
-                parts -> toReturn(parts));
+                Sequence(nodePattern(), relationshipPattern(), nodePattern()),
+                parts -> toPath(parts));
     }
+
 
     /**
      * <pre>{@code
-     * projection : expression "AS" variable
-     *            | expression
+     * properties : mapLiteral
      * }</pre>
-     * Equivale a {@code projectionItem} del .g4.
+     * Usada en {@code nodePattern} pero no definida en el .g4.
      */
-    private static IParser<InputTokens, AstNode, String> projection() {
-        return OrFlat(concatStringList,
-                TFlat(
-                        Sequence(expression(), parsify(AS), variable()),
-                        parts -> toProjection(parts)
-                ),
-                TFlat(
-                        Sequence(expression()),
-                        parts -> toProjection(parts)
-                )
-        );
+    private static IParser<InputTokens, AstNode, String> properties() {
+        return mapLiteral();
     }
+
 
     /**
      * <pre>{@code
-     * deleteClause : "DETACH"? "DELETE" expression ("," expression)*
+     * propertyEntry : propertyKeyName ":" expression
      * }</pre>
+     * Fragmento de {@code mapLiteral}, separado como regla propia.
      */
-    private static IParser<InputTokens, AstNode, String> deleteClause() {
+    private static IParser<InputTokens, AstNode, String> propertyEntry() {
         return TFlat(
-                Sequence(
-                        asNode(Optional(parsify(DETACH))), parsify(DELETE), expression(), asNode(Star(JustGetRight(parsify(COMMA), expression())))
-                ), parts -> toDelete(parts)
-        );
+                Sequence(propertyKeyName(), parsify(TokenType.COLON), expression()),
+                parts -> toProperty(parts));
     }
 
-    /**
-     * <pre>{@code
-     * expression : orExpression
-     * }</pre>
-     * Implementado: {@code simple (comparisonOperator simple)?}
-     */
-    private static IParser<InputTokens, AstNode, String> expression() {
-        return TFlat(
-                Sequence(
-                        simple(),
-                        asNode(Optional(asNode(Sequence(comparisonOperator(), simple()))))
-                ),
-                parts -> toExpression(parts)
-        );
-    }
 
     /**
      * <pre>{@code
@@ -395,36 +868,16 @@ public class Grammar {
         return symbolicName();
     }
 
-    /**
-     * <pre>{@code
-     * literal : numberLiteral
-     *         | StringLiteral
-     *         | booleanLiteral
-     *         | "NULL"
-     * }</pre>
-     * Implementado: {@code NUMBER | STRING_LITERAL}
-     */
-    private static IParser<InputTokens, AstNode, String> literal() {
-        return OrFlat(concatStringList,
-                parsify(NUMBER),
-                parsify(STRING_LITERAL)
+
+
+    private static IParser<InputTokens, AstNode, String> propertyExpression() {
+        return TFlat(
+                Sequence(variable(), parsify(DOT), propertyKeyName()),
+                parts -> toPropertyAccess(parts)
         );
     }
 
-    /**
-     * <pre>{@code
-     * comparisonOperator : "=" | "<>" | "<" | ">" | "<=" | ">="
-     * }</pre>
-     */
-    private static IParser<InputTokens, AstNode, String> comparisonOperator() {
-        return OrFlat(concatStringList,
-                parsify(EQUALS),
-                parsify(NOTEQUALS),
-                parsify(LESS_THAN),
-                parsify(GREATER_THAN),
-                parsify(LESS_THAN_OR_EQUAL),
-                parsify(GREATER_THAN_OR_EQUAL)
-        );
-    }
+
+
 }
 

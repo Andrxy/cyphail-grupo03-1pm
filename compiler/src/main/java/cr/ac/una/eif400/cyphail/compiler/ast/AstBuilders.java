@@ -3,6 +3,7 @@ package cr.ac.una.eif400.cyphail.compiler.ast;
 import java.util.ArrayList;
 import java.util.List;
 import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
+import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.Relationship.Direction;
 
 /**
  * Métodos constructores y transformadores para armar
@@ -23,7 +24,7 @@ public class AstBuilders {
     public static AstNode toQuery(List<AstNode> parts) {
         return new Query(
                 itemsAs(parts.get(0), Match.class),
-                itemsAs(parts.get(1), AstNode.class),
+                itemsAs(parts.get(1), UpdatingClause.class),
                 itemsAs(parts.get(2), Return.class));
     }
 
@@ -63,6 +64,19 @@ public class AstBuilders {
     }
 
     /**
+     * Agrupa un primer elemento y los que le siguen, separados por coma, en un nodo ({@link Node})
+     *
+     * @param parts la lista que contiene el primer elemento y el nodo con los demás
+     * @return un nodo {@link AstNode} contenedor con todos los elementos
+     */
+    public static AstNode toItems(List<AstNode> parts) {
+        var items = new ArrayList<AstNode>();
+        items.add(parts.get(0));
+        items.addAll(itemsAs(parts.get(1), AstNode.class));
+        return new Node(items);
+    }
+
+    /**
      * Construye un nodo ({@link Path})
      *
      * @param parts la lista que contiene el origen, la relación y el destino
@@ -71,8 +85,51 @@ public class AstBuilders {
     public static AstNode toPath(List<AstNode> parts) {
         return new Path(
                 (Pattern) parts.get(0),
-                parts.get(1),
+                (Relationship) parts.get(1),
                 (Pattern) parts.get(2));
+    }
+
+    /**
+     * Agrupa las partes del detalle de una relación en un nodo ({@link Node})
+     *
+     * @param parts la lista de componentes del detalle, con sus corchetes
+     * @return un nodo {@link AstNode} contenedor con la variable, los tipos y las propiedades
+     */
+    public static AstNode toRelationshipDetail(List<AstNode> parts) {
+        return new Node(List.of(parts.get(1), parts.get(2), parts.get(3)));
+    }
+
+    /**
+     * Agrupa los tipos de una relación en un nodo ({@link Node})
+     *
+     * @param parts la lista que contiene el primer tipo y los tipos alternativos separados por {@code |}
+     * @return un nodo {@link AstNode} contenedor con los tipos
+     */
+    public static AstNode toRelTypes(List<AstNode> parts) {
+        var types = new ArrayList<AstNode>();
+        types.add(parts.get(1));
+        types.addAll(itemsAs(parts.get(2), AstNode.class));
+        return new Node(types);
+    }
+
+    /**
+     * Construye un nodo ({@link Relationship})
+     *
+     * @param parts la lista que contiene el símbolo de apertura, el detalle opcional y el símbolo de cierre
+     * @param direction el sentido de la relación según las flechas escritas
+     * @return un nodo {@link AstNode} de tipo {@link Relationship}
+     */
+    public static AstNode toRelationship(List<AstNode> parts, Direction direction) {
+        var detail = itemsAs(parts.get(1), AstNode.class);
+        if (detail.isEmpty()) {
+            return new Relationship(List.of(), List.of(), List.of(), List.of(), direction);
+        }
+        return new Relationship(
+                itemsAs(detail.get(0), Leaf.class),
+                itemsAs(detail.get(1), Leaf.class),
+                List.of(),
+                itemsAs(detail.get(2), Property.class),
+                direction);
     }
 
     /**
@@ -122,7 +179,7 @@ public class AstBuilders {
         var projections = new ArrayList<AstNode>();
         projections.add(parts.get(1));
         projections.addAll(itemsAs(parts.get(2), AstNode.class));
-        return new Return(projections);
+        return new Return(false, projections, List.of());
     }
 
     /**
@@ -188,7 +245,7 @@ public class AstBuilders {
      * @return un nodo {@link AstNode} de tipo {@link Create}
      */
     public static AstNode toCreate(List<AstNode> parts) {
-        return new Create(itemsAs(parts.get(1), Pattern.class));
+        return new Create(itemsAs(parts.get(1), AstNode.class));
     }
 
     /**
@@ -206,4 +263,53 @@ public class AstBuilders {
         comp.addAll(itemsAs(opt.get(0), AstNode.class));
         return new Comparison(parts.get(0), (Leaf) comp.get(0), comp.get(1));
     }
+
+    public static AstNode toSetProperty(List<AstNode> parts) {
+        return new SetProperty(
+                (PropertyAccess) parts.get(0),
+                parts.get(2)
+        );
+    }
+
+    public static AstNode toSetAllProperties(List<AstNode> parts) {
+        return new SetAllProperties(
+                (Leaf) parts.get(0),
+                parts.get(2)
+        );
+    }
+
+    public static AstNode toSetLabels(List<AstNode> parts) {
+        return new SetLabels(
+                (Leaf) parts.get(0),
+                itemsAs(parts.get(1), Leaf.class)
+        );
+    }
+
+    public static AstNode toSet(List<AstNode> parts) {
+        var items = new ArrayList<AstNode>();
+        items.add(parts.get(1));
+        items.addAll(itemsAs(parts.get(2), AstNode.class));
+
+        return new Set(items);
+    }
+
+    public static AstNode toRemoveLabels(List<AstNode> parts) {
+        return new RemoveLabels(
+                (Leaf) parts.get(0),
+                itemsAs(parts.get(1), Leaf.class)
+        );
+    }
+
+    public static AstNode toRemoveProperty(AstNode target) {
+        return new RemoveProperty((PropertyAccess) target);
+    }
+
+    public static AstNode toRemove(List<AstNode> parts) {
+        var items = new ArrayList<AstNode>();
+        items.add(parts.get(1));
+        items.addAll(itemsAs(parts.get(2), AstNode.class));
+
+        return new Remove(items);
+    }
+
 }
