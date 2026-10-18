@@ -101,9 +101,16 @@ public class Lexers {
     public static Lexer StringLiteral = specificLexer("\"[^\"]*\"|'[^']*'", TokenType.STRING_LITERAL);
 
     /** Para identificadores (nombres de variables, propiedades, etc) */
-    public static Lexer Identifier = specificLexer("[a-zA-Z_]\\w*", TokenType.IDENTIFIER);
+    public static Lexer Identifier = specificLexer("(?!__)[a-zA-Z_]\\w*", TokenType.IDENTIFIER);
 
     /** Para números enteros y decimales */
     public static Lexer Numbers = specificLexer("\\d+(\\.\\d+)?", TokenType.NUMBER);
+
+    /** Para comentarios de línea */
+    public static Lexer LineComments = specificLexer("//[^\\r\\n]*", TokenType.LINE_COMMENT);
+
+    /** Para comentarios de bloque */
+    public static Lexer BlockComments = specificLexer("(?s)/\\*.*?\\*/", TokenType.BLOCK_COMMENT);
+
 }
 
