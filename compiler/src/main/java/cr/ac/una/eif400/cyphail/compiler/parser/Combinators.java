@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -135,6 +136,24 @@ public class Combinators {
         return (I source) -> switch (parser.parse(source)) {
             case Ok(I rest, T value) -> new Ok<>(rest, List.of(value));
             case Fail(R _) -> new Ok<>(source, List.of());
+        };
+    }
+
+    /**
+     * Acepta el resultado de un parser solo si su valor cumple un predicado, de lo contrario falla con la razón dada.
+     * Si el parser original falla, se propaga su propia razón y el predicado no se evalúa
+     *
+     * @param parser el parser original cuyo valor se evalúa
+     * @param accepts el predicado que debe cumplir el valor para ser aceptado
+     * @param reason la razón con la que se falla cuando el valor no cumple el predicado
+     * @return un parser que devuelve el mismo resultado si el valor cumple el predicado, o un fallo con la razón dada
+     */
+    public static <I, T, R> IParser<I, T, R> Filter(IParser<I, T, R> parser, Predicate<T> accepts, R reason) {
+        return (I source) -> switch (parser.parse(source)) {
+            case Ok(I rest, T value) -> accepts.test(value)
+                    ? new Ok<I, T, R>(rest, value)
+                    : new Fail<I, T, R>(reason);
+            case Fail(R failure) -> new Fail<>(failure);
         };
     }
 
