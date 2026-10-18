@@ -9,5 +9,5 @@ import java.util.List;
  * @version P1
  * @param projections la lista de proyecciones o expresiones a retornar
  */
-public record Return(List<AstNode> projections) implements AstNode {
+public record Return(boolean distinct, List<AstNode> projections, List<AstNode> modifiers) implements AstNode {
 }

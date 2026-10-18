@@ -5,9 +5,9 @@ import java.util.List;
 /**
  * Cláusula de creación ({@code CREATE}) dentro del AST
  *
- * @author Andrey Solano
- * @version P1
+ * @author Andrey Solano, Alejandro Miranda
+ * @version P2
  * @param patterns la lista de patrones de grafos a crear
  */
-public record Create(List<Pattern> patterns) implements AstNode {
+public record Create(List<AstNode> patterns) implements UpdatingClause {
 }

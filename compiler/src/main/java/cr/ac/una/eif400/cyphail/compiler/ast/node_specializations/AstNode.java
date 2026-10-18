@@ -10,7 +10,8 @@ package cr.ac.una.eif400.cyphail.compiler.ast.node_specializations;
  * @author Wilson Umaña
  * @version P1
  */
-public sealed interface AstNode permits Leaf, Node, Query, Match, Where,
-                                        Create, Delete, Return, Path, Pattern,
-                                        Property, PropertyAccess, Comparison,
-                                        SimpleProjection, AliasedProjection { }
+public sealed interface AstNode permits AliasedProjection, And, Arithmetic, Comparison,
+        FunctionCall, LabelTest, Leaf, Limit, Match, Node, Not, NullTest, Or, Order,
+        Path, Pattern, Property, PropertyAccess, Query, Relationship, RemoveClause, RemoveLabels,
+        RemoveProperty, Return, SetAllProperties, SetClause, SetLabels, SetProperty, SimpleProjection,
+        Skip, SortItem, Unary, UpdatingClause, Where { }
