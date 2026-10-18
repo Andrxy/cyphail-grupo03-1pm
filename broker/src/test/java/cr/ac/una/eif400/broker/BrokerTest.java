@@ -2,6 +2,8 @@ package cr.ac.una.eif400.broker;
 
 import cr.ac.una.eif400.broker.fake.FakeGraphs;
 import cr.ac.una.eif400.broker.fake.FakeQueries;
+import cr.ac.una.eif400.broker.fake.FixtureLoader;
+import cr.ac.una.eif400.broker.model.QueryEntry;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,13 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Pruebas del broker: instancia unica, catalogo de grafos, grafo activo de la
- * sesion y resolucion de consultas.
- *
- * @author Grupo 03-1pm
- * @version P1.1
- */
 @DisplayName("Pruebas del Broker")
 public class BrokerTest {
 
@@ -59,14 +54,18 @@ public class BrokerTest {
     @Test
     @DisplayName("Confirma la existencia de un grafo del catalogo")
     void confirmaUnGrafoDelCatalogo() {
-        assertTrue(broker.graphExists("Amigos"));
-        assertTrue(broker.graphExists("amigos"), "Sin importar mayusculas");
+        String nombre = FakeGraphs.getAvailableGraphs()[0].id();
+
+        assertTrue(broker.graphExists(nombre));
+        assertTrue(broker.graphExists(nombre.toLowerCase()), "Sin importar mayusculas");
     }
 
     @Test
     @DisplayName("Niega la existencia de un grafo fuera del catalogo")
     void niegaUnGrafoDesconocido() {
-        assertFalse(broker.graphExists("NoExiste"));
+        String desconocido = FixtureLoader.unknownGraphName(FakeGraphs.getAvailableGraphs());
+
+        assertFalse(broker.graphExists(desconocido));
     }
 
     @Test
@@ -78,32 +77,34 @@ public class BrokerTest {
     @Test
     @DisplayName("Recuerda el grafo activo de la sesion")
     void recuerdaElGrafoActivo() {
-        broker.setCurrentGraph("Amigos");
-        assertEquals("Amigos", broker.getCurrentGraph());
+        broker.setCurrentGraph("sesion-grafo-1");
+        assertEquals("sesion-grafo-1", broker.getCurrentGraph());
     }
 
     @Test
     @DisplayName("Cambiar de grafo reemplaza el anterior")
     void cambiarDeGrafoReemplazaElAnterior() {
-        broker.setCurrentGraph("Amigos");
-        broker.setCurrentGraph("planets");
+        broker.setCurrentGraph("sesion-grafo-1");
+        broker.setCurrentGraph("sesion-grafo-2");
 
-        assertEquals("planets", broker.getCurrentGraph());
+        assertEquals("sesion-grafo-2", broker.getCurrentGraph());
     }
 
     @Test
     @DisplayName("Resuelve una consulta conocida")
     void resuelveUnaConsultaConocida() {
-        QueryResponse response = broker.resolveQuery("MATCH (t:Tarea) RETURN t.titulo, t.estado");
+        QueryEntry entrada = FixtureLoader.loadQueries()[0];
+        QueryResponse response = broker.resolveQuery(entrada.query());
 
         assertTrue(response.isOk());
-        assertArrayEquals(new String[]{"t.titulo", "t.estado"}, response.getHeaders());
+        assertArrayEquals(entrada.headers(), response.getHeaders());
     }
 
     @Test
     @DisplayName("Reporta error ante una consulta desconocida")
     void reportaErrorAnteConsultaDesconocida() {
-        QueryResponse response = broker.resolveQuery("MATCH (x:Desconocido) RETURN x");
+        String desconocida = FixtureLoader.unknownQuery(FixtureLoader.loadQueries());
+        QueryResponse response = broker.resolveQuery(desconocida);
 
         assertFalse(response.isOk());
         assertEquals(FakeQueries.NOT_RESOLVED_MESSAGE, response.getMessage());
@@ -112,9 +113,10 @@ public class BrokerTest {
     @Test
     @DisplayName("Resolver una consulta no cambia el grafo activo")
     void resolverNoCambiaElGrafoActivo() {
-        broker.setCurrentGraph("Amigos");
-        broker.resolveQuery("MATCH (t:Tarea) RETURN t.titulo, t.estado");
+        QueryEntry entrada = FixtureLoader.loadQueries()[0];
+        broker.setCurrentGraph("sesion-grafo-1");
+        broker.resolveQuery(entrada.query());
 
-        assertEquals("Amigos", broker.getCurrentGraph());
+        assertEquals("sesion-grafo-1", broker.getCurrentGraph());
     }
 }

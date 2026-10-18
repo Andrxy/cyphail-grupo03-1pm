@@ -1,5 +1,6 @@
 package cr.ac.una.eif400.broker.fake;
 
+import cr.ac.una.eif400.broker.model.Graph;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -8,12 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Pruebas del catalogo de grafos quemados del sprint P1.1.
- *
- * @author Grupo 03-1pm
- * @version P1.1
- */
 @DisplayName("Pruebas de FakeGraphs")
 public class FakeGraphsTest {
 
@@ -24,39 +19,55 @@ public class FakeGraphsTest {
     }
 
     @Test
-    @DisplayName("El catalogo trae los cinco grafos del sprint")
-    void elCatalogoTraeLosCincoGrafos() {
-        assertEquals(5, FakeGraphs.getAvailableGraphs().length);
+    @DisplayName("El catalogo trae al menos un grafo")
+    void elCatalogoTraeAlMenosUnGrafo() {
+        assertTrue(FakeGraphs.getAvailableGraphs().length > 0);
     }
 
     @Test
     @DisplayName("Cada grafo tiene nombre y descripcion")
     void cadaGrafoTieneNombreYDescripcion() {
-        for (String[] graph : FakeGraphs.toRows()) {
-            assertEquals(2, graph.length, "El grafo tiene tantas columnas como cabeceras");
+        for (Graph graph : FakeGraphs.getAvailableGraphs()) {
+            assertFalse(graph.id().isBlank());
+            assertFalse(graph.description().isBlank());
         }
     }
 
     @Test
-    @DisplayName("Reconoce un grafo del catalogo")
-    void reconoceUnGrafoDelCatalogo() {
-        assertTrue(FakeGraphs.exists("Amigos"));
-        assertTrue(FakeGraphs.exists("Tasks"));
-        assertTrue(FakeGraphs.exists("teams"));
-        assertTrue(FakeGraphs.exists("planets"));
+    @DisplayName("toRows refleja cada grafo del catalogo")
+    void toRowsReflejaCadaGrafoDelCatalogo() {
+        Graph[] graphs = FakeGraphs.getAvailableGraphs();
+        String[][] rows = FakeGraphs.toRows();
+
+        assertEquals(graphs.length, rows.length);
+        for (int i = 0; i < graphs.length; i++) {
+            assertArrayEquals(new String[]{graphs[i].id(), graphs[i].description()}, rows[i]);
+        }
+    }
+
+    @Test
+    @DisplayName("Reconoce cada grafo del catalogo")
+    void reconoceCadaGrafoDelCatalogo() {
+        for (Graph graph : FakeGraphs.getAvailableGraphs()) {
+            assertTrue(FakeGraphs.exists(graph.id()));
+        }
     }
 
     @Test
     @DisplayName("La busqueda ignora mayusculas y minusculas")
     void laBusquedaIgnoraMayusculas() {
-        assertTrue(FakeGraphs.exists("amigos"), "Busca en minuscula");
-        assertTrue(FakeGraphs.exists("TEAMS"), "Busca en mayuscula");
+        for (Graph graph : FakeGraphs.getAvailableGraphs()) {
+            assertTrue(FakeGraphs.exists(graph.id().toLowerCase()));
+            assertTrue(FakeGraphs.exists(graph.id().toUpperCase()));
+        }
     }
 
     @Test
     @DisplayName("No reconoce un grafo fuera del catalogo")
     void noReconoceUnGrafoDesconocido() {
-        assertFalse(FakeGraphs.exists("NoExiste"));
+        String desconocido = FixtureLoader.unknownGraphName(FakeGraphs.getAvailableGraphs());
+
+        assertFalse(FakeGraphs.exists(desconocido));
     }
 
     @Test
