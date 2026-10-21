@@ -241,8 +241,8 @@ public class Grammar {
      */
     private static IParser<InputTokens, AstNode, String> returnClause() {
         return TFlat(
-                Sequence(parsify(RETURN), projection(),
-                        asNode(Star(JustGetRight(parsify(COMMA), projection())))),
+                Sequence(parsify(RETURN), projectionItem(),
+                        asNode(Star(JustGetRight(parsify(COMMA), projectionItem())))),
                 parts -> toReturn(parts));
     }
 
@@ -657,16 +657,7 @@ public class Grammar {
         return "TODO";
     }
 
-    /**
-     * <pre>{@code
-     * propertyExpression
-     *     : atom propertyLookup+
-     *     ;
-     * }</pre>
-     */
-    private static String propertyExpression() {
-        return "TODO";
-    }
+
 
     /**
      * <pre>{@code

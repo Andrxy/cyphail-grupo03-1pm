@@ -300,8 +300,8 @@ public class AstBuilders {
         );
     }
 
-    public static AstNode toRemoveProperty(AstNode target) {
-        return new RemoveProperty((PropertyAccess) target);
+    public static AstNode toRemoveProperty(List<AstNode> parts) {
+        return new RemoveProperty((PropertyAccess) parts.getFirst());
     }
 
     public static AstNode toRemove(List<AstNode> parts) {
