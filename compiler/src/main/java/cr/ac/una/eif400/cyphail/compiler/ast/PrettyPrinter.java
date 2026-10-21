@@ -47,7 +47,14 @@ public class PrettyPrinter {
 
             case Delete(var targets) -> block("Delete:", "Exprs: " + listify(targets));
 
-            case Return(var projections) -> block("Return:", block("Projection:", "Items: " + listify(projections), "Modifiers: []"));
+            case Return(var distinct, var projections, var modifiers) ->
+                    block("Return:",
+                            "Distinct: " + distinct,
+                            block("Projection:",
+                                    "Items: " + listify(projections),
+                                    "Modifiers: " + listify(modifiers)
+                            )
+                    );
 
             case Path(var from, var relationship, var to) -> block("Path:", print(from), print(relationship), print(to));
 
