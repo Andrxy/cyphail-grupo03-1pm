@@ -9,5 +9,5 @@ import java.util.List;
  * @version P1
  * @param targets la lista de nodos o cosas a eliminar
  */
-public record Delete(List<AstNode> targets) implements UpdatingClause {
+public record Delete(boolean detach, List<AstNode> targets) implements UpdatingClause {
 }
