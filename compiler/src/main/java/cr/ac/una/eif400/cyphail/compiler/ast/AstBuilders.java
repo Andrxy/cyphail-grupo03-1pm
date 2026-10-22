@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
 import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.Relationship.Direction;
+import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 
 /**
  * Métodos constructores y transformadores para armar
@@ -77,26 +78,13 @@ public class AstBuilders {
     }
 
     /**
-     * Construye un nodo ({@link Path})
-     *
-     * @param parts la lista que contiene el origen, la relación y el destino
-     * @return un nodo {@link AstNode} de tipo {@link Path}
-     */
-    public static AstNode toPath(List<AstNode> parts) {
-        return new Path(
-                (Pattern) parts.get(0),
-                (Relationship) parts.get(1),
-                (Pattern) parts.get(2));
-    }
-
-    /**
      * Agrupa las partes del detalle de una relación en un nodo ({@link Node})
      *
      * @param parts la lista de componentes del detalle, con sus corchetes
      * @return un nodo {@link AstNode} contenedor con la variable, los tipos y las propiedades
      */
     public static AstNode toRelationshipDetail(List<AstNode> parts) {
-        return new Node(List.of(parts.get(1), parts.get(2), parts.get(3)));
+        return new Node(List.of(parts.get(1), parts.get(2), parts.get(3), parts.get(4)));
     }
 
     /**
@@ -127,8 +115,8 @@ public class AstBuilders {
         return new Relationship(
                 itemsAs(detail.get(0), Leaf.class),
                 itemsAs(detail.get(1), Leaf.class),
-                List.of(),
-                itemsAs(detail.get(2), Property.class),
+                itemsAs(detail.get(2), AstNode.class),
+                itemsAs(detail.get(3), Property.class),
                 direction);
     }
 
@@ -176,10 +164,11 @@ public class AstBuilders {
      * @return un nodo {@link AstNode} de tipo {@link Return}
      */
     public static AstNode toReturn(List<AstNode> parts) {
-        var projections = new ArrayList<AstNode>();
-        projections.add(parts.get(1));
-        projections.addAll(itemsAs(parts.get(2), AstNode.class));
-        return new Return(false, projections, List.of());
+        var body = itemsAs(parts.get(2), AstNode.class);
+        return new Return(
+                !itemsAs(parts.get(1), Leaf.class).isEmpty(),
+                itemsAs(body.get(0), AstNode.class),
+                itemsAs(body.get(1), AstNode.class));
     }
 
     /**
@@ -212,30 +201,13 @@ public class AstBuilders {
     }
 
     /**
-     * Construye un nodo  ({@link PropertyAccess})
-     *
-     * @param parts la lista que contiene la variable y la clave de la propiedad
-     * @return un nodo {@link AstNode} de tipo {@link PropertyAccess}
-     */
-    public static AstNode toPropertyAccess(List<AstNode> parts) {
-        return new PropertyAccess(
-                (Leaf) parts.get(0),
-                (Leaf) parts.get(2)
-        );
-    }
-
-    /**
      * Construye un nodo ({@link Delete})
      *
      * @param parts la lista de elementos a eliminar
      * @return un nodo {@link AstNode} de tipo {@link Delete}
      */
     public static AstNode toDelete(List<AstNode> parts) {
-        var targets = new ArrayList<AstNode>();
-        targets.add(parts.get(2));
-        targets.addAll(itemsAs(parts.get(3), AstNode.class));
-
-        return new Delete(targets);
+        return new Delete(!itemsAs(parts.get(0), Leaf.class).isEmpty(), itemsAs(toItems(parts.subList(2, 4)), AstNode.class));
     }
 
     /**
@@ -286,11 +258,7 @@ public class AstBuilders {
     }
 
     public static AstNode toSet(List<AstNode> parts) {
-        var items = new ArrayList<AstNode>();
-        items.add(parts.get(1));
-        items.addAll(itemsAs(parts.get(2), AstNode.class));
-
-        return new Set(items);
+        return new SetClause(itemsAs(toItems(parts.subList(1, 3)), AstNode.class));
     }
 
     public static AstNode toRemoveLabels(List<AstNode> parts) {
@@ -305,11 +273,137 @@ public class AstBuilders {
     }
 
     public static AstNode toRemove(List<AstNode> parts) {
-        var items = new ArrayList<AstNode>();
-        items.add(parts.get(1));
-        items.addAll(itemsAs(parts.get(2), AstNode.class));
-
-        return new Remove(items);
+        return new RemoveClause(itemsAs(toItems(parts.subList(1, 3)), AstNode.class));
     }
+
+
+    /** Junta los modificadores presentes (ORDER, SKIP, LIMIT) en un solo ({@link Node}) */
+    public static AstNode toModifiers(List<AstNode> parts) {
+        return new Node(parts.stream().flatMap(part -> itemsAs(part, AstNode.class).stream()).toList());
+    }
+
+    public static AstNode toOrder(List<AstNode> parts) {
+        return new Order(itemsAs(toItems(parts.subList(2, 4)), SortItem.class));
+    }
+
+    /** Construye un nodo ({@link SortItem}); sin dirección explícita es ascendente */
+    public static AstNode toSortItem(List<AstNode> parts) {
+        var direction = itemsAs(parts.get(1), Leaf.class);
+        return new SortItem(parts.get(0),
+                !direction.isEmpty() && direction.getFirst().token().type() == TokenType.DESCENDING);
+    }
+
+    /** Construye un nodo ({@link Skip}) */
+    public static AstNode toSkip(List<AstNode> parts) {
+        return new Skip(parts.get(1));
+    }
+
+    /** Construye un nodo ({@link Limit}) */
+    public static AstNode toLimit(List<AstNode> parts) {
+        return new Limit(parts.get(1));
+    }
+
+    public static AstNode toPatternElement(List<AstNode> parts) {
+        var chain = itemsAs(parts.get(1), Node.class);
+        if (chain.isEmpty()) return parts.get(0);
+        var link = chain.getFirst().items();
+        return new Path((Pattern) parts.get(0), (Relationship) link.get(0), (Pattern) link.get(1));
+    }
+
+    /**
+     * Construye el contenido de un {@code mapLiteral}: un nodo ({@link Node}) con una {@link Property} por entrada.
+     * parts = [clave, ":", valor, Node([Node([clave, ":", valor]), ...])]
+     *
+     * @param parts la primera entrada y el nodo con las demás entradas
+     * @return un nodo {@link Node} con las propiedades
+     */
+    public static AstNode toMapLiteral(List<AstNode> parts) {
+        var entries = new ArrayList<AstNode>();
+        entries.add(toProperty(parts));
+        itemsAs(parts.get(3), Node.class).forEach(entry -> entries.add(toProperty(entry.items())));
+        return new Node(entries);
+    }
+
+    public static AstNode toOr(List<AstNode> parts) {
+        return itemsAs(toItems(parts), AstNode.class).stream().reduce(Or::new).orElseThrow();
+    }
+
+    public static AstNode toAnd(List<AstNode> parts) {
+        return itemsAs(toItems(parts), AstNode.class).stream().reduce(And::new).orElseThrow();
+    }
+
+    public static AstNode toNot(List<AstNode> parts) {
+        var result = parts.get(1);
+        for (var _ : itemsAs(parts.get(0), Leaf.class))
+            result = new Not(result);
+        return result;
+    }
+
+    public static AstNode toComparison(List<AstNode> parts) {
+        var comparisons = new ArrayList<AstNode>();
+        var left = parts.get(0);
+        for (var pair : itemsAs(parts.get(1), Node.class)) {
+            var right = pair.items().get(1);
+            comparisons.add(new Comparison(left, (Leaf) pair.items().get(0), right));
+            left = right;
+        }
+        return comparisons.stream().reduce(And::new).orElse(parts.get(0));
+    }
+
+    public static AstNode toArithmetic(List<AstNode> parts) {
+        var result = parts.get(0);
+        for (var pair : itemsAs(parts.get(1), Node.class))
+            result = new Arithmetic(result, (Leaf) pair.items().get(0), pair.items().get(1));
+        return result;
+    }
+
+
+    public static AstNode toUnary(List<AstNode> parts) {
+        var result = parts.get(1);
+        for (var sign : itemsAs(parts.get(0), Leaf.class).reversed())
+            result = new Unary(sign, result);
+        return result;
+    }
+
+    public static AstNode toNullTest(List<AstNode> parts) {
+        var test = itemsAs(parts.get(1), Node.class);
+        if (test.isEmpty()) return parts.get(0);
+        return new NullTest(parts.get(0), !itemsAs(test.getFirst().items().get(1), Leaf.class).isEmpty());
+    }
+
+    public static AstNode toPropertyOrLabels(List<AstNode> parts) {
+        var result = parts.get(0);
+        for (var suffix : itemsAs(parts.get(1), AstNode.class))
+            result = switch (suffix) {
+                case Leaf key -> new PropertyAccess(result, key);
+                case Node labels -> new LabelTest(result, itemsAs(labels, Leaf.class));
+                default -> throw new IllegalStateException("Unexpected suffix: " + suffix);
+            };
+        return result;
+    }
+
+    public static AstNode toFunctionCall(List<AstNode> parts) {
+        return new FunctionCall((Leaf) parts.get(0), itemsAs(parts.get(2), AstNode.class));
+    }
+
+    /**
+     * Construye un nodo ({@link RelRange}) según el caso escrito:
+     * {@code *} sin límites, {@code *n} exactamente n, {@code *n..} desde n, {@code *..m} hasta m, {@code *n..m}.
+     *
+     * @param parts ["*", Node(opcional: Node([n, Node(opcional: Node(["..", Node(m opcional)]))]) o Node(["..", m]))]
+     * @return un nodo {@link RelRange}
+     */
+    public static AstNode toRelRange(List<AstNode> parts) {
+        var bounds = itemsAs(parts.get(1), Node.class);
+        if (bounds.isEmpty()) return new RelRange(List.of(), List.of());                          // *
+        var items = bounds.getFirst().items();
+        if (items.get(0) instanceof Leaf dots && dots.token().type() == TokenType.RANGE_DOTS)
+            return new RelRange(List.of(), List.of((Leaf) items.get(1)));                       // *..m
+        var min = List.of((Leaf) items.get(0));
+        var upper = itemsAs(items.get(1), Node.class);
+        if (upper.isEmpty()) return new RelRange(min, min);                                      // *n
+        return new RelRange(min, itemsAs(upper.getFirst().items().get(1), Leaf.class));         // *n.. | *n..m
+    }
+
 
 }
