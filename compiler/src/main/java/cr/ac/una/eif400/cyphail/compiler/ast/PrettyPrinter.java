@@ -4,6 +4,7 @@ import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
@@ -45,7 +46,7 @@ public class PrettyPrinter {
 
             case Create(var patterns) -> block("Create:", "Patterns: " + listify(patterns));
 
-            case Delete(var targets) -> block("Delete:", "Exprs: " + listify(targets));
+            case Delete(var detach, var targets) -> block("Delete:", detach ? "Detach: true" : "", "Exprs: " + listify(targets));
 
             case Return(var distinct, var projections, var modifiers) ->
                     block("Return:",
@@ -70,18 +71,33 @@ public class PrettyPrinter {
 
             case AliasedProjection(var expression, var alias) -> "(as " + print(expression) + " " + print(alias) + ")";
 
-            case Relationship(var variable, var types, var _, var properties, var direction) -> block("Relationship:",
+            case Relationship(var variable, var types, var range, var properties, var direction) -> block("Relationship:",
                     "var: " + each(variable),
                     "types: " + inline(types),
+                    range.isEmpty() ? "" : "range: " + each(range),
                     "direction: " + direction,
                     "properties: " + listify(properties));
 
-            case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _, FunctionCall _, LabelTest _ ->
-                    throw new UnsupportedOperationException("PrettyPrinter: expressions");
-
-            case SetClause _, SetProperty _, SetAllProperties _, SetLabels _,
-                 RemoveClause _, RemoveProperty _, RemoveLabels _ ->
-                    throw new UnsupportedOperationException("PrettyPrinter: clauses");
+            case RelRange(var min, var max) -> "*" + (min.equals(max) ? each(min) : each(min) + ".." + each(max));
+            case Or(var left, var right) -> prefix("OR", left, right);
+            case And(var left, var right) -> prefix("AND", left, right);
+            case Not(var expression) -> prefix("NOT", expression);
+            case Arithmetic(var left, var operator, var right) -> prefix(print(operator), left, right);
+            case Unary(var operator, var expression) -> prefix(print(operator), expression);
+            case NullTest(var expression, var negated) -> prefix(negated ? "IS NOT NULL" : "IS NULL", expression);
+            case FunctionCall(var name, var arguments) -> prefix(print(name), arguments);
+            case LabelTest(var expression, var labels) -> "(: " + print(expression) + " " + inline(labels) + ")";
+            case Order(var items) -> block("Order:", "Items: " + listify(items));
+            case SortItem(var expression, var descending) -> prefix(descending ? "DESC" : "ASC", expression);
+            case Skip(var expression) -> prefix("SKIP", expression);
+            case Limit(var expression) -> prefix("LIMIT", expression);
+            case SetClause(var items) -> block("Set:", "Items: " + listify(items));
+            case SetProperty(var target, var value) -> prefix("=", target, value);
+            case SetAllProperties(var variable, var value) -> prefix("=", variable, value);
+            case SetLabels(var variable, var labels) -> "(: " + print(variable) + " " + inline(labels) + ")";
+            case RemoveClause(var items) -> block("Remove:", "Items: " + listify(items));
+            case RemoveProperty(var target) -> print(target);
+            case RemoveLabels(var variable, var labels) -> "(: " + print(variable) + " " + inline(labels) + ")";
         };
     }
 
@@ -148,5 +164,14 @@ public class PrettyPrinter {
      */
     private static String indent(String text) {
         return text.lines().map(line -> INDENT + line).collect(joining("\n"));
+    }
+
+    private static String prefix(String head, List<? extends AstNode> arguments) {
+        return Stream.concat(Stream.of(head), arguments.stream().map(PrettyPrinter::print))
+                .collect(joining(" ", "(", ")"));
+    }
+
+    private static String prefix(String head, AstNode... arguments) {
+        return prefix(head, List.of(arguments));
     }
 }
