@@ -78,11 +78,12 @@ public class SemanticAnalyzer {
 
             case Create(var patterns) -> patterns.forEach(this::visit);
 
-            case Delete(var targets) ->
+            case Delete(var _, var targets) ->
                     targets.forEach(target -> use(target, "DELETE"));
 
-            case Return(var distinct, var projections, var modifiers) -> {
+            case Return(var _, var projections, var modifiers) -> {
                 projections.forEach(projection -> use(projection, "RETURN"));
+                projections.forEach(this::declareAlias);
                 modifiers.forEach(this::visit);
             }
 
@@ -106,7 +107,7 @@ public class SemanticAnalyzer {
                 use(value, "SET value");
             }
 
-            case SetLabels(var variable, var labels) ->
+            case SetLabels(var variable, var _) ->
                     use(variable, "SET labels");
 
             case RemoveClause(var items) -> items.forEach(this::visit);
@@ -114,11 +115,8 @@ public class SemanticAnalyzer {
             case RemoveProperty(var target) ->
                     use(target, "REMOVE property");
 
-            case RemoveLabels(var variable, var labels) ->
+            case RemoveLabels(var variable, var _) ->
                     use(variable, "REMOVE labels");
-
-            case Leaf _, Property _, PropertyAccess _, Comparison _,
-                 SimpleProjection _, AliasedProjection _ -> {}
 
             case Relationship(var variable, var _, var _, var properties, var _) -> {
                 var name = variable.stream().map(SemanticAnalyzer::name).collect(joining());
@@ -126,9 +124,28 @@ public class SemanticAnalyzer {
                 variable.forEach(leaf -> defined.add(name(leaf)));
             }
 
-            case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _,
-                 FunctionCall _, LabelTest _ -> {}
+            case Order(var items) -> items.forEach(item -> use(item, "ORDER BY"));
+
+            case Skip(var expression) -> use(expression, "SKIP");
+
+            case Limit(var expression) -> use(expression, "LIMIT");
+
+            case Leaf _, Property _, PropertyAccess _, Comparison _, SimpleProjection _, AliasedProjection _,
+                 SortItem _, RelRange _ -> {}
+
+            case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _, FunctionCall _, LabelTest _ -> {}
         }
+    }
+
+    /**
+     * Declara el alias de una proyección para que se pueda usar en ORDER BY, SKIP y LIMIT.
+     * Se llama después de revisar todas las proyecciones, así un alias no se puede usar en el mismo RETURN.
+     *
+     * @param projection la proyección del RETURN
+     */
+    private void declareAlias(AstNode projection) {
+        if (projection instanceof AliasedProjection(var _, var alias))
+            defined.add(name(alias));
     }
 
     /**
@@ -163,26 +180,51 @@ public class SemanticAnalyzer {
         return switch (expression) {
             case Leaf(var token) -> token.type() == TokenType.IDENTIFIER ? List.of(token.value()) : List.of();
 
-            case PropertyAccess(var variable, var _) -> List.of(name(variable));
+            case PropertyAccess(var target, var _) -> variables(target);
 
             case Property(var _, var value) -> variables(value);
 
-            case Comparison(var left, var _, var right) -> Stream.concat(variables(left).stream(), variables(right).stream()).toList();
+            case Comparison(var left, var _, var right) -> variablesOf(List.of(left, right));
+
+            case Arithmetic(var left, var _, var right) -> variablesOf(List.of(left, right));
+
+            case Or(var left, var right) -> variablesOf(List.of(left, right));
+
+            case And(var left, var right) -> variablesOf(List.of(left, right));
+
+            case Not(var inner) -> variables(inner);
+
+            case Unary(var _, var inner) -> variables(inner);
+
+            case NullTest(var inner, var _) -> variables(inner);
+
+            case LabelTest(var inner, var _) -> variables(inner);
+
+            case FunctionCall(var _, var arguments) -> variablesOf(arguments);
 
             case SimpleProjection(var inner) -> variables(inner);
 
             case AliasedProjection(var inner, var _) -> variables(inner);
 
-            case Node(var items) -> items.stream().flatMap(item -> variables(item).stream()).toList();
+            case SortItem(var inner, var _) -> variables(inner);
 
-            case Query _, Match _, Where _, Create _, Delete _, Return _, Pattern _, Path _ -> List.of();
+            case Node(var items) -> variablesOf(items);
 
-            case Relationship _ -> List.of();
-
-            case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _, FunctionCall _, LabelTest _ -> List.of();
+            case Query _, Match _, Where _, Create _, Delete _, Return _, Pattern _, Path _,
+                 Relationship _, RelRange _, Order _, Skip _, Limit _ -> List.of();
 
             case SetClause _, SetProperty _, SetAllProperties _, SetLabels _,
                  RemoveClause _, RemoveProperty _, RemoveLabels _ -> List.of();
         };
+    }
+
+    /**
+     * Junta las variables usadas en varios nodos
+     *
+     * @param nodes los nodos a revisar
+     * @return los nombres de variables encontrados, en orden
+     */
+    private static List<String> variablesOf(List<? extends AstNode> nodes) {
+        return nodes.stream().flatMap(node -> variables(node).stream()).toList();
     }
 }
