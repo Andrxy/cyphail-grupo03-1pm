@@ -9,7 +9,7 @@ import java.util.List;
  * @version P2
  * @param variable la variable de la relación, vacía si no la tiene
  * @param types los tipos de la relación, vacíos si no se indican
- * @param range el rango de longitud de la relación, vacío mientras no se admitan rangos
+ * @param range el rango de longitud de la relación (un {@link RelRange}), vacío si no tiene
  * @param properties las propiedades de la relación
  * @param direction el sentido de la relación según las flechas escritas
  */

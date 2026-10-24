@@ -18,19 +18,15 @@ import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
 import static cr.ac.una.eif400.cyphail.compiler.parser.grammar.GrammarHelpers.*;
 
 /**
- * Gramatica de Cyphail para el Sprint P1: convierte la lista de tokens en un AST.
+ * Gramatica de Cyphail para el Sprint P2: convierte la lista de tokens en un AST.
  *
- * <p>Sigue la gramatica del curso (EIF400-II-2026-GrammarCypherSprint1.g4) recortada al
- * alcance del SPEC de casos de P1: solo patrones de nodo (sin relaciones), varios patrones
- * separados por coma, comparaciones entre expresiones simples, y toda consulta empieza con MATCH.</p>
+ * <p>Sigue la gramatica del curso (EIF400-II-2026-GrammarCypherSprint1.g4) con sus reglas en el mismo
+ * orden. Las reglas que no estan en el .g4 se agrupan al final del archivo. No acepta ";" ni la consulta
+ * vacia por separado: eso lo resuelven el REPL y el Compiler.</p>
  *
  * <p>Cada regla es un parser construido con los combinadores de {@link Combinators}:
- * {@code Sequence} para el orden, {@code Or} para las alternativas, {@code Plus}/{@code Star}
- * para las repeticiones, y {@code Map} para convertir lo reconocido en un nodo del AST.
- * Las reglas estan declaradas en orden de dependencia: cada una usa solo las de arriba.</p>
- *
- * <p>Escrita por el Grupo 03-1pm con la asistencia de Claude (Anthropic),
- * segun lo declarado en el README.</p>
+ * {@code Sequence} para el orden, {@code OrFlat} para las alternativas, {@code Star}, {@code Plus} y
+ * {@code Optional} para las repeticiones, y {@code TFlat} para convertir lo reconocido en un nodo del AST.</p>
  */
 public class Grammar {
     public static Result<InputTokens, AstNode, String> parse(List<TokenString> source) {
@@ -282,8 +278,8 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * projection : expression "AS" variable
-     *            | expression
+     * projectionItem : expression "AS" variable
+     *                | expression
      * }</pre>
      */
     private static IParser<InputTokens, AstNode, String> projectionItem() {
@@ -377,11 +373,12 @@ public class Grammar {
                 AstBuilders::toPatterns);
     }
 
-    /**   CAMBIAR
+    /**
      * <pre>{@code
      * patternElement : nodePattern (relationshipPattern nodePattern)?
      *                | LPAREN patternElement RPAREN
      * }</pre>
+     * Implementado: {@code nodePattern patternElementChain? | "(" patternElement ")"}. La relación es de un solo salto, como en el .g4.
      */
     private static IParser<InputTokens, AstNode, String> patternElement() {
         return OrFlat(concatStringList,
@@ -433,7 +430,7 @@ public class Grammar {
      * }</pre>
      */
     private static IParser<InputTokens, AstNode, String> labelName() {
-        return symbolicName();
+        return nameOrKeyword();
     }
 
     /**
@@ -495,7 +492,7 @@ public class Grammar {
      * }</pre>
      */
     private static IParser<InputTokens, AstNode, String> relTypeName() {
-        return symbolicName();
+        return nameOrKeyword();
     }
 
     /**                               PONER OJO PARA CAMBIAR
@@ -530,7 +527,7 @@ public class Grammar {
     }
 
 
-    /**                      CAMBIAR
+    /**
      * <pre>{@code
      * expression : orExpression
      * }</pre>
@@ -723,7 +720,7 @@ public class Grammar {
      * }</pre>
      */
     private static IParser<InputTokens, AstNode, String> propertyKeyName() {
-        return symbolicName();
+        return nameOrKeyword();
     }
 
     /**
@@ -776,7 +773,7 @@ public class Grammar {
         return symbolicName();
     }
 
-    /**                       CAMBIAR
+    /**
      * <pre>{@code
      * mapLiteral : "{" (propertyKeyName ":" expression ("," propertyKeyName ":" expression)*)? "}"
      * }</pre>
@@ -813,7 +810,7 @@ public class Grammar {
      */
     private static IParser<InputTokens, AstNode, String> literal() {
         return OrFlat(concatStringList,
-                parsify(NUMBER),
+                numberLiteral(),
                 parsify(STRING_LITERAL),
                 booleanLiteral(),
                 parsify(NULL)
@@ -827,6 +824,7 @@ public class Grammar {
      *     | integerLiteral
      *     ;
      * }</pre>
+     * Implementado: {@code NUMBER}. El lexer emite el mismo token para enteros y decimales, así que no se distinguen.
      */
     private static IParser<InputTokens, AstNode, String> numberLiteral() {
         return parsify(NUMBER);
@@ -854,6 +852,7 @@ public class Grammar {
      *     : DecimalInteger
      *     ;
      * }</pre>
+     * Implementado: {@code NUMBER}. El lexer emite el mismo token para enteros y decimales, así que no se distinguen.
      */
     private static IParser<InputTokens, AstNode, String> integerLiteral() {
         return parsify(NUMBER);
@@ -878,6 +877,13 @@ public class Grammar {
      */
     private static IParser<InputTokens, AstNode, String> properties() {
         return mapLiteral();
+    }
+
+    /**
+     * Regla propia: un nombre puede ser un identificador o una palabra clave, como el label {@code Order}.
+     */
+    private static IParser<InputTokens, AstNode, String> nameOrKeyword() {
+        return OrFlat(concatStringList, symbolicName(), parsifyKeyword());
     }
 
 
