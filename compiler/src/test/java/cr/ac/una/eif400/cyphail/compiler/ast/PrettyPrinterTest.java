@@ -119,7 +119,19 @@ public class PrettyPrinterTest {
                   Exprs: [
                     o
                   ]
-                }""", PrettyPrinter.print(new Delete(List.of(id("o")))));
+                }""", PrettyPrinter.print(new Delete(false, List.of(id("o")))));
+    }
+
+    @Test
+    @DisplayName("Un DETACH DELETE lo indica antes de sus expresiones")
+    void detachDelete() {
+        assertEquals("""
+                Delete: {
+                  Detach: true
+                  Exprs: [
+                    o
+                  ]
+                }""", PrettyPrinter.print(new Delete(true, List.of(id("o")))));
     }
 
     @Test
@@ -147,9 +159,9 @@ public class PrettyPrinterTest {
                         List.of(new Pattern(List.of(id("m")), List.of(id("Movie")), List.of())),
                         List.of(new Where(greaterThan(access("m", "year"), num("2000")))))),
                 List.of(),
-                List.of(new Return(List.of(
+                List.of(new Return(false, List.of(
                         new SimpleProjection(access("m", "title")),
-                        new AliasedProjection(access("m", "year"), id("year"))))));
+                        new AliasedProjection(access("m", "year"), id("year"))), List.of())));
 
         assertEquals("""
                 Query {
@@ -167,6 +179,7 @@ public class PrettyPrinterTest {
                   }
                   Updates: []
                   Return: {
+                    Distinct: false
                     Projection: {
                       Items: [
                         (. m title)

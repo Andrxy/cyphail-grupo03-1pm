@@ -60,7 +60,7 @@ public class GrammarTest {
     }
 
     private static Return returning(AstNode... projections) {
-        return new Return(List.of(projections));
+        return new Return(false, List.of(projections), List.of());
     }
 
     @Test
@@ -177,6 +177,16 @@ public class GrammarTest {
     }
 
     @Test
+    @DisplayName("Una comparacion encadenada se convierte en comparaciones unidas con AND")
+    void comparacionEncadenada() {
+        Where where = query("MATCH (m:Movie) WHERE m.year > 1 > 2 RETURN m").matches().getFirst().where().getFirst();
+
+        assertEquals(new And(
+                new Comparison(access("m", "year"), leaf(GREATER_THAN, ">"), num("1")),
+                new Comparison(num("1"), leaf(GREATER_THAN, ">"), num("2"))), where.condition());
+    }
+
+    @Test
     @DisplayName("El RETURN acepta varias proyecciones con y sin alias")
     void returnConAlias() {
         Return expected = returning(
@@ -218,19 +228,20 @@ public class GrammarTest {
     void deleteConVariasExpresiones() {
         Query result = query("MATCH (a:A), (b:B) DELETE a, b");
 
-        assertEquals(List.of(new Delete(List.of(id("a"), id("b")))), result.updates());
+        assertEquals(List.of(new Delete(false, List.of(id("a"), id("b")))), result.updates());
     }
 
     @Test
-    @DisplayName("El DETACH DELETE produce el mismo nodo que DELETE")
+    @DisplayName("El DETACH DELETE marca el nodo Delete con detach")
     void detachDelete() {
-        assertEquals(query("MATCH (n:A) DELETE n"), query("MATCH (n:A) DETACH DELETE n"));
+        assertEquals(List.of(new Delete(true, List.of(id("n")))), query("MATCH (n:A) DETACH DELETE n").updates());
+        assertEquals(List.of(new Delete(false, List.of(id("n")))), query("MATCH (n:A) DELETE n").updates());
     }
 
     @Test
     @DisplayName("Las actualizaciones se guardan en el orden en que aparecen")
     void variasActualizaciones() {
-        List<AstNode> updates = query("MATCH (o:Order) CREATE (a:Archive) DELETE o RETURN a").updates();
+        List<UpdatingClause> updates = query("MATCH (o:Order) CREATE (a:Archive) DELETE o RETURN a").updates();
 
         assertInstanceOf(Create.class, updates.get(0));
         assertInstanceOf(Delete.class, updates.get(1));
@@ -243,13 +254,14 @@ public class GrammarTest {
             "MATCH (m:Movie) RETURN",
             "MATCH (m:Movie) RETURN m,",
             "MATCH (m:Movie) WHERE RETURN m",
-            "MATCH (m:Movie) WHERE m.year > 1 > 2 RETURN m",
             "RETURN m MATCH (m:Movie)",
             "MATCH (m:Movie) RETURN m CREATE (n:Movie)",
             "MATCH (m:) RETURN m",
             "MATCH (m {year}) RETURN m",
             "MATCH (m) DELETE",
-            "MATCH (a)-[:KNOWS]->(b) RETURN a"
+            "MATCH (a)-[:KNOWS]->",
+            "MATCH (a)-[:KNOWS](b)",
+            "MATCH (a)<-[:KNOWS]->(b)"
     })
     @DisplayName("Rechaza consultas mal formadas")
     void rechazaConsultasMalFormadas(String source) {
