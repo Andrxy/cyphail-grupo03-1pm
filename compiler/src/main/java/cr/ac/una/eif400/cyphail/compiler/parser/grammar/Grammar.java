@@ -62,16 +62,27 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * singlePartQuery : readingClause* updatingClause* returnClause?
+     * singlePartQuery
+     *     : readingClause* returnClause
+     *     | readingClause* updatingClause+ returnClause?
+     *     ;
      * }</pre>
+     * Las dos alternativas producen las tres partes que espera {@code toQuery}: lecturas, actualizaciones y retorno.
      */
     private static IParser<InputTokens, AstNode, String> singlePartQuery() {
-        return TFlat(
-                Sequence(
-                        asNode(Star(readingClause())),
-                        asNode(Star(updatingClause())),
-                        asNode(Optional(returnClause()))),
-                AstBuilders::toQuery);
+        return OrFlat(concatStringList,
+                TFlat(
+                        Sequence(
+                                asNode(Star(readingClause())),
+                                emptyNode(),
+                                asNode(Sequence(returnClause()))),
+                        AstBuilders::toQuery),
+                TFlat(
+                        Sequence(
+                                asNode(Star(readingClause())),
+                                asNode(Plus(updatingClause())),
+                                asNode(Optional(returnClause()))),
+                        AstBuilders::toQuery));
     }
 
     /**
@@ -390,17 +401,6 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * patternElementChain
-     *     : relationshipPattern nodePattern
-     *     ;
-     * }</pre>
-     */
-    private static IParser<InputTokens, AstNode, String> patternElementChain() {
-        return asNode(Sequence(relationshipPattern(), nodePattern()));
-    }
-
-    /**
-     * <pre>{@code
      * nodePattern : "(" variable? nodeLabels? properties? ")"
      * }</pre>
      */
@@ -456,7 +456,7 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * relationshipDetail : "[" variable? relTypes? relRange? relProperties? "]"
+     * relationshipDetail : "[" variable? relTypes? relRange? properties? "]"
      * }</pre>
      */
     private static IParser<InputTokens, AstNode, String> relationshipDetail() {
@@ -466,7 +466,7 @@ public class Grammar {
                         asNode(Optional(variable())),
                         orEmpty(relTypes()),
                         asNode(Optional(relRange())),
-                        orEmpty(relProperties()),
+                        orEmpty(properties()),
                         parsify(RBRACKET)),
                 AstBuilders::toRelationshipDetail);
     }
@@ -495,7 +495,7 @@ public class Grammar {
         return nameOrKeyword();
     }
 
-    /**                               PONER OJO PARA CAMBIAR
+    /**
      * <pre>{@code
      * relRange
      *     : "*" (integerLiteral (".." integerLiteral?)? | ".." integerLiteral)?
@@ -513,17 +513,6 @@ public class Grammar {
                                                 parsify(RANGE_DOTS), asNode(Optional(integerLiteral())))))))),
                                 asNode(Sequence(parsify(RANGE_DOTS), integerLiteral())))))),
                 parts -> toRelRange(parts));
-    }
-
-    /**
-     * <pre>{@code
-     * relProperties
-     *     : "{" (symbolicName ":" expression ("," symbolicName ":" expression)*)? "}"
-     *     ;
-     * }</pre>
-     */
-    private static IParser<InputTokens, AstNode, String> relProperties() {
-        return mapLiteral();
     }
 
 
@@ -712,6 +701,19 @@ public class Grammar {
         return JustGetRight(parsify(DOT), propertyKeyName());
     }
 
+    /**
+     * <pre>{@code
+     * propertyExpression
+     *     : atom propertyLookup+
+     *     ;
+     * }</pre>
+     */
+    private static IParser<InputTokens, AstNode, String> propertyExpression() {
+        return TFlat(
+                Sequence(atom(), asNode(Plus(propertyLookup()))),
+                AstBuilders::toPropertyOrLabels);
+    }
+
 
 
     /**
@@ -775,10 +777,12 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * mapLiteral : "{" (propertyKeyName ":" expression ("," propertyKeyName ":" expression)*)? "}"
+     * properties
+     *     : "{" (propertyKeyName ":" expression ("," propertyKeyName ":" expression)*)? "}"
+     *     ;
      * }</pre>
      */
-    private static IParser<InputTokens, AstNode, String> mapLiteral() {
+    private static IParser<InputTokens, AstNode, String> properties() {
         return JustGetMiddle(
                 parsify(LBRACE),
                 orEmpty(TFlat(
@@ -805,6 +809,7 @@ public class Grammar {
      * literal : numberLiteral
      *         | StringLiteral
      *         | booleanLiteral
+     *         | properties
      *         | "NULL"
      * }</pre>
      */
@@ -813,6 +818,7 @@ public class Grammar {
                 numberLiteral(),
                 parsify(STRING_LITERAL),
                 booleanLiteral(),
+                Lazy(Grammar::properties),
                 parsify(NULL)
         );
     }
@@ -871,12 +877,14 @@ public class Grammar {
 
     /**
      * <pre>{@code
-     * properties : mapLiteral
+     * patternElementChain
+     *     : relationshipPattern nodePattern
+     *     ;
      * }</pre>
-     * Usada en {@code nodePattern} pero no definida en el .g4.
+     * Regla comentada en el .g4. Agrupa la relación y el nodo final para que {@code patternElement} los trate como un solo opcional.
      */
-    private static IParser<InputTokens, AstNode, String> properties() {
-        return mapLiteral();
+    private static IParser<InputTokens, AstNode, String> patternElementChain() {
+        return asNode(Sequence(relationshipPattern(), nodePattern()));
     }
 
     /**
@@ -885,18 +893,5 @@ public class Grammar {
     private static IParser<InputTokens, AstNode, String> nameOrKeyword() {
         return OrFlat(concatStringList, symbolicName(), parsifyKeyword());
     }
-
-
-
-
-
-    private static IParser<InputTokens, AstNode, String> propertyExpression() {
-        return TFlat(
-                Sequence(atom(), asNode(Plus(propertyLookup()))),
-                AstBuilders::toPropertyOrLabels);
-    }
-
-
-
 }
 

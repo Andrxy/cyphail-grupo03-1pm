@@ -311,7 +311,7 @@ public class AstBuilders {
     }
 
     /**
-     * Construye el contenido de un {@code mapLiteral}: un nodo ({@link Node}) con una {@link Property} por entrada.
+     * Construye el contenido de {@code properties}: un nodo ({@link Node}) con una {@link Property} por entrada.
      * parts = [clave, ":", valor, Node([Node([clave, ":", valor]), ...])]
      *
      * @param parts la primera entrada y el nodo con las demás entradas
