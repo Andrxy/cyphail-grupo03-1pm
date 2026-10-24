@@ -77,7 +77,7 @@ public class GrammarTest {
     @Test
     @DisplayName("Un patron de nodo puede no tener variable")
     void patronSinVariable() {
-        Pattern pattern = (Pattern) query("MATCH (:Movie)").matches().getFirst().patterns().getFirst();
+        Pattern pattern = (Pattern) query("MATCH (:Movie) RETURN 1").matches().getFirst().patterns().getFirst();
 
         assertEquals(new Pattern(List.of(), List.of(id("Movie")), List.of()), pattern);
     }
@@ -198,9 +198,9 @@ public class GrammarTest {
     }
 
     @Test
-    @DisplayName("El RETURN es opcional")
-    void sinReturn() {
-        assertEquals(List.of(), query("MATCH (m:Movie)").ret());
+    @DisplayName("Un MATCH sin RETURN ni actualizaciones es invalido")
+    void matchSinReturn() {
+        assertFail(parse("MATCH (m:Movie)"));
     }
 
     @Test
