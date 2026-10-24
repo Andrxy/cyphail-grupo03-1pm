@@ -4,8 +4,10 @@ import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -28,7 +30,10 @@ import static java.util.stream.Collectors.joining;
  */
 public class SemanticAnalyzer {
     private Set<String> defined = new HashSet<>();
+    private final Map<String, Kind> kinds = new HashMap<>();
     private List<String> reasons = new ArrayList<>();
+
+    private enum Kind { NODE, RELATIONSHIP }
 
     private SemanticAnalyzer() {}
 
@@ -71,7 +76,7 @@ public class SemanticAnalyzer {
                 properties.forEach(property ->
                         use(property, "properties of (" + name + ")"));
 
-                variable.forEach(leaf -> defined.add(name(leaf)));
+                variable.forEach(leaf -> declare(leaf, Kind.NODE));
             }
 
             case Where(var condition) -> use(condition, "WHERE");
@@ -121,7 +126,7 @@ public class SemanticAnalyzer {
             case Relationship(var variable, var _, var _, var properties, var _) -> {
                 var name = variable.stream().map(SemanticAnalyzer::name).collect(joining());
                 properties.forEach(property -> use(property, "properties of [" + name + "]"));
-                variable.forEach(leaf -> defined.add(name(leaf)));
+                variable.forEach(leaf -> declare(leaf, Kind.RELATIONSHIP));
             }
 
             case Order(var items) -> items.forEach(item -> use(item, "ORDER BY"));
@@ -135,6 +140,24 @@ public class SemanticAnalyzer {
 
             case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _, FunctionCall _, LabelTest _ -> {}
         }
+    }
+
+    /**
+     * Declara una variable de un patrón y revisa que no se repita una variable de relación
+     * ni que una misma variable se use como nodo y como relación
+     *
+     * @param variable la variable declarada
+     * @param kind si es de un nodo o de una relación
+     */
+    private void declare(Leaf variable, Kind kind) {
+        var name = name(variable);
+        var previous = kinds.putIfAbsent(name, kind);
+        defined.add(name);
+        if (previous == null || (previous == Kind.NODE && kind == Kind.NODE))
+            return;
+        reasons.add(previous == kind
+                ? "Relationship variable '%s' cannot be repeated in the same query".formatted(name)
+                : "Variable '%s' cannot be used as both a node and a relationship".formatted(name));
     }
 
     /**
