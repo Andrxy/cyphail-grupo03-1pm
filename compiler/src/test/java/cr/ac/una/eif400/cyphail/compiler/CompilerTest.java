@@ -126,6 +126,7 @@ public class CompilerTest {
                   }
                   Updates: []
                   Return: {
+                    Distinct: false
                     Projection: {
                       Items: [
                         (. m title)

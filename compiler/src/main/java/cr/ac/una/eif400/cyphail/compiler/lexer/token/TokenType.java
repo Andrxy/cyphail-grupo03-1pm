@@ -50,5 +50,10 @@ public enum TokenType {
     ASCENDING, DESCENDING, SKIP, LIMIT, OR,
     AND, NOT, IS, TRUE, FALSE, NULL,
 
+    /**
+     * Comentarios
+     */
+    LINE_COMMENT, BLOCK_COMMENT,
+
     EOF
 }

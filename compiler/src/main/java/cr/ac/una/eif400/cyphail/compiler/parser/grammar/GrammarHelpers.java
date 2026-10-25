@@ -1,6 +1,7 @@
 package cr.ac.una.eif400.cyphail.compiler.parser.grammar;
 
 import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
+import cr.ac.una.eif400.cyphail.compiler.lexer.TokenMaps;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 import cr.ac.una.eif400.cyphail.compiler.parser.IParser;
@@ -84,12 +85,38 @@ public class GrammarHelpers {
     }
 
     /**
+     * Crea un parser que no consume nada y devuelve un nodo vacío
+     *
+     * @return un {@link IParser} que siempre tiene éxito con un nodo sin elementos
+     */
+    static IParser<InputTokens, AstNode, String> emptyNode() {
+        return (InputTokens source) -> new Ok<>(source, new Node(List.of()));
+    }
+
+    /**
      * Intenta aplicar el parser de listas. Si falla usa {@code OrFlat} para devolver un nodo vacío
      *
      * @param listParser el parser de listas que se quiere evaluar
      * @return un parser que devuelve los elementos encontrados o un nodo vacío si todos fallan
      */
     static IParser<InputTokens, AstNode, String> orEmpty(IParser<InputTokens, AstNode, String> listParser) {
-        return OrFlat(concatStringList, listParser, (InputTokens source) -> new Ok<>(source, new Node(List.of())));
+        return OrFlat(concatStringList, listParser, emptyNode());
+    }
+
+    /**
+     * Crea un parser que come un token cualquiera que sea palabra clave y devuelve su nodo hoja,
+     * para poder usar una palabra clave como nombre, como en el label {@code Order}
+     *
+     * @return un {@link IParser} que procesa la entrada y retorna un nodo {@link AstNode}
+     */
+    static IParser<InputTokens, AstNode, String> parsifyKeyword() {
+        return (InputTokens source) -> {
+            if (source.isEmpty())
+                return new Fail<>("Expecting a keyword. Found empty source");
+            var token = source.first();
+            if (!TokenMaps.KEYWORDS.containsValue(token.type()))
+                return new Fail<>(String.format("Expecting a keyword. Found %s", token.type()));
+            return new Ok<>(source.next(), new Leaf(token));
+        };
     }
 }

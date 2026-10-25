@@ -11,5 +11,5 @@ import java.util.List;
  * @param updates la lista de operaciones de actualización o mutación del grafo
  * @param ret la lista de cláusulas de retorno o proyección ({@code RETURN})
  */
-public record Query(List<Match> matches, List<AstNode> updates, List<Return> ret) implements AstNode {
+public record Query(List<Match> matches, List<UpdatingClause> updates, List<Return> ret) implements AstNode {
 }

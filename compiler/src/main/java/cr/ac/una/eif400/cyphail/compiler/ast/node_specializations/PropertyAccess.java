@@ -6,8 +6,8 @@ package cr.ac.una.eif400.cyphail.compiler.ast.node_specializations;
  *
  * @author Andrey Solano
  * @version P1
- * @param variable la hoja que representa la variable de la cual se accede
+ * @param target la expresión de la cual se accede la propiedad
  * @param key la hoja que representa la clave de la propiedad consultada
  */
-public record PropertyAccess(Leaf variable, Leaf key) implements AstNode {
+public record PropertyAccess(AstNode target, Leaf key) implements AstNode {
 }

@@ -1,6 +1,7 @@
 package cr.ac.una.eif400.cyphail.compiler.lexer;
 
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
+import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
@@ -11,6 +12,8 @@ import cr.ac.una.eif400.cyphail.compiler.parser.IParser;
 import java.util.List;
 
 import static cr.ac.una.eif400.cyphail.compiler.lexer.Lexers.*;
+import static cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType.BLOCK_COMMENT;
+import static cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType.LINE_COMMENT;
 import static cr.ac.una.eif400.cyphail.compiler.parser.Combinators.*;
 
 /**
@@ -36,6 +39,8 @@ public class Tokenizer {
      */
     private static IParser<InputString, TokenString, String> ANY_TOKEN = OrFlat(
             concatStringList,
+            LineComments,
+            BlockComments,
             Relationship,
             Comparison,
             Keywords,
@@ -51,9 +56,17 @@ public class Tokenizer {
     public static Result<InputString, List<TokenString>, String> tokenize(String sourceCode) {
         return switch (TOKENIZER.parse(new InputString(sourceCode))) {
             case Fail(var reason) -> new Fail<>(reason);
-            case Ok(var rest, var tokens) -> unconsumed(sourceCode, rest.index())
-                    ? new Fail<>("Lexical Error: Unexpected character at index " + rest.index())
-                    : new Ok<>(rest, tokens);
+            case Ok(var rest, var tokens) -> {
+                if (unconsumed(sourceCode, rest.index())) {
+                    yield new Fail<>("Lexical Error: Unexpected character at index " + rest.index());
+                }
+
+                List<TokenString> filtered = tokens.stream()
+                                                   .filter(token -> token.type() != LINE_COMMENT && token.type() != BLOCK_COMMENT)
+                                                   .toList();
+                yield new Ok<>(rest, filtered);
+
+            }
         };
     }
 

@@ -81,7 +81,7 @@ public class SemanticAnalyzerTest {
     @DisplayName("Un nodo sin variable se reporta con parentesis vacios")
     void nodoSinVariable() {
         assertEquals(List.of("Undefined variable 'x' in properties of ()"),
-                check("MATCH (:Person {id: x.id})"));
+                check("MATCH (:Person {id: x.id}) RETURN 1"));
     }
 
     @Test

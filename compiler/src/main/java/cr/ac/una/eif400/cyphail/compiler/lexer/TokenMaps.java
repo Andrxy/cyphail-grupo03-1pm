@@ -2,7 +2,9 @@ package cr.ac.una.eif400.cyphail.compiler.lexer;
 
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType.*;
 
@@ -56,7 +58,7 @@ public class TokenMaps {
     );
 
 
-    public static Map<String, TokenType> KEYWORDS = Map.ofEntries(
+    public static Map<String, TokenType> KEYWORDS = caseInsensitive(Map.ofEntries(
             Map.entry("MATCH", MATCH),
             Map.entry("WHERE", WHERE),
             Map.entry("CREATE", CREATE),
@@ -80,5 +82,17 @@ public class TokenMaps {
             Map.entry("TRUE", TRUE),
             Map.entry("FALSE", FALSE),
             Map.entry("NULL", NULL)
-    );
+    ));
+
+    /**
+     * Envuelve un mapa de palabras clave para que se busquen sin distinguir mayúsculas de minúsculas
+     *
+     * @param entries las palabras clave con su tipo de token
+     * @return un mapa de solo lectura que ignora mayúsculas y minúsculas en las claves
+     */
+    private static Map<String, TokenType> caseInsensitive(Map<String, TokenType> entries) {
+        var keywords = new TreeMap<String, TokenType>(String.CASE_INSENSITIVE_ORDER);
+        keywords.putAll(entries);
+        return Collections.unmodifiableMap(keywords);
+    }
 }

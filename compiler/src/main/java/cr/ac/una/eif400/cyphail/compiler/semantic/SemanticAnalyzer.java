@@ -4,8 +4,10 @@ import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -28,7 +30,10 @@ import static java.util.stream.Collectors.joining;
  */
 public class SemanticAnalyzer {
     private Set<String> defined = new HashSet<>();
+    private final Map<String, Kind> kinds = new HashMap<>();
     private List<String> reasons = new ArrayList<>();
+
+    private enum Kind { NODE, RELATIONSHIP }
 
     private SemanticAnalyzer() {}
 
@@ -57,23 +62,35 @@ public class SemanticAnalyzer {
                 updates.forEach(this::visit);
                 ret.forEach(this::visit);
             }
+
             case Match(var patterns, var where) -> {
                 patterns.forEach(this::visit);
                 where.forEach(this::visit);
             }
+
             case Pattern(var variable, var _, var properties) -> {
-                var name = variable.stream().map(SemanticAnalyzer::name).collect(joining());
-                properties.forEach(property -> use(property, "properties of (" + name + ")"));
-                variable.forEach(leaf -> defined.add(name(leaf)));
+                var name = variable.stream()
+                        .map(SemanticAnalyzer::name)
+                        .collect(joining());
+
+                properties.forEach(property ->
+                        use(property, "properties of (" + name + ")"));
+
+                variable.forEach(leaf -> declare(leaf, Kind.NODE));
             }
 
             case Where(var condition) -> use(condition, "WHERE");
 
             case Create(var patterns) -> patterns.forEach(this::visit);
 
-            case Delete(var targets) -> targets.forEach(target -> use(target, "DELETE"));
+            case Delete(var _, var targets) ->
+                    targets.forEach(target -> use(target, "DELETE"));
 
-            case Return(var projections) -> projections.forEach(projection -> use(projection, "RETURN"));
+            case Return(var _, var projections, var modifiers) -> {
+                projections.forEach(projection -> use(projection, "RETURN"));
+                projections.forEach(this::declareAlias);
+                modifiers.forEach(this::visit);
+            }
 
             case Path(var from, var relationship, var to) -> {
                 visit(from);
@@ -83,8 +100,75 @@ public class SemanticAnalyzer {
 
             case Node(var items) -> items.forEach(this::visit);
 
-            case Leaf _, Property _, PropertyAccess _, Comparison _, SimpleProjection _, AliasedProjection _ -> {}
+            case SetClause(var items) -> items.forEach(this::visit);
+
+            case SetProperty(var target, var value) -> {
+                use(target, "SET target");
+                use(value, "SET value");
+            }
+
+            case SetAllProperties(var variable, var value) -> {
+                use(variable, "SET target");
+                use(value, "SET value");
+            }
+
+            case SetLabels(var variable, var _) ->
+                    use(variable, "SET labels");
+
+            case RemoveClause(var items) -> items.forEach(this::visit);
+
+            case RemoveProperty(var target) ->
+                    use(target, "REMOVE property");
+
+            case RemoveLabels(var variable, var _) ->
+                    use(variable, "REMOVE labels");
+
+            case Relationship(var variable, var _, var _, var properties, var _) -> {
+                var name = variable.stream().map(SemanticAnalyzer::name).collect(joining());
+                properties.forEach(property -> use(property, "properties of [" + name + "]"));
+                variable.forEach(leaf -> declare(leaf, Kind.RELATIONSHIP));
+            }
+
+            case Order(var items) -> items.forEach(item -> use(item, "ORDER BY"));
+
+            case Skip(var expression) -> use(expression, "SKIP");
+
+            case Limit(var expression) -> use(expression, "LIMIT");
+
+            case Leaf _, Property _, PropertyAccess _, Comparison _, SimpleProjection _, AliasedProjection _,
+                 SortItem _, RelRange _ -> {}
+
+            case Or _, And _, Not _, Arithmetic _, Unary _, NullTest _, FunctionCall _, LabelTest _ -> {}
         }
+    }
+
+    /**
+     * Declara una variable de un patrón y revisa que no se repita una variable de relación
+     * ni que una misma variable se use como nodo y como relación
+     *
+     * @param variable la variable declarada
+     * @param kind si es de un nodo o de una relación
+     */
+    private void declare(Leaf variable, Kind kind) {
+        var name = name(variable);
+        var previous = kinds.putIfAbsent(name, kind);
+        defined.add(name);
+        if (previous == null || (previous == Kind.NODE && kind == Kind.NODE))
+            return;
+        reasons.add(previous == kind
+                ? "Relationship variable '%s' cannot be repeated in the same query".formatted(name)
+                : "Variable '%s' cannot be used as both a node and a relationship".formatted(name));
+    }
+
+    /**
+     * Declara el alias de una proyección para que se pueda usar en ORDER BY, SKIP y LIMIT.
+     * Se llama después de revisar todas las proyecciones, así un alias no se puede usar en el mismo RETURN.
+     *
+     * @param projection la proyección del RETURN
+     */
+    private void declareAlias(AstNode projection) {
+        if (projection instanceof AliasedProjection(var _, var alias))
+            defined.add(name(alias));
     }
 
     /**
@@ -119,19 +203,51 @@ public class SemanticAnalyzer {
         return switch (expression) {
             case Leaf(var token) -> token.type() == TokenType.IDENTIFIER ? List.of(token.value()) : List.of();
 
-            case PropertyAccess(var variable, var _) -> List.of(name(variable));
+            case PropertyAccess(var target, var _) -> variables(target);
 
             case Property(var _, var value) -> variables(value);
 
-            case Comparison(var left, var _, var right) -> Stream.concat(variables(left).stream(), variables(right).stream()).toList();
+            case Comparison(var left, var _, var right) -> variablesOf(List.of(left, right));
+
+            case Arithmetic(var left, var _, var right) -> variablesOf(List.of(left, right));
+
+            case Or(var left, var right) -> variablesOf(List.of(left, right));
+
+            case And(var left, var right) -> variablesOf(List.of(left, right));
+
+            case Not(var inner) -> variables(inner);
+
+            case Unary(var _, var inner) -> variables(inner);
+
+            case NullTest(var inner, var _) -> variables(inner);
+
+            case LabelTest(var inner, var _) -> variables(inner);
+
+            case FunctionCall(var _, var arguments) -> variablesOf(arguments);
 
             case SimpleProjection(var inner) -> variables(inner);
 
             case AliasedProjection(var inner, var _) -> variables(inner);
 
-            case Node(var items) -> items.stream().flatMap(item -> variables(item).stream()).toList();
+            case SortItem(var inner, var _) -> variables(inner);
 
-            case Query _, Match _, Where _, Create _, Delete _, Return _, Pattern _, Path _ -> List.of();
+            case Node(var items) -> variablesOf(items);
+
+            case Query _, Match _, Where _, Create _, Delete _, Return _, Pattern _, Path _,
+                 Relationship _, RelRange _, Order _, Skip _, Limit _ -> List.of();
+
+            case SetClause _, SetProperty _, SetAllProperties _, SetLabels _,
+                 RemoveClause _, RemoveProperty _, RemoveLabels _ -> List.of();
         };
+    }
+
+    /**
+     * Junta las variables usadas en varios nodos
+     *
+     * @param nodes los nodos a revisar
+     * @return los nombres de variables encontrados, en orden
+     */
+    private static List<String> variablesOf(List<? extends AstNode> nodes) {
+        return nodes.stream().flatMap(node -> variables(node).stream()).toList();
     }
 }

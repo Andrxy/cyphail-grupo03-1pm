@@ -152,11 +152,13 @@ public class Repl {
     /**
      * Enruta y procesa la línea de comandos introducida por el usuario.
      * Valida si es un subcomando interno del repl o si es una consulta para el compilador.
+     * Al subcomando se le entrega el resto de la línea como un único argumento, tal como se escribió,
+     * para que Picocli no tome como opciones las palabras que empiezan con {@code -}, como en {@code -[:amigo]->}
      *
      * @param line la cadena de texto ingresada en la consola
      */
     private void dispatch(String line) {
-        String[] args = line.split("\\s+");
+        String[] args = line.split("\\s+", 2);
         String firstWord = args[0];
 
         Set<String> actionNames = dispatcher.getSubcommands().keySet();
