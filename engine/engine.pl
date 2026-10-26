@@ -1,9 +1,9 @@
-:- ensure_loaded('../data/graphs.pl').
-:- ensure_loaded('util.pl').
-:- ensure_loaded('comparisons.pl').
-:- ensure_loaded('graph/current_graph.pl').
-:- ensure_loaded('graph/nodes.pl').
-:- ensure_loaded('graph/relationships.pl').
+:- ensure_loaded('data/graphs.pl').
+:- ensure_loaded('prolog/util.pl').
+:- ensure_loaded('prolog/comparisons.pl').
+:- ensure_loaded('prolog/graph/current_graph.pl').
+:- ensure_loaded('prolog/graph/nodes.pl').
+:- ensure_loaded('prolog/graph/relationships.pl').
 
 % Ejecuta el patrón y convierte todas sus soluciones en texto.
 cy_exec_query(Headers, Columns, Goal, Rows) :-
