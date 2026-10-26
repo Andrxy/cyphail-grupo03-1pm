@@ -29,6 +29,7 @@ public class HelpCommandTest extends CommandTestSupport {
         assertTrue(salida().contains(".about"), "Lista .about");
         assertTrue(salida().contains(".help"), "Lista .help");
         assertTrue(salida().contains(".exit"), "Lista .exit");
+        assertTrue(salida().contains(".load"), "Lista .load");
     }
 
     @Test

@@ -5,6 +5,7 @@ import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.AboutCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.ExitCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.HelpCommand;
+import cr.ac.una.eif400.cyphail.cli.repl.actions.LoadCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.TreeCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.UseCommand;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
@@ -33,10 +34,12 @@ import java.util.Set;
                 ExitCommand.class,
                 AboutCommand.class,
                 TreeCommand.class,
-                UseCommand.class
+                UseCommand.class,
+                LoadCommand.class
         }
 )
 public class Repl {
+    private static final String TREE_COMMAND = ".tree";
     private final CommandLine dispatcher;
     private final Broker broker;
     private final Compiler compiler;
@@ -83,7 +86,8 @@ public class Repl {
     /**
      * Inicia el ciclo interactivo del shell del repl
      * Muestra el banner de bienvenida y procesa de forma secuencial las líneas de entrada
-     * proporcionadas por el usuario a través de la entrada estándar hasta que se indique la salida
+     * proporcionadas por el usuario a través de la entrada estándar hasta que se indique la salida.
+     * Las consultas y .tree se completan con más líneas hasta el ';' o el fin de entrada.
      */
     public void open() {
         Scanner scanner = new Scanner(System.in);
@@ -91,36 +95,59 @@ public class Repl {
         printBanner();
 
         while (running) {
-            String prompt = buildPrompt();
-            IO.print(prompt);
+            IO.print(buildPrompt());
 
             if (!scanner.hasNextLine()) {
                 IO.println();
                 break;
             }
 
-            String line = scanner.nextLine().trim();
-            if (line.isEmpty()) continue;
-
-            dispatch(line);
+            String line = scanner.nextLine().stripLeading();
+            if (line.isBlank()) continue;
+            dispatch(spansLines(line) ? readStatement(scanner, line) : line.strip());
         }
     }
 
     /**
-     * Compila y ejecuta una sentencia de código fuente, formateando y mostrando el resultado
-     * obtenido de manera tabular
+     * Indica si la entrada es una consulta o .tree, los únicos casos que admiten varias líneas.
+     */
+    private static boolean spansLines(String line) {
+        return !line.startsWith(".") || line.split("\\s+", 2)[0].equals(TREE_COMMAND);
+    }
+
+    /** Completa la consulta o el argumento de .tree sin enviar el nombre del comando al compilador. */
+    private String readStatement(Scanner scanner, String firstLine) {
+        StatementReader reader = new StatementReader();
+        String[] parts = firstLine.split("\\s+", 2);
+        if (parts[0].equals(TREE_COMMAND)) {
+            String query = parts.length > 1 ? parts[1] : "";
+            return TREE_COMMAND + " " + reader.read(scanner, query, compiler::isTerminated);
+        }
+        return reader.read(scanner, firstLine, compiler::isTerminated);
+    }
+
+    /**
+     * Compila y muestra las respuestas de un script en orden. Deja de consumir el stream
+     * en el primer error, por lo que las sentencias restantes no llegan al broker.
      *
      * @param sourceCode el código fuente de la consulta
+     * @return true si la consulta se ejecutó correctamente
      */
-    public void executeQuery(String sourceCode) {
-        QueryResponse response = compiler.compile(sourceCode);
+    public boolean executeQuery(String sourceCode) {
+        return !compiler.compileScript(sourceCode)
+                .map(this::show)
+                .anyMatch(response -> !response.isOk());
+    }
 
-        if (response.isOk()) {
+    /** Imprime la tabla solo si hay encabezados y siempre muestra el mensaje de la respuesta. */
+    private QueryResponse show(QueryResponse response) {
+        if (response.isOk() && response.getHeaders() != null && response.getHeaders().length > 0) {
             IO.println(Formatter.format(response.getHeaders(), response.getRows()));
             IO.println();
         }
 
         IO.println(response.getMessage());
+        return response;
     }
 
     /**
@@ -133,6 +160,7 @@ public class Repl {
                 Visit www.whatiscyphail.com for more information
                 Type ".help" for more information and commands
                 Type ".exit" to quit
+                End queries with ";". Queries may span multiple lines.
                 """
         );
     }

@@ -12,7 +12,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -120,7 +123,7 @@ public class ReplTest {
     @Test
     @DisplayName("Una linea que no empieza con punto se compila como consulta")
     void compilaLaLineaComoConsulta() {
-        escribir(TAREAS, ".exit");
+        escribir(TAREAS + ";", ".exit");
         repl.open();
 
         assertTrue(salida().contains("Escribir README"), "Muestra los datos de la consulta");
@@ -160,6 +163,59 @@ public class ReplTest {
             entrada += System.lineSeparator();
         }
         System.setIn(new ByteArrayInputStream(entrada.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void acumulaConsultaMultilineaYDespachaComandosSinPuntoYComa() {
+        List<String> queries = capturarConsultas();
+        escribir(".about", "MATCH (n)", "", "RETURN n;", ".exit");
+        repl.open();
+
+        assertEquals(List.of("MATCH (n)\n\nRETURN n;"), queries);
+        assertTrue(salida().contains("     ...> "));
+        assertTrue(salida().contains("What is cyphail?"));
+        assertFalse(repl.isRunning());
+    }
+
+    @Test
+    void ejecutaVariasConsultasYConservaElFragmentoPendiente() {
+        List<String> queries = capturarConsultas();
+        escribir("RETURN 1; RETURN 2; MATCH (n)", "RETURN n;", ".exit");
+        repl.open();
+
+        assertEquals(List.of("RETURN 1; RETURN 2; MATCH (n)\nRETURN n;"), queries);
+    }
+
+    @Test
+    void despachaLoLeidoAlLlegarAlFinDeEntrada() {
+        List<String> queries = capturarConsultas();
+        escribir("MATCH (n)", "RETURN n");
+        repl.open();
+
+        assertEquals(List.of("MATCH (n)\nRETURN n"), queries);
+        assertFalse(salida().contains("Incomplete statement"));
+    }
+
+    @Test
+    void muestraUnErrorLexicoSinEsperarMasLineas() {
+        escribir("RETURN 'first", ".exit", "last'; // ;", ".exit");
+        repl.open();
+
+        assertTrue(salida().contains("Lexical Error"), salida());
+        assertFalse(salida().contains("Incomplete statement"));
+        assertFalse(repl.isRunning());
+    }
+
+    private List<String> capturarConsultas() {
+        List<String> queries = new ArrayList<>();
+        repl = new Repl(Compiler.getInstance(), Broker.getInstance()) {
+            @Override
+            public boolean executeQuery(String sourceCode) {
+                queries.add(sourceCode);
+                return true;
+            }
+        };
+        return queries;
     }
 
     private String salida() {

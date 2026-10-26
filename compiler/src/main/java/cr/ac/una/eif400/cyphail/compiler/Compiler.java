@@ -6,13 +6,19 @@ import cr.ac.una.eif400.cyphail.compiler.ast.PrettyPrinter;
 import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.AstNode;
 import cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
+import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
+import cr.ac.una.eif400.cyphail.compiler.parser.Statements;
 import cr.ac.una.eif400.cyphail.compiler.parser.grammar.Grammar;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.*;
 import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyzer;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Encargado de dirigir el flujo de compilación y ejecución.
@@ -66,49 +72,158 @@ public class Compiler {
      */
     public QueryResponse compile(String source) {
         return switch (analyze(source)) {
-            case Ok(InputTokens _, AstNode _) -> broker.resolveQuery(source);
+            case Ok(InputTokens _, AstNode ast) -> resolve(ast, withoutTerminator(source));
             case Fail(String reason) -> QueryResponse.error(reason);
         };
     }
 
     /**
-     * Compila la consulta y devuelve su árbol de sintaxis dibujado, o el error encontrado.
+     * Ejecuta un script de forma perezosa: cada respuesta se calcula cuando se solicita.
+     * Quien deje de consumir el stream evita ejecutar las sentencias restantes.
+     *
+     * @param script una o varias sentencias separadas por punto y coma
+     * @return las respuestas en orden, o un error léxico si el script no se puede tokenizar
+     */
+    public Stream<QueryResponse> compileScript(String script) {
+        return switch (Tokenizer.tokenize(script)) {
+            case Fail(String reason) -> Stream.of(QueryResponse.error(reason));
+            case Ok(InputString _, List<TokenString> tokens) -> {
+                List<List<TokenString>> statements = Statements.split(tokens);
+                List<String> sources = sourcesOf(script, statements);
+                yield IntStream.range(0, statements.size())
+                        .mapToObj(index -> compileStatement(statements.get(index), sources.get(index)));
+            }
+        };
+    }
+
+    /**
+     * Revisa si el último token es un punto y coma. Un error léxico también termina
+     * la lectura para que el REPL lo muestre de inmediato.
+     *
+     * @param source el texto acumulado hasta ahora
+     * @return true si se puede despachar, false si hacen falta más líneas
+     */
+    public boolean isTerminated(String source) {
+        return switch (Tokenizer.tokenize(source)) {
+            case Fail(String _) -> true;
+            case Ok(InputString _, List<TokenString> tokens) ->
+                    !tokens.isEmpty() && tokens.getLast().type() == TokenType.SEMICOLON;
+        };
+    }
+
+    /**
+     * Punto de integración con Codegen: recibe el AST validado y el texto sin terminador.
+     * El Plan #2 reemplazará este cuerpo para enviar al broker el Prolog generado.
+     *
+     * @param ast el árbol validado, reservado para Codegen
+     * @param source el texto de la sentencia sin el punto y coma final
+     * @return la respuesta del broker
+     */
+    private QueryResponse resolve(AstNode ast, String source) {
+        return broker.resolveQuery(source);
+    }
+
+    /**
+     * Compila los tokens de una sentencia conservando su texto para el broker provisional.
+     *
+     * @param tokens los tokens de una sentencia sin terminador
+     * @param source su texto original sin terminador
+     * @return la respuesta de la ejecución o del análisis
+     */
+    private QueryResponse compileStatement(List<TokenString> tokens, String source) {
+        return switch (analyze(tokens)) {
+            case Ok(InputTokens _, AstNode ast) -> resolve(ast, source);
+            case Fail(String reason) -> QueryResponse.error(reason);
+        };
+    }
+
+    /**
+     * Recupera el texto original de las sentencias que separó Statements.split.
+     * Vuelve a tokenizar los prefijos terminados en ';' para reconocer el separador sin
+     * implementar otro lexer. Es menos eficiente, pero conserva strings, comentarios y
+     * espacios tal como se escribieron, necesarios para los fixtures del broker falso.
+     *
+     * @param script el texto original
+     * @param statements las sentencias separadas por tokens
+     * @return el texto correspondiente a cada sentencia, sin su terminador
+     */
+    private static List<String> sourcesOf(String script, List<List<TokenString>> statements) {
+        List<String> sources = new ArrayList<>();
+        int start = 0;
+        for (List<TokenString> statement : statements) {
+            boolean found = false;
+            for (int end = script.indexOf(';', start); end >= 0; end = script.indexOf(';', end + 1)) {
+                if (Tokenizer.tokenize(script.substring(start, end + 1))
+                        instanceof Ok(InputString _, List<TokenString> prefix)
+                        && !prefix.isEmpty() && prefix.getLast().type() == TokenType.SEMICOLON) {
+                    List<List<TokenString>> parts = Statements.split(prefix);
+                    if (parts.isEmpty()) {
+                        start = end + 1;
+                    } else if (parts.equals(List.of(statement))) {
+                        sources.add(script.substring(start, end).strip());
+                        start = end + 1;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) sources.add(script.substring(start).strip());
+        }
+        return sources;
+    }
+
+    /** Quita los espacios exteriores y el punto y coma final de una sentencia. */
+    private static String withoutTerminator(String source) {
+        return source.strip().replaceFirst(";$", "").strip();
+    }
+
+    /** Quita el token terminador antes de entregar la sentencia a la gramática. */
+    private static List<TokenString> withoutTerminator(List<TokenString> tokens) {
+        return !tokens.isEmpty() && tokens.getLast().type() == TokenType.SEMICOLON
+                ? tokens.subList(0, tokens.size() - 1)
+                : tokens;
+    }
+
+    /**
+     * Dibuja un árbol por sentencia, separados por una línea en blanco.
      *
      * <p>Es lo que muestra el comando {@code .tree}.</p>
      *
-     * @param source código fuente de la consulta.
+     * @param source código fuente de una o varias sentencias.
      * @return el árbol como texto, o el mensaje de error.
      */
 
     public String tree(String source) {
-        switch (Tokenizer.tokenize(source)) {
-            case Fail(String reason) -> {
-                return reason;
-            }
+        return switch (Tokenizer.tokenize(source)) {
+            case Fail(String reason) -> reason;
             case Ok(InputString _, List<TokenString> tokens) -> {
-                switch (Grammar.parse(tokens)) {
-                    case Fail(String reason) -> {
-                        return "Syntax error: " + reason;
-                    }
-                    case Ok(InputTokens _, AstNode ast) -> {
-                        String treeStr = PrettyPrinter.print(ast);
-                        List<String> errors = SemanticAnalyzer.check(ast);
-
-                        if (!errors.isEmpty()) {
-                            return treeStr + "\nSemantic error: " + String.join("; ", errors);
-                        }
-                        return treeStr + "\nSuccess";
-                    }
-                }
+                List<List<TokenString>> statements = Statements.split(tokens);
+                yield (statements.isEmpty() ? List.of(tokens) : statements).stream()
+                        .map(this::treeOf)
+                        .collect(Collectors.joining("\n\n"));
             }
-        }
+        };
+    }
+
+    /** Dibuja el AST y los errores semánticos de una sentencia ya separada. */
+    private String treeOf(List<TokenString> tokens) {
+        return switch (Grammar.parse(tokens)) {
+            case Fail(String reason) -> "Syntax error: " + reason;
+            case Ok(InputTokens _, AstNode ast) -> {
+                String treeStr = PrettyPrinter.print(ast);
+                List<String> errors = SemanticAnalyzer.check(ast);
+                yield errors.isEmpty()
+                        ? treeStr + "\nSuccess"
+                        : treeStr + "\nSemantic error: " + String.join("; ", errors);
+            }
+        };
     }
 
     /**
      * Ejecuta las tres etapas de análisis, cortando en la primera que falle.
      *
-     * <p>Está en un solo lugar para que {@link #compile} y {@link #tree} analicen exactamente
-     * igual: lo que muestra el árbol es lo mismo que se manda a ejecutar.</p>
+     * <p>El análisis sintáctico y semántico se comparte con compileScript mediante
+     * la sobrecarga que recibe tokens.</p>
      *
      * @param source código fuente de la consulta.
      * @return el AST de la consulta, o el motivo del fallo.
@@ -116,10 +231,15 @@ public class Compiler {
     private Result<InputTokens, AstNode, String> analyze(String source) {
         return switch (Tokenizer.tokenize(source)) {
             case Fail(String reason) -> new Fail<>(reason);
-            case Ok(InputString _, List<TokenString> tokens) -> switch (Grammar.parse(tokens)) {
-                case Fail(String reason) -> new Fail<>("Syntax error: " + reason);
-                case Ok(InputTokens rest, AstNode ast) -> validate(rest, ast);
-            };
+            case Ok(InputString _, List<TokenString> tokens) -> analyze(tokens);
+        };
+    }
+
+    /** Ejecuta el análisis sintáctico y semántico de una sentencia con o sin terminador. */
+    private Result<InputTokens, AstNode, String> analyze(List<TokenString> tokens) {
+        return switch (Grammar.parse(withoutTerminator(tokens))) {
+            case Fail(String reason) -> new Fail<>("Syntax error: " + reason);
+            case Ok(InputTokens rest, AstNode ast) -> validate(rest, ast);
         };
     }
 
