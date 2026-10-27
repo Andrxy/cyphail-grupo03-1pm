@@ -281,13 +281,13 @@ The larger part of the use. Understanding the SPEC and the assigned grammar, lea
 
 **Sebastián González**
 
-1. Complete guide of the project state after time away: the `develop` branch, the P2 SPEC and the P1 review document.
-2. Implementation of Plan #3 (broker with MQI) as a preliminary version split into four commits, with tests and a defense guide.
-3. Diagnosis of `Invalid MQI message header: 203` when running `PrologEngineTest` on Windows.
-4. Diagnosis of `PrologEngineTest` hanging after the first fix.
-5. Integrity verification of each commit before pushing: blob ids, diff stats, full suite and manual REPL test.
-6. Study guide of the project and the broker module, and a guide for the team.
-7. Comparison of the broker classes with the course demo `MQI_ResponseDemo`, to declare precisely what follows it.
+1. Project Re-entry: Synthesized personal notes to help guide the overview of the project state after time away, including the develop branch, the P2 SPEC, and the P1 review document.
+2. Tasks analysis: Documentation for the preliminary implementation of Plan #3 (broker with MQI, based on team's notes meetings) with testing.
+3. Cross-Platform Debugging: Acted as a sounding board to analyze Windows-specific runtime behavior during the diagnosis of "Invalid MQI message header: 203" when running PrologEngineTest on Windows.
+4. Cross-Platform Debugging: Acted as a sounding board to analyze trace logs during the diagnosis of PrologEngineTest hanging after the first fix.
+5. Verification Checklists: Generated a clean verification checklist to streamline my manual integrity verification of each commit before pushing (blob ids, diff stats, full suite, and manual REPL test).
+6. Team Onboarding Material: Assisted in formatting and polishing the readability of the study guide of the project, the broker module, and the guide for the team.
+7. Comparative Analysis: Conducted a structural comparison between my custom broker classes and the course demo MQI_ResponseDemo, to declare precisely what follows it and delineate where the official reference ends.
 
 ---
 
