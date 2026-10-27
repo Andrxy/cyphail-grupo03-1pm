@@ -60,7 +60,7 @@ class LoadCommandTest extends CommandTestSupport {
 
         assertTrue(salida().contains("Escribir README"), salida());
         assertFalse(salida().contains("Error"), salida());
-        assertFalse(repl.isRunning());
+        assertTrue(salida().contains("Bye!"));
     }
 
     @Test
@@ -91,14 +91,16 @@ class LoadCommandTest extends CommandTestSupport {
         assertTrue(salida().contains("Ana"), salida());
         assertTrue(salida().contains("Undefined variable 'q'"), salida());
         assertFalse(salida().contains("Escribir README"), salida());
-        assertTrue(repl.isRunning());
+        assertEquals(0, ejecutar(".about"));
+        assertTrue(salida().contains("What is cyphail?"));
     }
 
     @Test
     void informaSiElArchivoNoExiste() {
         assertEquals(1, ejecutar(".load", directory.resolve("missing.cyphail").toString()));
         assertTrue(salida().contains("Cannot read script"), salida());
-        assertTrue(repl.isRunning());
+        assertEquals(0, ejecutar(".about"));
+        assertTrue(salida().contains("What is cyphail?"));
     }
 
     @Test

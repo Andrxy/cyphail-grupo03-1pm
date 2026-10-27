@@ -2,6 +2,9 @@ package cr.ac.una.eif400.cyphail.cli.repl.actions;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -17,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ExitCommandTest extends CommandTestSupport {
 
     @Test
-    @DisplayName("Termina con codigo 0")
-    void terminaConExito() {
-        assertEquals(0, ejecutar(".exit"));
+    @DisplayName("Devuelve la señal de salida")
+    void devuelveLaSenalDeSalida() {
+        assertEquals(ExitCommand.EXIT_CODE, ejecutar(".exit"));
     }
 
     @Test
@@ -30,15 +33,22 @@ public class ExitCommandTest extends CommandTestSupport {
     }
 
     @Test
-    @DisplayName("El repl arranca activo")
-    void elReplArrancaActivo() {
-        assertTrue(repl.isRunning());
+    @DisplayName("Los demás comandos no devuelven la señal de salida")
+    void distingueLosDemasComandos() {
+        assertEquals(0, ejecutar(".about"));
     }
 
     @Test
-    @DisplayName("Marca el repl como terminado")
+    @DisplayName("El flujo termina sin despachar el comando siguiente")
     void detieneElRepl() {
-        ejecutar(".exit");
-        assertFalse(repl.isRunning(), "El repl queda marcado para salir");
+        InputStream original = System.in;
+        try {
+            System.setIn(new ByteArrayInputStream(".exit\n.about\n".getBytes(StandardCharsets.UTF_8)));
+            repl.open();
+        } finally {
+            System.setIn(original);
+        }
+        assertTrue(salida().contains("Bye!"));
+        assertFalse(salida().contains("What is cyphail?"));
     }
 }

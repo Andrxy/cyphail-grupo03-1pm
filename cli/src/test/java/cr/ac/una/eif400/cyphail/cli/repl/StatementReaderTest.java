@@ -31,7 +31,7 @@ class StatementReaderTest {
     @Test
     void lexicalErrorIsDispatchedImmediately() {
         try (Scanner input = new Scanner(".exit\n")) {
-            assertEquals("RETURN @", reader.read(input, "RETURN @", Compiler.getInstance()::isTerminated));
+            assertEquals("RETURN @", reader.read(input, "RETURN @", source -> Compiler.getInstance().isTerminated(source)));
             assertEquals(".exit", input.nextLine());
         }
     }
@@ -39,7 +39,7 @@ class StatementReaderTest {
     @Test
     void completeStatementDoesNotConsumeTheNextCommand() {
         try (Scanner input = new Scanner(".exit\n")) {
-            assertEquals("RETURN 1;", reader.read(input, "RETURN 1;", Compiler.getInstance()::isTerminated));
+            assertEquals("RETURN 1;", reader.read(input, "RETURN 1;", source -> Compiler.getInstance().isTerminated(source)));
             assertEquals(".exit", input.nextLine());
         }
     }
@@ -68,7 +68,7 @@ class StatementReaderTest {
 
     private String read(String firstLine, String remainingLines) {
         try (Scanner input = new Scanner(remainingLines)) {
-            return reader.read(input, firstLine, Compiler.getInstance()::isTerminated);
+            return reader.read(input, firstLine, source -> Compiler.getInstance().isTerminated(source));
         }
     }
 }

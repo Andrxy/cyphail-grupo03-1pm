@@ -57,17 +57,19 @@ public class ReplTest {
     }
 
     @Test
-    @DisplayName("Arranca activo y guarda el broker recibido")
-    void arrancaActivoConSuBroker() {
-        assertTrue(repl.isRunning(), "El bucle arranca activo");
+    @DisplayName("Guarda el broker recibido")
+    void conservaSuBroker() {
         assertSame(Broker.getInstance(), repl.getBroker(), "Conserva el broker recibido");
     }
 
     @Test
-    @DisplayName("stop marca el bucle como terminado")
-    void stopDetieneElBucle() {
-        repl.stop();
-        assertFalse(repl.isRunning());
+    @DisplayName(".exit termina sin leer la consulta siguiente")
+    void exitDetieneLaLectura() {
+        List<String> queries = capturarConsultas();
+        escribir(".exit", TAREAS + ";");
+        repl.open();
+        assertTrue(queries.isEmpty());
+        assertTrue(salida().contains("Bye!"));
     }
 
     @Test
@@ -97,7 +99,7 @@ public class ReplTest {
         repl.open();
 
         assertTrue(salida().contains("What is cyphail?"), "Corrio el comando .about");
-        assertFalse(repl.isRunning(), "El .exit final cerro el bucle");
+        assertTrue(salida().contains("Bye!"), "El .exit final se ejecutó");
     }
 
     @Test
@@ -174,7 +176,7 @@ public class ReplTest {
         assertEquals(List.of("MATCH (n)\n\nRETURN n;"), queries);
         assertTrue(salida().contains("     ...> "));
         assertTrue(salida().contains("What is cyphail?"));
-        assertFalse(repl.isRunning());
+        assertTrue(salida().contains("Bye!"));
     }
 
     @Test
@@ -203,7 +205,7 @@ public class ReplTest {
 
         assertTrue(salida().contains("Lexical Error"), salida());
         assertFalse(salida().contains("Incomplete statement"));
-        assertFalse(repl.isRunning());
+        assertTrue(salida().contains("Bye!"));
     }
 
     private List<String> capturarConsultas() {
