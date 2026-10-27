@@ -15,7 +15,7 @@ import static java.util.stream.Collectors.joining;
 
 /**
  * Generador de código: transpila el AST de una consulta Cyphail a un goal de Prolog
- * que el engine resuelve con {@code cy_exec_query(Headers, Columns, Goal, Rows)}.<br><br>
+ * que el engine resuelve con {@code cy_exec_query(Goal, Headers, Columns, Rows)}.<br><br>
  *
  * Igual que el {@code SemanticAnalyzer}, recorre el AST con {@code switch} exhaustivos sobre
  * el {@link AstNode} sellado. Se usan tres recorridos según el lugar donde aparece el nodo:
@@ -79,9 +79,9 @@ public class CodeGen {
         generator.visit(query);
 
         return "cy_exec_query(%s, %s, %s, Rows)".formatted(
+                allOf(generator.goals),
                 list(generator.headers.stream().map(CodeGen::atom).toList()),
-                list(generator.columns),
-                allOf(generator.goals));
+                list(generator.columns));
     }
 
     /**

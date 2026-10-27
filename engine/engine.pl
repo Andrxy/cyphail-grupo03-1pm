@@ -7,7 +7,7 @@
 :- ensure_loaded('graph/relationships.pl').
 
 % Ejecuta el patrón y convierte todas sus soluciones en texto.
-cy_exec_query(Headers, Columns, Goal, Rows) :-
+cy_exec_query(Goal, Headers, Columns, Rows) :-
     findall(Columns, Goal, Solutions),
     format_rows(Headers, Solutions, Rows)
 .
