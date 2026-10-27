@@ -41,8 +41,8 @@ public class CodeGen {
      * le corresponden a cada una.
      */
     private enum Kind {
-        NODE("cy_node_lab", "cy_node_prop"),
-        RELATIONSHIP("cy_edge_lab", "cy_edge_prop");
+        NODE("cy_node_label", "cy_node_prop"),
+        RELATIONSHIP("cy_edge_label", "cy_edge_prop");
 
         private final String label;
         private final String property;
