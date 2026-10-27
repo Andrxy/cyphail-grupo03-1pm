@@ -1,3 +1,4 @@
+:- encoding(utf8).
 :- ensure_loaded('rows.pl').
 
 % Compara números por valor y otros términos por identidad.

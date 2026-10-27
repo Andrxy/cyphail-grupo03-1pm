@@ -1,3 +1,4 @@
+:- encoding(utf8).
 :- ensure_loaded('graph.pl').
 
 % Busca un nodo en el grafo actual.

@@ -1,3 +1,4 @@
+:- encoding(utf8).
 :- dynamic current_graph/1.
 
 :- ensure_loaded('../data/amigos.pl').

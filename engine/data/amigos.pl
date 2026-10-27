@@ -1,3 +1,4 @@
+:- encoding(utf8).
 % Identifica los grafos disponibles.
 graph(amigos).
 

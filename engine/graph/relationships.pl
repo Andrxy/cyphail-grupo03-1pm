@@ -1,3 +1,4 @@
+:- encoding(utf8).
 :- ensure_loaded('graph.pl').
 
 % Busca una relación y sus extremos en el grafo actual.

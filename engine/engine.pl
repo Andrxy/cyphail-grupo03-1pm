@@ -1,3 +1,4 @@
+:- encoding(utf8).
 :- ensure_loaded('data/amigos.pl').
 :- ensure_loaded('query/rows.pl').
 :- ensure_loaded('query/comparisons.pl').
