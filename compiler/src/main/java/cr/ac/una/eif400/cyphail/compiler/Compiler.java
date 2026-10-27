@@ -4,6 +4,7 @@ import cr.ac.una.eif400.broker.Broker;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import cr.ac.una.eif400.cyphail.compiler.ast.PrettyPrinter;
 import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.AstNode;
+import cr.ac.una.eif400.cyphail.compiler.codegen.CodeGen;
 import cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
@@ -113,15 +114,19 @@ public class Compiler {
     }
 
     /**
-     * Punto de integración con Codegen: recibe el AST validado y el texto sin terminador.
-     * El Plan #2 reemplazará este cuerpo para enviar al broker el Prolog generado.
+     * Transpila el AST validado y entrega al broker el goal de Prolog generado.
+     * Las construcciones aún no soportadas se devuelven como errores de compilación.
      *
-     * @param ast el árbol validado, reservado para Codegen
-     * @param source el texto de la sentencia sin el punto y coma final
+     * @param ast el árbol validado
+     * @param source el texto original, conservado en la firma del punto de integración
      * @return la respuesta del broker
      */
     private QueryResponse resolve(AstNode ast, String source) {
-        return broker.resolveQuery(source);
+        try {
+            return broker.resolveQuery(CodeGen.generate(ast));
+        } catch (UnsupportedOperationException error) {
+            return QueryResponse.error("Code generation error: " + error.getMessage());
+        }
     }
 
     /**

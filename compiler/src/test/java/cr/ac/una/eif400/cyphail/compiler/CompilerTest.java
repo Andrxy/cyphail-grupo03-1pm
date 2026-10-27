@@ -111,6 +111,22 @@ public class CompilerTest {
                 response.getMessage());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "CREATE (n:Persona)",
+            "MATCH (n) RETURN DISTINCT n",
+            "MATCH (n) RETURN size(n)"
+    })
+    void devuelveUnErrorSiCodegenNoSoportaLaConsulta(String source) {
+        QueryResponse response = compiler.compile(source);
+
+        assertFalse(response.isOk());
+        assertTrue(response.getMessage().startsWith("Code generation error:"), response.getMessage());
+        assertTrue(response.getMessage().contains("Not supported yet"), response.getMessage());
+        assertNull(response.getHeaders());
+        assertNull(response.getRows());
+    }
+
     @Test
     @DisplayName("El tree de una consulta valida muestra el arbol y termina en Success")
     void treeDeConsultaValida() {

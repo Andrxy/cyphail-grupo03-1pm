@@ -11,6 +11,7 @@ import picocli.CommandLine;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,37 +19,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class LoadCommandTest extends CommandTestSupport {
-    private static final String PERSONAS = "MATCH (p:Persona) RETURN p.nombre, p.edad";
-    private static final String TAREAS = "MATCH (t:Tarea) RETURN t.titulo, t.estado";
+    private static final String PRIMERA = "RETURN 'primera' AS valor";
+    private static final String SEGUNDA = "RETURN 'segunda' AS otro";
 
     @TempDir
     Path directory;
 
     @Test
-    void ejecutaDosConsultasConocidasYPresentaSusTablasEnOrden() throws Exception {
-        Path script = script("\uFEFF" + PERSONAS + ";\n" + TAREAS);
+    void ejecutaDosConsultasYPresentaSusTablasEnOrden() throws Exception {
+        requiereSwipl();
+        Path script = script("\uFEFF" + PRIMERA + ";\n" + SEGUNDA);
 
         assertEquals(0, ejecutar(".load", script.toString()));
-        assertTrue(salida().contains("Ana"), salida());
-        assertTrue(salida().contains("Escribir README"), salida());
-        assertTrue(salida().indexOf("p.nombre") < salida().indexOf("t.titulo"), salida());
+        assertTrue(salida().contains("primera"), salida());
+        assertTrue(salida().contains("segunda"), salida());
+        assertTrue(salida().indexOf("valor") < salida().indexOf("otro"), salida());
         assertFalse(salida().contains("Error"), salida());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", "\"", "'"})
     void admiteRutasConEspaciosYComillas(String quote) throws Exception {
-        Path script = script(PERSONAS + ";");
+        requiereSwipl();
+        Path script = script(PRIMERA + ";");
 
         assertEquals(0, ejecutar(".load", quote + script + quote));
-        assertTrue(salida().contains("p.nombre"), salida());
+        assertTrue(salida().contains("primera"), salida());
     }
 
     @Test
     void recibeLaRutaEntreComillasDesdeElBucleRealDelRepl() throws Exception {
-        Path script = script(TAREAS + ";");
+        requiereSwipl();
+        Path script = script(SEGUNDA + ";");
         InputStream original = System.in;
         try {
             String input = ".load \"" + script + "\"\n.exit\n";
@@ -58,7 +63,7 @@ class LoadCommandTest extends CommandTestSupport {
             System.setIn(original);
         }
 
-        assertTrue(salida().contains("Escribir README"), salida());
+        assertTrue(salida().contains("segunda"), salida());
         assertFalse(salida().contains("Error"), salida());
         assertTrue(salida().contains("Bye!"));
     }
@@ -75,9 +80,10 @@ class LoadCommandTest extends CommandTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"RETURN 1", "RETURN 'sin cerrar;", "/* sin cerrar", "RETURN \"sin cerrar;"})
+    @ValueSource(strings = {"RETURN", "RETURN 'sin cerrar;", "/* sin cerrar", "RETURN \"sin cerrar;"})
     void informaLosErroresDelScript(String tail) throws Exception {
-        Path script = script(PERSONAS + ";\n" + tail);
+        requiereSwipl();
+        Path script = script(PRIMERA + ";\n" + tail);
 
         assertEquals(1, ejecutar(".load", script.toString()));
         assertTrue(salida().toLowerCase().contains("error"), salida());
@@ -85,12 +91,13 @@ class LoadCommandTest extends CommandTestSupport {
 
     @Test
     void detieneElScriptEnLaPrimeraConsultaQueFalla() throws Exception {
-        Path script = script(PERSONAS + ";\nMATCH (n) RETURN q;\n" + TAREAS + ";");
+        requiereSwipl();
+        Path script = script(PRIMERA + ";\nMATCH (n) RETURN q;\n" + SEGUNDA + ";");
 
         assertEquals(1, ejecutar(".load", script.toString()));
-        assertTrue(salida().contains("Ana"), salida());
+        assertTrue(salida().contains("primera"), salida());
         assertTrue(salida().contains("Undefined variable 'q'"), salida());
-        assertFalse(salida().contains("Escribir README"), salida());
+        assertFalse(salida().contains("segunda"), salida());
         assertEquals(0, ejecutar(".about"));
         assertTrue(salida().contains("What is cyphail?"));
     }
@@ -127,6 +134,16 @@ class LoadCommandTest extends CommandTestSupport {
     void informaSiLaRutaNoEsValida() {
         assertEquals(1, ejecutar(".load", "invalid\0path.cyphail"));
         assertTrue(salida().contains("Cannot read script"), salida());
+    }
+
+    /** Solo las pruebas que ejecutan consultas requieren el proceso externo. */
+    private void requiereSwipl() throws InterruptedException {
+        try {
+            assumeTrue(new ProcessBuilder("swipl", "--version").start().waitFor() == 0,
+                    "swipl no está disponible");
+        } catch (IOException error) {
+            assumeTrue(false, "swipl no está en el PATH");
+        }
     }
 
     private Path script(String content) throws Exception {
