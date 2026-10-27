@@ -31,8 +31,9 @@ import java.util.Map;
  * @author Andrey Solano
  * @author Sebastián González
  *
- * <p>La versión P2 (conexión con MQI) se escribió con la asistencia de Claude (Anthropic) y fue
- * revisada por el equipo. Corresponde al prompt del Plan #3 (Broker MQI) declarado en el README.</p>
+ * <p>La versión P2 reemplaza el broker falso de P1 por la conexión con MQI, siguiendo el Plan #3
+ * del equipo y sin cambiar la interfaz pública.
+ * Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  *
  * @version P2
  */

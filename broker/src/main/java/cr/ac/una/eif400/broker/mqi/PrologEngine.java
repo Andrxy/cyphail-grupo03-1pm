@@ -27,9 +27,10 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Sebastián González
  *
- * <p>Escrita con la asistencia de Claude (Anthropic) a partir del demo {@code MQI_ResponseDemo}
- * del curso, y revisada por el equipo. Corresponde al prompt del Plan #3 (Broker MQI)
- * declarado en el README.</p>
+ * <p>Lleva a una clase el arranque de {@code startPrologEngine()} del demo
+ * {@code MQI_ResponseDemo} del curso, y le agrega el cierre del proceso, el tiempo límite y los
+ * reintentos de conexión.
+ * Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  *
  * @version P2
  */

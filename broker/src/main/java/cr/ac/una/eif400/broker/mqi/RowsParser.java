@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
  *
  * @author Sebastián González
  *
- * <p>Escrita con la asistencia de Claude (Anthropic) y revisada por el equipo. Corresponde al
- * prompt del Plan #3 (Broker MQI) declarado en el README.</p>
+ * <p>Implementa el formato {@code Rows} acordado con el engine en el Plan #3 del equipo.
+ * Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  *
  * @version P2
  */

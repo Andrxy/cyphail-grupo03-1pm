@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Pruebas del MqiResponseParser con respuestas reales copiadas de MQI.
  *
  * @author Sebastián González
+ *
+ * <p>Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  */
 @DisplayName("Pruebas del MqiResponseParser")
 public class MqiResponseParserTest {

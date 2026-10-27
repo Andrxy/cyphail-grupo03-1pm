@@ -24,10 +24,11 @@ import java.nio.charset.StandardCharsets;
  *
  * @author Sebastián González
  *
- * <p>Adaptada del demo {@code MQI_ResponseDemo} del curso, escrito con la asistencia de
- * Claude (Anthropic). La adaptación al paquete del proyecto también se hizo con la asistencia
- * de Claude y fue revisada por el equipo. Corresponde al prompt del Plan #3 (Broker MQI)
- * declarado en el README.</p>
+ * <p>Sigue el diseño del {@code MqiClient} del demo {@code MQI_ResponseDemo} del curso (el
+ * mismo framing, autenticación y {@code run}). A diferencia del demo, abre su propio socket y
+ * acepta {@code \r\n} y heartbeats de forma explícita, por los fallos encontrados al probarlo
+ * en Windows.
+ * Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  *
  * @version P2
  */

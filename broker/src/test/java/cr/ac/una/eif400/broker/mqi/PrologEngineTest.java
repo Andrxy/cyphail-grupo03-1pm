@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * Si swipl no está instalado se omiten en lugar de fallar.
  *
  * @author Sebastián González
+ *
+ * <p>Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  */
 @DisplayName("Pruebas del PrologEngine (necesitan swipl)")
 @Timeout(value = 20, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)

@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Casos de la tabla 3.2 del contrato de {@code Rows}.
  *
  * @author Sebastián González
+ *
+ * <p>Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  */
 @DisplayName("Pruebas del RowsParser")
 public class RowsParserTest {

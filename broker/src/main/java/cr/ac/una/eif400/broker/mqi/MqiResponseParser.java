@@ -22,10 +22,9 @@ import java.util.Map;
  *
  * @author Sebastián González
  *
- * <p>Adaptada del demo {@code MQI_ResponseDemo} del curso, escrito con la asistencia de
- * Claude (Anthropic). La adaptación al paquete del proyecto también se hizo con la asistencia
- * de Claude y fue revisada por el equipo. Corresponde al prompt del Plan #3 (Broker MQI)
- * declarado en el README.</p>
+ * <p>Sigue el {@code MqiResponseParser} del demo {@code MQI_ResponseDemo} del curso: las mismas
+ * tres formas de respuesta y el mismo resultado, usando la conversión genérica de Gson.
+ * Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  *
  * @version P2
  */

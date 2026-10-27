@@ -29,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * esperando bytes que nunca llegan, y el test debe fallar en vez de colgar el build.</p>
  *
  * @author Sebastián González
+ *
+ * <p>Herramienta de asistencia: Claude (Anthropic), declarado en el README, Sprint P2.</p>
  */
 @DisplayName("Pruebas del MqiClient con un servidor falso")
 @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
