@@ -23,9 +23,9 @@ import picocli.CommandLine.Parameters;
 public class TreeCommand implements Runnable {
 
     /**
-     * La consulta llega partida en palabras porque el REPL divide la línea por espacios
-     * antes de entregarla a picocli.
-     * No funciona de momento con queries multilínea
+     * La consulta llega como un argumento con el resto de la entrada del REPL, que puede ocupar
+     * varias líneas y terminar con ';'. Si trae varias sentencias, se muestra un árbol por cada una.
+     * Se conserva String[] para aceptar también consultas entregadas por palabras a Picocli.
      */
     @Parameters(arity = "0..*", description = "Query to analyze")
     private String[] queryWords;

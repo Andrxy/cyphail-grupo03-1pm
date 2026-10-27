@@ -12,7 +12,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -54,17 +57,19 @@ public class ReplTest {
     }
 
     @Test
-    @DisplayName("Arranca activo y guarda el broker recibido")
-    void arrancaActivoConSuBroker() {
-        assertTrue(repl.isRunning(), "El bucle arranca activo");
+    @DisplayName("Guarda el broker recibido")
+    void conservaSuBroker() {
         assertSame(Broker.getInstance(), repl.getBroker(), "Conserva el broker recibido");
     }
 
     @Test
-    @DisplayName("stop marca el bucle como terminado")
-    void stopDetieneElBucle() {
-        repl.stop();
-        assertFalse(repl.isRunning());
+    @DisplayName(".exit termina sin leer la consulta siguiente")
+    void exitDetieneLaLectura() {
+        List<String> queries = capturarConsultas();
+        escribir(".exit", TAREAS + ";");
+        repl.open();
+        assertTrue(queries.isEmpty());
+        assertTrue(salida().contains("Bye!"));
     }
 
     @Test
@@ -94,7 +99,7 @@ public class ReplTest {
         repl.open();
 
         assertTrue(salida().contains("What is cyphail?"), "Corrio el comando .about");
-        assertFalse(repl.isRunning(), "El .exit final cerro el bucle");
+        assertTrue(salida().contains("Bye!"), "El .exit final se ejecutó");
     }
 
     @Test
@@ -120,7 +125,7 @@ public class ReplTest {
     @Test
     @DisplayName("Una linea que no empieza con punto se compila como consulta")
     void compilaLaLineaComoConsulta() {
-        escribir(TAREAS, ".exit");
+        escribir(TAREAS + ";", ".exit");
         repl.open();
 
         assertTrue(salida().contains("Escribir README"), "Muestra los datos de la consulta");
@@ -160,6 +165,59 @@ public class ReplTest {
             entrada += System.lineSeparator();
         }
         System.setIn(new ByteArrayInputStream(entrada.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void acumulaConsultaMultilineaYDespachaComandosSinPuntoYComa() {
+        List<String> queries = capturarConsultas();
+        escribir(".about", "MATCH (n)", "", "RETURN n;", ".exit");
+        repl.open();
+
+        assertEquals(List.of("MATCH (n)\n\nRETURN n;"), queries);
+        assertTrue(salida().contains("     ...> "));
+        assertTrue(salida().contains("What is cyphail?"));
+        assertTrue(salida().contains("Bye!"));
+    }
+
+    @Test
+    void ejecutaVariasConsultasYConservaElFragmentoPendiente() {
+        List<String> queries = capturarConsultas();
+        escribir("RETURN 1; RETURN 2; MATCH (n)", "RETURN n;", ".exit");
+        repl.open();
+
+        assertEquals(List.of("RETURN 1; RETURN 2; MATCH (n)\nRETURN n;"), queries);
+    }
+
+    @Test
+    void despachaLoLeidoAlLlegarAlFinDeEntrada() {
+        List<String> queries = capturarConsultas();
+        escribir("MATCH (n)", "RETURN n");
+        repl.open();
+
+        assertEquals(List.of("MATCH (n)\nRETURN n"), queries);
+        assertFalse(salida().contains("Incomplete statement"));
+    }
+
+    @Test
+    void muestraUnErrorLexicoSinEsperarMasLineas() {
+        escribir("RETURN 'first", ".exit", "last'; // ;", ".exit");
+        repl.open();
+
+        assertTrue(salida().contains("Lexical Error"), salida());
+        assertFalse(salida().contains("Incomplete statement"));
+        assertTrue(salida().contains("Bye!"));
+    }
+
+    private List<String> capturarConsultas() {
+        List<String> queries = new ArrayList<>();
+        repl = new Repl(Compiler.getInstance(), Broker.getInstance()) {
+            @Override
+            public boolean executeQuery(String sourceCode) {
+                queries.add(sourceCode);
+                return true;
+            }
+        };
+        return queries;
     }
 
     private String salida() {
