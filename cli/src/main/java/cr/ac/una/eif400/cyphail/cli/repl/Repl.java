@@ -15,6 +15,8 @@ import picocli.CommandLine.Command;
 
 import java.util.Scanner;
 import java.util.Set;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Bucle de lectura, evaluación e impresión (REPL) para el CLI de Cyphail.
@@ -43,7 +45,6 @@ public class Repl {
     private final CommandLine dispatcher;
     private final Broker broker;
     private final Compiler compiler;
-    private boolean running = true;
 
     /**
      * Construye una nueva instancia del repl inicializando los componentes de compilación,
@@ -68,22 +69,6 @@ public class Repl {
     }
 
     /**
-     * Verifica si el repl se encuentra en estado de ejecuciòn
-     *
-     * @return true si el bucle está activo, false en caso contrario
-     */
-    public boolean isRunning() {
-        return running;
-    }
-
-    /**
-     * Detiene la ejecución del bucle interactivo del repl
-     */
-    public void stop() {
-        running = false;
-    }
-
-    /**
      * Inicia el ciclo interactivo del shell del repl
      * Muestra el banner de bienvenida y procesa de forma secuencial las líneas de entrada
      * proporcionadas por el usuario a través de la entrada estándar hasta que se indique la salida.
@@ -94,18 +79,23 @@ public class Repl {
 
         printBanner();
 
-        while (running) {
-            IO.print(buildPrompt());
+        Stream.generate(() -> readLine(scanner))
+                .takeWhile(line -> line.isPresent())
+                .map(line -> line.get())
+                .filter(line -> !line.isBlank())
+                .map(line -> spansLines(line) ? readStatement(scanner, line) : line.strip())
+                .map(line -> dispatch(line))
+                .anyMatch(code -> code == ExitCommand.EXIT_CODE);
+    }
 
-            if (!scanner.hasNextLine()) {
-                IO.println();
-                break;
-            }
-
-            String line = scanner.nextLine().stripLeading();
-            if (line.isBlank()) continue;
-            dispatch(spansLines(line) ? readStatement(scanner, line) : line.strip());
+    /** Lee una línea con su prompt. Optional.empty indica que terminó la entrada. */
+    private Optional<String> readLine(Scanner scanner) {
+        IO.print(buildPrompt());
+        if (!scanner.hasNextLine()) {
+            IO.println();
+            return Optional.empty();
         }
+        return Optional.of(scanner.nextLine().stripLeading());
     }
 
     /**
@@ -121,9 +111,9 @@ public class Repl {
         String[] parts = firstLine.split("\\s+", 2);
         if (parts[0].equals(TREE_COMMAND)) {
             String query = parts.length > 1 ? parts[1] : "";
-            return TREE_COMMAND + " " + reader.read(scanner, query, compiler::isTerminated);
+            return TREE_COMMAND + " " + reader.read(scanner, query, source -> compiler.isTerminated(source));
         }
-        return reader.read(scanner, firstLine, compiler::isTerminated);
+        return reader.read(scanner, firstLine, source -> compiler.isTerminated(source));
     }
 
     /**
@@ -134,20 +124,22 @@ public class Repl {
      * @return true si la consulta se ejecutó correctamente
      */
     public boolean executeQuery(String sourceCode) {
-        return !compiler.compileScript(sourceCode)
-                .map(this::show)
-                .anyMatch(response -> !response.isOk());
+        try (Stream<QueryResponse> responses = compiler.compileScript(sourceCode)) {
+            return responses.allMatch(response -> {
+                show(response);
+                return response.isOk();
+            });
+        }
     }
 
     /** Imprime la tabla solo si hay encabezados y siempre muestra el mensaje de la respuesta. */
-    private QueryResponse show(QueryResponse response) {
+    private void show(QueryResponse response) {
         if (response.isOk() && response.getHeaders() != null && response.getHeaders().length > 0) {
             IO.println(Formatter.format(response.getHeaders(), response.getRows()));
             IO.println();
         }
 
         IO.println(response.getMessage());
-        return response;
     }
 
     /**
@@ -184,19 +176,21 @@ public class Repl {
      * para que Picocli no tome como opciones las palabras que empiezan con {@code -}, como en {@code -[:amigo]->}
      *
      * @param line la cadena de texto ingresada en la consola
+     * @return el resultado del comando o la señal de salida de .exit
      */
-    private void dispatch(String line) {
+    private int dispatch(String line) {
         String[] args = line.split("\\s+", 2);
         String firstWord = args[0];
 
         Set<String> actionNames = dispatcher.getSubcommands().keySet();
 
         if (actionNames.contains(firstWord)) {
-            dispatcher.execute(args);
+            return dispatcher.execute(args);
         } else if (firstWord.startsWith(".")) {
             IO.println("Error. Unknown command '" + firstWord + "'. Type '.help' for the available commands");
+            return 1;
         } else {
-            executeQuery(line);
+            return executeQuery(line) ? 0 : 1;
         }
     }
 }
