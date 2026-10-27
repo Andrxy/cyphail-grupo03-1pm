@@ -1,9 +1,7 @@
 package cr.ac.una.eif400.cyphail.compiler;
 
-import cr.ac.una.eif400.broker.fake.FakeQueries;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -50,27 +47,6 @@ public class CompilerTest {
         QueryResponse response = compiler.compile(validSource);
 
         assertNotNull(response, "La respuesta de la compilación no debe ser nula");
-    }
-
-    @Test
-    @Disabled("Depende del broker fake; el broker ya usa MQI. Se rehace en el Plan #5")
-    @DisplayName("Una consulta valida y conocida por el broker devuelve sus datos")
-    void compilaYResuelveUnaConsultaConocida() {
-        QueryResponse response = compiler.compile("MATCH (p:Persona) RETURN p.nombre, p.edad");
-
-        assertTrue(response.isOk());
-        assertEquals(FakeQueries.OK_RESOLVED_MESSAGE, response.getMessage());
-        assertArrayEquals(new String[]{"p.nombre", "p.edad"}, response.getHeaders());
-    }
-
-    @Test
-    @Disabled("Depende del broker fake; el broker ya usa MQI. Se rehace en el Plan #5")
-    @DisplayName("Una consulta valida pero desconocida llega al broker y este la rechaza")
-    void compilaUnaConsultaDesconocida() {
-        QueryResponse response = compiler.compile("MATCH (x:Desconocido) RETURN x");
-
-        assertFalse(response.isOk());
-        assertEquals(FakeQueries.NOT_RESOLVED_MESSAGE, response.getMessage());
     }
 
     @Test
