@@ -16,7 +16,6 @@ import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyzer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -85,15 +84,17 @@ public class Compiler {
      * @return las respuestas en orden, o un error léxico si el script no se puede tokenizar
      */
     public Stream<QueryResponse> compileScript(String script) {
-        return switch (Tokenizer.tokenize(script)) {
-            case Fail(String reason) -> Stream.of(QueryResponse.error(reason));
+        switch (Tokenizer.tokenize(script)) {
+            case Fail(String reason) -> {
+                return Stream.of(QueryResponse.error(reason));
+            }
             case Ok(InputString _, List<TokenString> tokens) -> {
                 List<List<TokenString>> statements = Statements.split(tokens);
                 List<String> sources = sourcesOf(script, statements);
-                yield IntStream.range(0, statements.size())
+                return IntStream.range(0, statements.size())
                         .mapToObj(index -> compileStatement(statements.get(index), sources.get(index)));
             }
-        };
+        }
     }
 
     /**
@@ -194,29 +195,43 @@ public class Compiler {
      */
 
     public String tree(String source) {
-        return switch (Tokenizer.tokenize(source)) {
-            case Fail(String reason) -> reason;
+        switch (Tokenizer.tokenize(source)) {
+            case Fail(String reason) -> {
+                return reason;
+            }
             case Ok(InputString _, List<TokenString> tokens) -> {
                 List<List<TokenString>> statements = Statements.split(tokens);
-                yield (statements.isEmpty() ? List.of(tokens) : statements).stream()
-                        .map(this::treeOf)
-                        .collect(Collectors.joining("\n\n"));
+                if (statements.isEmpty()) {
+                    return treeOf(tokens);
+                }
+
+                StringBuilder trees = new StringBuilder();
+                for (List<TokenString> statement : statements) {
+                    if (!trees.isEmpty()) {
+                        trees.append("\n\n");
+                    }
+                    trees.append(treeOf(statement));
+                }
+                return trees.toString();
             }
-        };
+        }
     }
 
     /** Dibuja el AST y los errores semánticos de una sentencia ya separada. */
     private String treeOf(List<TokenString> tokens) {
-        return switch (Grammar.parse(tokens)) {
-            case Fail(String reason) -> "Syntax error: " + reason;
+        switch (Grammar.parse(tokens)) {
+            case Fail(String reason) -> {
+                return "Syntax error: " + reason;
+            }
             case Ok(InputTokens _, AstNode ast) -> {
                 String treeStr = PrettyPrinter.print(ast);
                 List<String> errors = SemanticAnalyzer.check(ast);
-                yield errors.isEmpty()
-                        ? treeStr + "\nSuccess"
-                        : treeStr + "\nSemantic error: " + String.join("; ", errors);
+                if (errors.isEmpty()) {
+                    return treeStr + "\nSuccess";
+                }
+                return treeStr + "\nSemantic error: " + String.join("; ", errors);
             }
-        };
+        }
     }
 
     /**
