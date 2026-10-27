@@ -187,6 +187,8 @@ The larger part of the use. Understanding the SPEC and the assigned grammar, lea
 
 ### Assistance in implementation
 
+**Sprint P2, broker with MQI (Sebastián González).** The `broker.mqi` package and the rewrite of `Broker` follow the team's Plan #3 and the design of the course demo `MQI_ResponseDemo` (same types, protocol and process start-up). Claude (Anthropic) was used as a programming assistant to write them. Sebastián integrated them in four commits, ran them on Windows with SWI-Prolog 10, found the protocol failures there (`Invalid MQI message header`, a hanging test) that led to the fixes, verified each commit (blob ids, diff stats, full test suite, manual REPL test) and studied the code to defend it.
+
 ### Prompts
 
 #### Sprint P1
@@ -274,6 +276,18 @@ The larger part of the use. Understanding the SPEC and the assigned grammar, lea
 4. Analysis of the team branches after the migration to Picocli and a multi-module structure, identifying integration inconsistencies.
 5. Design consultation on the `Repl -> Compiler -> Broker -> Repl` flow, the Singleton pattern and the sample query format.
 6. Review of the sprint branch in preparation for the defense, against the review criteria.
+
+#### Sprint P2
+
+**Sebastián González**
+
+1. Complete guide of the project state after time away: the `develop` branch, the P2 SPEC and the P1 review document.
+2. Implementation of Plan #3 (broker with MQI) as a preliminary version split into four commits, with tests and a defense guide.
+3. Diagnosis of `Invalid MQI message header: 203` when running `PrologEngineTest` on Windows.
+4. Diagnosis of `PrologEngineTest` hanging after the first fix.
+5. Integrity verification of each commit before pushing: blob ids, diff stats, full suite and manual REPL test.
+6. Study guide of the project and the broker module, and a guide for the team.
+7. Comparison of the broker classes with the course demo `MQI_ResponseDemo`, to declare precisely what follows it.
 
 ---
 
