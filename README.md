@@ -281,13 +281,13 @@ The larger part of the use. Understanding the SPEC and the assigned grammar, lea
 
 **Sebastián González**
 
-1. Project Re-entry: Synthesized personal notes to help guide the overview of the project state after time away, including the develop branch, the P2 SPEC, and the P1 review document.
-2. Tasks analysis: Documentation for the preliminary implementation of Plan #3 (broker with MQI, based on team's notes meetings) with testing.
-3. Cross-Platform Debugging: Acted as a sounding board to analyze Windows-specific runtime behavior during the diagnosis of "Invalid MQI message header: 203" when running PrologEngineTest on Windows.
-4. Cross-Platform Debugging: Acted as a sounding board to analyze trace logs during the diagnosis of PrologEngineTest hanging after the first fix.
-5. Verification Checklists: Generated a clean verification checklist to streamline my manual integrity verification of each commit before pushing (blob ids, diff stats, full suite, and manual REPL test).
-6. Team Onboarding Material: Assisted in formatting and polishing the readability of the study guide of the project, the broker module, and the guide for the team.
-7. Comparative Analysis: Conducted a structural comparison between my custom broker classes and the course demo MQI_ResponseDemo, to declare precisely what follows it and delineate where the official reference ends.
+1. Project abstract: Synthesized notes to overview the project state (develop branch, P2 SPEC, P1 review).
+2. Tasks analysis: Documented the preliminary implementation of Plan #3 (broker with MQI, based on team notes) with testing.
+3. Cross-Platform Debugging: Analyzed Windows-specific behavior to diagnose the "Invalid MQI message header: 203" error in PrologEngineTest.
+4. Cross-Platform Debugging: Analyzed trace logs to diagnose PrologEngineTest hanging after the first fix.
+5. Verification Checklists: Generated a checklist for manual commit validation (blob ids, diff stats, full suite, REPL test).
+6. Team Onboarding Material: Formatted the study guide for the project, broker module, and team documentation.
+7. Comparative Analysis: Compared broker classes with MQI_ResponseDemo to declare precisely where the official reference ends.
 
 ---
 
