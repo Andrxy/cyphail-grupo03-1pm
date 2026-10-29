@@ -1,8 +1,8 @@
-package cr.ac.una.eif400.broker.fake;
+package cr.ac.una.eif400.cyphail.broker.fake;
 
 import com.google.gson.Gson;
-import cr.ac.una.eif400.broker.model.Graph;
-import cr.ac.una.eif400.broker.model.QueryEntry;
+import cr.ac.una.eif400.cyphail.broker.model.Graph;
+import cr.ac.una.eif400.cyphail.broker.model.QueryEntry;
 
 import java.io.IOException;
 import java.io.Reader;

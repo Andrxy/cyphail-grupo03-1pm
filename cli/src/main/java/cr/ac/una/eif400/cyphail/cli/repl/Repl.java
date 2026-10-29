@@ -1,7 +1,7 @@
 package cr.ac.una.eif400.cyphail.cli.repl;
 
 import cr.ac.una.eif400.cyphail.cli.output.Formatter;
-import cr.ac.una.eif400.broker.Broker;
+import cr.ac.una.eif400.cyphail.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.AboutCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.ExitCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.HelpCommand;

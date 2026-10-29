@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.broker.mqi;
+package cr.ac.una.eif400.cyphail.broker.mqi;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

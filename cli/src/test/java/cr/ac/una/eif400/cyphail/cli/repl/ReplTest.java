@@ -1,6 +1,6 @@
 package cr.ac.una.eif400.cyphail.cli.repl;
 
-import cr.ac.una.eif400.broker.Broker;
+import cr.ac.una.eif400.cyphail.broker.Broker;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,8 +1,8 @@
-package cr.ac.una.eif400.broker;
+package cr.ac.una.eif400.cyphail.broker;
 
-import cr.ac.una.eif400.broker.mqi.PrologEngine;
-import cr.ac.una.eif400.broker.mqi.PrologResult;
-import cr.ac.una.eif400.broker.mqi.RowsParser;
+import cr.ac.una.eif400.cyphail.broker.mqi.PrologEngine;
+import cr.ac.una.eif400.cyphail.broker.mqi.PrologResult;
+import cr.ac.una.eif400.cyphail.broker.mqi.RowsParser;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 
 import java.io.IOException;

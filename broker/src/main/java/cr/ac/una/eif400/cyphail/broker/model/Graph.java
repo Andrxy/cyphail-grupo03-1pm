@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.broker.model;
+package cr.ac.una.eif400.cyphail.broker.model;
 
 /**
  * Representa un grafo dentro del sistema, tiene identificador y descripción

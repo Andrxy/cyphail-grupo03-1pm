@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.broker;
+package cr.ac.una.eif400.cyphail.broker;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

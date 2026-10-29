@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.broker.mqi;
+package cr.ac.una.eif400.cyphail.broker.mqi;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;

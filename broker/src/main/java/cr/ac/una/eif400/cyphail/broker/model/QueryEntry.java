@@ -1,4 +1,4 @@
-package cr.ac.una.eif400.broker.model;
+package cr.ac.una.eif400.cyphail.broker.model;
 
 /**
  * Representa una entrada de consulta ejecutada, almacenando la query,

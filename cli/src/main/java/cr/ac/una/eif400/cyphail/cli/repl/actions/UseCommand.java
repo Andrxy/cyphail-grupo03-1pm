@@ -1,6 +1,6 @@
 package cr.ac.una.eif400.cyphail.cli.repl.actions;
 import cr.ac.una.eif400.cyphail.cli.output.Formatter;
-import cr.ac.una.eif400.broker.Broker;
+import cr.ac.una.eif400.cyphail.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.Repl;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
