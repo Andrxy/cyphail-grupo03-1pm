@@ -34,10 +34,9 @@ path_max(infinite, Max) :- !,
 
 path_max(Max, Max).
 
-% Búsqueda en profundidad; acumula los arcos usados (al revés) para no repetirlos.
-path_dfs(rules(_, _, _, Min, _), To, To, Edges, Length, Path) :-
-    Length >= Min,
-    reverse(Edges, Path)
+% Búsqueda en profundidad; acumula los arcos usados para no repetirlos.
+path_dfs(rules(_, _, _, Min, _), To, To, Path, Length, Path) :-
+    Length >= Min
 .
 
 path_dfs(Rules, Node, To, Edges, Length, Path) :-
@@ -46,7 +45,8 @@ path_dfs(Rules, Node, To, Edges, Length, Path) :-
     path_step(Direction, Types, Props, Node, Edge, Next),
     \+ memberchk(Edge, Edges),
     Length1 is Length + 1,
-    path_dfs(Rules, Next, To, [Edge | Edges], Length1, Path)
+    append(Edges, [Edge], NewEdges),
+    path_dfs(Rules, Next, To, NewEdges, Length1, Path)
 .
 
 % Un paso: un arco desde Node que cumple dirección, tipos y propiedades.
