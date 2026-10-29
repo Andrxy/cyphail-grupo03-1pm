@@ -1,5 +1,90 @@
 # Cyphail
 
+## Build and run
+
+Four steps: check the tools, get the project, build it, run it.
+
+### 1. Check you have the tools
+
+| Tool | Version | Check with |
+|---|---|---|
+| JDK | 26 | `java -version` |
+| SWI-Prolog | 9 or newer, with `swipl` in the `PATH` | `swipl --version` |
+
+Both commands must print a version. If one is not found, install it and open a **new** terminal.
+
+Maven is not needed: the project ships the Maven Wrapper (`mvnw`). No IDE is required.
+
+### 2. Get the project
+
+Clone it, or download the ZIP and extract it. Then move into the folder that contains `pom.xml` and `cyphail.bat`:
+
+```
+cd cyphail-grupo03-1pm
+```
+
+> Extracting a GitHub ZIP usually produces a folder named after the branch, like `cyphail-grupo03-1pm-main`. Use the name you see on disk.
+
+### 3. Build (once)
+
+Pick the line for your terminal:
+
+```
+mvnw.cmd clean package
+```
+CMD
+
+```
+.\mvnw.cmd clean package
+```
+PowerShell
+
+```
+./mvnw clean package
+```
+Linux / macOS
+
+It compiles the four modules, runs the tests and produces `cli\target\cyphail.jar`. Wait for the final `BUILD SUCCESS`.
+
+> In a hurry? Add `-DskipTests` to skip the tests. The tests that need SWI-Prolog are skipped on their own when `swipl` is not installed.
+
+### 4. Run
+
+Always from the **project root**, the same folder where you built:
+
+```
+cyphail repl
+```
+CMD
+
+```
+.\cyphail repl
+```
+PowerShell
+
+The REPL opens. Try it:
+
+```
+cyphail>>> .use
+cyphail>>> .use amigos
+cyphail (amigos) >>> MATCH (p:Persona) RETURN p.nombre, p.edad
+cyphail (amigos) >>> .exit
+```
+
+`.use` lists the graphs, `.use amigos` selects one, any line that does not start with `.` is a query, and `.exit` leaves. The rest of the commands are in [REPL commands](#repl-commands).
+
+### If something fails
+
+| Message | Cause | Fix |
+|---|---|---|
+| `No se encontro ... cyphail.jar` | The project has not been built | Run step 3 |
+| `'cyphail' is not recognized` (PowerShell) | PowerShell does not run files from the current folder by name | Use `.\cyphail repl` |
+| `Error: SWI-Prolog (swipl) could not be started` | `swipl` is not in the `PATH` | Install SWI-Prolog, open a new terminal, check `swipl --version` |
+| `release version 26 not supported` | JDK older than 26 | Install JDK 26 and check `java -version` |
+| `.use amigos` says the graph is not available | Run from a different folder | `cd` to the project root and run again |
+
+---
+
 Transpiler for a graph query language inspired by **Cypher**, targeting **SWI-Prolog** as its execution engine.
 
 Course project for **Paradigmas de Programación (EIF400-II-2026)**, Escuela de Informática, Universidad Nacional de Costa Rica. Professor: **Carlos Loría-Sáenz**. Group 03, 1:00pm.
@@ -10,10 +95,9 @@ Team: Andrey Solano, Sebastián González, Alejandro Miranda, Wilson Umaña.
 
 ## Contents
 
+- [Build and run](#build-and-run)
 - [What it does](#what-it-does)
 - [Architecture](#architecture)
-- [Requirements](#requirements)
-- [Build and run](#build-and-run)
 - [REPL commands](#repl-commands)
 - [Language scope](#language-scope)
 - [Test cases](#test-cases)
@@ -63,56 +147,6 @@ cli  ->  compiler  ->  broker  ->  common
 | `cli` | Picocli commands and the interactive REPL |
 
 `Compiler` is the only class that knows the compiler stages. The CLI asks it for results and never calls the tokenizer, the grammar or the analyzer on its own.
-
----
-
-## Requirements
-
-**JDK 26.** Maven is not needed: the project ships the Maven Wrapper.
-
-Verify with:
-
-```
-java -version
-```
-
-No IDE is required.
-
----
-
-## Build and run
-
-### 1. Get the project
-
-Clone it, or download the ZIP and extract it. Then move into the folder that contains `pom.xml` and `cyphail.bat`:
-
-```
-cd cyphail-grupo03-1pm
-```
-
-> Extracting a GitHub ZIP usually produces a folder named after the branch, like `cyphail-grupo03-1pm-main`. Use the name you see on disk.
-
-### 2. Build
-
-| Terminal | Command |
-|---|---|
-| CMD | `mvnw.cmd clean package` |
-| PowerShell | `.\mvnw.cmd clean package` |
-| Linux | `./mvnw clean package` |
-
-Builds the four modules, runs the tests, and produces `cli\target\cyphail.jar`. It ends with `BUILD SUCCESS`.
-
-To skip the tests, add `-DskipTests`.
-
-### 3. Run
-
-**From the project root**, the same folder where you built:
-
-| Terminal | Command |
-|---|---|
-| CMD | `cyphail repl` |
-| PowerShell | `.\cyphail repl` |
-
 
 ---
 
