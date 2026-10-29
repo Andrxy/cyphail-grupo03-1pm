@@ -438,20 +438,20 @@ public class Grammar {
      * relationshipPattern : "-" relationshipDetail? ("->" | "-")
      *                     | "<-" relationshipDetail? "-"
      * }</pre>
-     * Cada forma produce un {@code Relationship} con su {@link Direction}: {@code -...->} es {@code OUT},
-     * {@code -...-} es {@code NONE} y {@code <-...-} es {@code IN}.
+     * Cada forma produce un {@code Relationship} con su {@link Direction}: {@code -...->} es {@code RIGHT},
+     * {@code -...-} es {@code NONE} y {@code <-...-} es {@code LEFT}.
      */
     private static IParser<InputTokens, AstNode, String> relationshipPattern() {
         return OrFlat(concatStringList,
                 TFlat(
                         Sequence(parsify(MINUS), orEmpty(relationshipDetail()), parsify(RIGHT_ARROW)),
-                        parts -> toRelationship(parts, Direction.OUT)),
+                        parts -> toRelationship(parts, Direction.RIGHT)),
                 TFlat(
                         Sequence(parsify(MINUS), orEmpty(relationshipDetail()), parsify(MINUS)),
                         parts -> toRelationship(parts, Direction.NONE)),
                 TFlat(
                         Sequence(parsify(LEFT_ARROW), orEmpty(relationshipDetail()), parsify(MINUS)),
-                        parts -> toRelationship(parts, Direction.IN)));
+                        parts -> toRelationship(parts, Direction.LEFT)));
     }
 
     /**

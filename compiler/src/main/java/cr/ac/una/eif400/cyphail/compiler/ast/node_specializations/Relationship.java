@@ -17,10 +17,10 @@ public record Relationship(List<Leaf> variable, List<Leaf> types, List<AstNode> 
                            List<Property> properties, Direction direction) implements AstNode {
 
     /**
-     * Sentido de la relación según las flechas escritas: {@code OUT} para {@code (a)-[]->(b)},
-     * {@code IN} para {@code (a)<-[]-(b)} y {@code NONE} para {@code (a)-[]-(b)}
+     * Sentido de la relación según las flechas escritas: {@code RIGHT} para {@code (a)-[]->(b)},
+     * {@code LEFT} para {@code (a)<-[]-(b)} y {@code NONE} para {@code (a)-[]-(b)}
      */
     public enum Direction {
-        IN, OUT, NONE
+        LEFT, RIGHT, NONE
     }
 }

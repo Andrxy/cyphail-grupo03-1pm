@@ -42,7 +42,7 @@ public class CodeGen {
      */
     private enum Kind {
         NODE("cy_node_label", "cy_node_prop"),
-        RELATIONSHIP("cy_edge_label", "cy_edge_prop");
+        RELATIONSHIP("cy_edge_type", "cy_edge_prop");
 
         private final String label;
         private final String property;
@@ -246,14 +246,17 @@ public class CodeGen {
      * Para {@code <-[]-} se invierten los extremos y para {@code -[]-} se aceptan los dos sentidos.
      */
     private void relationship(Relationship relationship, String source, String target) {
-        if (!relationship.range().isEmpty()) throw unsupported("variable-length relationships");
+        if (!relationship.range().isEmpty()) {
+            goals.add(path(relationship, source, target));
+            return;
+        }
 
         var edge = declare(relationship.variable(), Kind.RELATIONSHIP);
         matchRelationships.add(edge);
 
         goals.add(switch (relationship.direction()) {
-            case OUT -> edge(edge, source, target);
-            case IN -> edge(edge, target, source);
+            case RIGHT -> edge(edge, source, target);
+            case LEFT -> edge(edge, target, source);
             case NONE -> anyOf(List.of(edge(edge, source, target), edge(edge, target, source)));
         });
 
@@ -264,6 +267,40 @@ public class CodeGen {
 
         relationship.properties().forEach(property -> goals.add(
                 lookup(Kind.RELATIONSHIP, edge, property.key().token().value(), term(property.value()))));
+    }
+
+    /**
+     * Arma el goal {@code cy_path} de una relación de longitud variable. El camino no se retorna,
+     * así que va como variable anónima; por eso la relación no puede tener variable propia.
+     *
+     * @param relationship la relación con su rango, por ejemplo {@code -[:AMIGO_DE*1..3]->}
+     * @param source la variable de Prolog del nodo de origen
+     * @param target la variable de Prolog del nodo de destino
+     * @return el goal con la dirección, los límites, los tipos y las propiedades como opciones
+     */
+    private String path(Relationship relationship, String source, String target) {
+        if (!relationship.variable().isEmpty()) throw unsupported("variable on a variable-length relationship");
+
+        var range = (RelRange) relationship.range().getFirst();
+        var options = new ArrayList<String>();
+
+        options.add("edge_direction(%s)".formatted(switch (relationship.direction()) {
+            case RIGHT -> "right";
+            case LEFT -> "left";
+            case NONE -> "none";
+        }));
+        options.add("bounds(%s, %s)".formatted(
+                range.min().isEmpty() ? "1" : range.min().getFirst().token().value(),
+                range.max().isEmpty() ? "infinite" : range.max().getFirst().token().value()));
+        if (!relationship.types().isEmpty())
+            options.add("edge_types(%s)".formatted(list(relationship.types().stream()
+                    .map(type -> atom(type.token().value())).toList())));
+        if (!relationship.properties().isEmpty())
+            options.add("edge_props(%s)".formatted(list(relationship.properties().stream()
+                    .map(property -> "%s-%s".formatted(atom(property.key().token().value()), term(property.value())))
+                    .toList())));
+
+        return "cy_path(%s, %s, _, %s)".formatted(source, target, list(options));
     }
 
     /** Agrega los labels y las propiedades escritos en el patrón de un nodo. */
