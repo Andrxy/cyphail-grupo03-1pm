@@ -1,4 +1,7 @@
 :- encoding(utf8).
+:- multifile graph/1, graph_desc/2, node/2, node_label/3, node_prop/4.
+:- multifile edge/4, edge_type/3, edge_prop/4.
+
 % Identifica los grafos disponibles.
 graph(amigos).
 
@@ -23,7 +26,7 @@ node_prop(amigos, luis, edad, 31).
 edge(amigos, e1, ana, luis).
 
 % Asocia cada relación con su tipo.
-edge_label(amigos, e1, 'AMIGO_DE').
+edge_type(amigos, e1, 'AMIGO_DE').
 
 % Almacena las propiedades de cada relación.
 edge_prop(amigos, e1, desde, 2015).
