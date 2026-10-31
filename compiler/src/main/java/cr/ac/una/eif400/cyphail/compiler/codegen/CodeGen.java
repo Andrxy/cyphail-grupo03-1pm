@@ -32,6 +32,7 @@ import static java.util.stream.Collectors.joining;
  * o el visitor del pretty printer. Que se pueda hacer lo que dice el .md
  *
  * @author Andrey Solano
+ * @author Sebastián González
  * @version P2
  */
 public class CodeGen {
@@ -204,7 +205,8 @@ public class CodeGen {
         return switch (expression) {
             case And(var left, var right) -> allOf(List.of(condition(left), condition(right)));
 
-            case Or(var left, var right) -> anyOf(List.of(condition(left), condition(right)));
+            // once/1: si las dos ramas se cumplen, el OR cuenta una sola vez (sin filas repetidas)
+            case Or(var left, var right) -> "once(%s)".formatted(anyOf(List.of(condition(left), condition(right))));
 
             case Not(var inner) -> "\\+ " + condition(inner);
 
