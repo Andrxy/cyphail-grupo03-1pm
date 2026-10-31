@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <b>Sugerido por Claude (Anthropic)</b>, junto con {@link CodeGen}.
  *
  * @author Andrey Solano
+ * @author Seb González
  * @version P2
  */
 @DisplayName("Pruebas del generador de código")
@@ -50,7 +51,7 @@ public class CodeGenTest {
                 Arguments.of("MATCH (n:Persona) WHERE n.edad > 20 AND n.edad < 30 RETURN n",
                         "cy_exec_query((cy_node(__N), cy_node_label(__N, 'Persona'), cy_node_prop(__N, 'edad', __Nedad), (cy_greater_than(__Nedad, 20), cy_less_than(__Nedad, 30))), ['n'], [__N], Rows)"),
                 Arguments.of("MATCH (n:Persona) WHERE n.edad < 20 OR n.edad > 30 RETURN n",
-                        "cy_exec_query((cy_node(__N), cy_node_label(__N, 'Persona'), cy_node_prop(__N, 'edad', __Nedad), (cy_less_than(__Nedad, 20) ; cy_greater_than(__Nedad, 30))), ['n'], [__N], Rows)"),
+                        "cy_exec_query((cy_node(__N), cy_node_label(__N, 'Persona'), cy_node_prop(__N, 'edad', __Nedad), once((cy_less_than(__Nedad, 20) ; cy_greater_than(__Nedad, 30)))), ['n'], [__N], Rows)"),
                 Arguments.of("MATCH (n:Persona) WHERE NOT n.edad > 30 RETURN n",
                         "cy_exec_query((cy_node(__N), cy_node_label(__N, 'Persona'), cy_node_prop(__N, 'edad', __Nedad), \\+ cy_greater_than(__Nedad, 30)), ['n'], [__N], Rows)"),
                 Arguments.of("MATCH (a)-[r]->(b) RETURN a, b",
@@ -80,7 +81,7 @@ public class CodeGenTest {
                 Arguments.of("MATCH (a)-[r]->(b) RETURN a.nombre, type(r), b.nombre",
                         "cy_exec_query((cy_edge(__R, __A, __B), cy_node_prop(__A, 'nombre', __Anombre), cy_edge_type(__R, __Type), cy_node_prop(__B, 'nombre', __Bnombre)), ['a.nombre', 'type(r)', 'b.nombre'], [__Anombre, __Type, __Bnombre], Rows)"),
                 Arguments.of("MATCH (a)-[r:AMIGO_DE|TRABAJA_EN]->(b) WHERE r.desde < 2010 OR b:Empresa RETURN a, r, b",
-                        "cy_exec_query((cy_edge(__R, __A, __B), (cy_edge_type(__R, 'AMIGO_DE') ; cy_edge_type(__R, 'TRABAJA_EN')), cy_edge_prop(__R, 'desde', __Rdesde), (cy_less_than(__Rdesde, 2010) ; cy_node_label(__B, 'Empresa'))), ['a', 'r', 'b'], [__A, __R, __B], Rows)"),
+                        "cy_exec_query((cy_edge(__R, __A, __B), (cy_edge_type(__R, 'AMIGO_DE') ; cy_edge_type(__R, 'TRABAJA_EN')), cy_edge_prop(__R, 'desde', __Rdesde), once((cy_less_than(__Rdesde, 2010) ; cy_node_label(__B, 'Empresa')))), ['a', 'r', 'b'], [__A, __R, __B], Rows)"),
                 Arguments.of("MATCH (a), (A) WHERE a.nombre = 'Ana' AND A.nombre = \"Luis\" RETURN a, A",
                         "cy_exec_query((cy_node(__A), cy_node(__1), cy_node_prop(__A, 'nombre', __Anombre), cy_node_prop(__1, 'nombre', __2), (cy_equal(__Anombre, 'Ana'), cy_equal(__2, 'Luis'))), ['a', 'A'], [__A, __1], Rows)"),
                 Arguments.of("MATCH (n {nombre: \"O'Brien\"}) RETURN n",

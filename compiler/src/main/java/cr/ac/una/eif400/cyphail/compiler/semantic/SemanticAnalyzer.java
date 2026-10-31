@@ -26,11 +26,13 @@ import static java.util.stream.Collectors.joining;
  * Prompt: Proporcióneme un ejemplo de cómo funciona una verificación semántica básica en base a un AST de un lenguaje
  *
  * @author Andrey Solano
+ * @author Seb González
  * @version P1
  */
 public class SemanticAnalyzer {
     private Set<String> defined = new HashSet<>();
     private final Map<String, Kind> kinds = new HashMap<>();
+    private final Set<String> labeled = new HashSet<>();
     private List<String> reasons = new ArrayList<>();
 
     private enum Kind { NODE, RELATIONSHIP }
@@ -68,7 +70,7 @@ public class SemanticAnalyzer {
                 where.forEach(this::visit);
             }
 
-            case Pattern(var variable, var _, var properties) -> {
+            case Pattern(var variable, var labels, var properties) -> {
                 var name = variable.stream()
                         .map(SemanticAnalyzer::name)
                         .collect(joining());
@@ -77,6 +79,7 @@ public class SemanticAnalyzer {
                         use(property, "properties of (" + name + ")"));
 
                 variable.forEach(leaf -> declare(leaf, Kind.NODE));
+                variable.forEach(leaf -> declareLabels(leaf, labels));
             }
 
             case Where(var condition) -> use(condition, "WHERE");
@@ -158,6 +161,24 @@ public class SemanticAnalyzer {
         reasons.add(previous == kind
                 ? "Relationship variable '%s' cannot be repeated in the same query".formatted(name)
                 : "Variable '%s' cannot be used as both a node and a relationship".formatted(name));
+    }
+
+    /**
+     * Revisa que las etiquetas de una variable de nodo se declaren una sola vez.
+     * Al reutilizar la variable en otro patrón se escribe sin etiquetas, por ejemplo
+     * {@code (e:Empresa)} y después {@code (e)}. Volver a ponerlas, iguales o distintas,
+     * es un error semántico: así {@code (e:Empresa)} seguido de {@code (e:Ciudad)} no se
+     * fusiona en silencio.
+     *
+     * @param variable la variable del nodo
+     * @param labels las etiquetas escritas en esta aparición
+     */
+    private void declareLabels(Leaf variable, List<Leaf> labels) {
+        if (labels.isEmpty())
+            return;
+        var name = name(variable);
+        if (!labeled.add(name))
+            reasons.add("Labels of node variable '%s' can only be declared once".formatted(name));
     }
 
     /**
