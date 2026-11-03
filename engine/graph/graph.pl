@@ -1,8 +1,10 @@
 :- encoding(utf8).
-:- dynamic current_graph/1.
+:- dynamic(current_graph/1).
 
 :- ensure_loaded('../data/amigos.pl').
 :- ensure_loaded('../data/ingenieria.pl').
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Current graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Establece el grafo actual, reemplazando el anterior si existe.
 set_current_graph(G) :- (
