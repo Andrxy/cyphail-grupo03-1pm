@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <b>Sugerido por Claude (Anthropic)</b>, junto con {@link CodeGen}.
  *
  * @author Andrey Solano
- * @author Seb González
+ * @author Sebastián González
  * @version P2
  */
 @DisplayName("Pruebas del generador de código")
@@ -96,6 +96,36 @@ public class CodeGenTest {
                         "cy_exec_query(cy_path(__A, __B, _, [edge_direction(right), bounds(1, infinite)]), ['a'], [__A], Rows)"));
     }
 
+    private static Stream<Arguments> mutaciones() {
+        return Stream.of(
+                Arguments.of("CREATE (n:Persona {nombre: 'Ana'})",
+                        "cy_exec_query(cy_create_node(['Persona'], ['nombre'-'Ana'], __N), [], [], Rows)"),
+                Arguments.of("CREATE (a:Persona {nombre: 'Marta'})-[r:TRABAJA_EN {cargo: 'Dev', activo: true}]->(e:Empresa {nombre: 'Acme'}) RETURN a, r, e",
+                        "cy_exec_query((cy_create_node(['Persona'], ['nombre'-'Marta'], __A), cy_create_node(['Empresa'], ['nombre'-'Acme'], __E), cy_create_edge(__A, __E, 'TRABAJA_EN', ['cargo'-'Dev', 'activo'-true], __R)), ['a', 'r', 'e'], [__A, __R, __E], Rows)"),
+                Arguments.of("MATCH (a:Persona {nombre: 'Ana'}), (b:Persona {nombre: 'Luis'}) CREATE (a)-[:CONOCE {desde: 2020, nivel: 'amigo'}]->(b)",
+                        "cy_exec_query((cy_node(__A), cy_node_label(__A, 'Persona'), cy_node_prop(__A, 'nombre', 'Ana'), cy_node(__B), cy_node_label(__B, 'Persona'), cy_node_prop(__B, 'nombre', 'Luis'), cy_create_edge(__A, __B, 'CONOCE', ['desde'-2020, 'nivel'-'amigo'], __1)), [], [], Rows)"),
+                Arguments.of("CREATE (a:Persona)<-[:CONOCE]-(b:Persona)",
+                        "cy_exec_query((cy_create_node(['Persona'], [], __A), cy_create_node(['Persona'], [], __B), cy_create_edge(__B, __A, 'CONOCE', [], __1)), [], [], Rows)"),
+                Arguments.of("MATCH (a:Persona)-[r:CONOCE]->(b:Persona) WHERE r.desde < 2000 DELETE r",
+                        "cy_exec_query((cy_edge(__R, __A, __B), cy_edge_type(__R, 'CONOCE'), cy_node_label(__A, 'Persona'), cy_node_label(__B, 'Persona'), cy_edge_prop(__R, 'desde', __Rdesde), cy_less_than(__Rdesde, 2000), cy_delete_edge(__R)), [], [], Rows)"),
+                Arguments.of("MATCH (n) DELETE n",
+                        "cy_exec_query((cy_node(__N), cy_delete_node(__N)), [], [], Rows)"),
+                Arguments.of("MATCH (n:Persona {nombre: 'Ana'}) DETACH DELETE n",
+                        "cy_exec_query((cy_node(__N), cy_node_label(__N, 'Persona'), cy_node_prop(__N, 'nombre', 'Ana'), cy_detach_delete_node(__N)), [], [], Rows)"),
+                Arguments.of("MATCH (p:Persona {nombre: 'Ana'}) SET p.edad = 30, p.ciudad = 'Heredia' RETURN p.edad, p.ciudad",
+                        "cy_exec_query((cy_node(__P), cy_node_label(__P, 'Persona'), cy_node_prop(__P, 'nombre', 'Ana'), cy_set_node_prop(__P, 'edad', 30), cy_set_node_prop(__P, 'ciudad', 'Heredia'), cy_node_prop(__P, 'edad', __Pedad), cy_node_prop(__P, 'ciudad', __Pciudad)), ['p.edad', 'p.ciudad'], [__Pedad, __Pciudad], Rows)"),
+                Arguments.of("MATCH (p) WHERE p.edad > 30 SET p.edad = p.edad + 1 RETURN p.edad",
+                        "cy_exec_query((cy_node(__P), cy_node_prop(__P, 'edad', __Pedad), cy_greater_than(__Pedad, 30), __1 is __Pedad + 1, cy_set_node_prop(__P, 'edad', __1), cy_node_prop(__P, 'edad', __2)), ['p.edad'], [__2], Rows)"),
+                Arguments.of("MATCH (a)-[r:CONOCE]->(b) SET r.desde = 2024",
+                        "cy_exec_query((cy_edge(__R, __A, __B), cy_edge_type(__R, 'CONOCE'), cy_set_edge_prop(__R, 'desde', 2024)), [], [], Rows)"),
+                Arguments.of("MATCH (a)-[r:CONOCE]->(b) REMOVE r.desde, r.nivel",
+                        "cy_exec_query((cy_edge(__R, __A, __B), cy_edge_type(__R, 'CONOCE'), cy_remove_edge_prop(__R, 'desde'), cy_remove_edge_prop(__R, 'nivel')), [], [], Rows)"),
+                Arguments.of("MATCH (n:Persona {nombre: 'Ana'}) SET n:Admin:Activo",
+                        "cy_exec_query((cy_node(__N), cy_node_label(__N, 'Persona'), cy_node_prop(__N, 'nombre', 'Ana'), cy_set_node_label(__N, 'Admin'), cy_set_node_label(__N, 'Activo')), [], [], Rows)"),
+                Arguments.of("MATCH (n) REMOVE n:Admin",
+                        "cy_exec_query((cy_node(__N), cy_remove_node_label(__N, 'Admin')), [], [], Rows)"));
+    }
+
     @ParameterizedTest(name = "{0}")
     @MethodSource("ejemplosDelMd")
     @DisplayName("Transpila los ejemplos 1 a 15 del documento de ejemplos")
@@ -111,8 +141,16 @@ public class CodeGenTest {
     }
 
     @ParameterizedTest(name = "{0}")
+    @MethodSource("mutaciones")
+    @DisplayName("Transpila CREATE, SET, REMOVE y DELETE a los predicados de mutación del engine")
+    void mutaciones(String source, String expected) {
+        assertEquals(expected, generate(source));
+    }
+
+    @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {
-            "CREATE (n:Persona {nombre: 'Ana'})",
+            "MATCH (n), (m) SET n = m",
+            "MATCH (n) DELETE n.nombre",
             "MATCH (n) RETURN DISTINCT n",
             "MATCH (n) RETURN n ORDER BY n.edad",
             "MATCH (a)-[r*1..3]->(b) RETURN a",

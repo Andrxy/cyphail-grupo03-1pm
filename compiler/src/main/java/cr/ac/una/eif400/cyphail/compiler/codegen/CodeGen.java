@@ -27,6 +27,10 @@ import static java.util.stream.Collectors.joining;
  * ({@code a} pasa a {@code __A}). Las propiedades consultadas se guardan en variables propias
  * ({@code a.edad} pasa a {@code __Aedad}) que se leen una sola vez por consulta.<br><br>
  *
+ * Las cláusulas {@code CREATE}, {@code SET}, {@code REMOVE} y {@code DELETE} se traducen a goals
+ * que modifican el grafo en memoria. Van después de los goals del {@code MATCH}, así que se
+ * ejecutan una vez por cada fila encontrada.<br><br>
+ *
  * <b>Sugerido por Claude (Anthropic)</b>. Prompt: Elabore el visitor del codegen en base a lo que
  * se tiene de predicados de momento, que sea con switch exhaustivo. Tome de base la demos de MQI
  * o el visitor del pretty printer. Que se pueda hacer lo que dice el .md
@@ -39,18 +43,24 @@ public class CodeGen {
 
     /**
      * Si una variable de patrón es de nodo o de relación, con los predicados del engine que
-     * le corresponden a cada una.
+     * le corresponden a cada una para consultarla y modificarla.
      */
     private enum Kind {
-        NODE("cy_node_label", "cy_node_prop"),
-        RELATIONSHIP("cy_edge_type", "cy_edge_prop");
+        NODE("cy_node_label", "cy_node_prop", "cy_set_node_prop", "cy_remove_node_prop", "cy_delete_node"),
+        RELATIONSHIP("cy_edge_type", "cy_edge_prop", "cy_set_edge_prop", "cy_remove_edge_prop", "cy_delete_edge");
 
         private final String label;
         private final String property;
+        private final String setProperty;
+        private final String removeProperty;
+        private final String delete;
 
-        Kind(String label, String property) {
+        Kind(String label, String property, String setProperty, String removeProperty, String delete) {
             this.label = label;
             this.property = property;
+            this.setProperty = setProperty;
+            this.removeProperty = removeProperty;
+            this.delete = delete;
         }
     }
 
@@ -137,12 +147,40 @@ public class CodeGen {
             case Leaf(var token) when token.type() == TokenType.MULTIPLY ->
                     kinds.keySet().forEach(variable -> column(variable, names.get(variable)));
 
-            case UpdatingClause _ -> throw unsupported("CREATE, SET, REMOVE and DELETE");
+            case Create(var patterns) -> patterns.forEach(this::create);
+
+            case SetClause(var items) -> items.forEach(this::visit);
+
+            case RemoveClause(var items) -> items.forEach(this::visit);
+
+            case Delete(var detach, var targets) -> targets.forEach(target -> goals.add(delete(target, detach)));
+
+            case SetProperty(PropertyAccess(Leaf(var variable), Leaf(var key)), var value) -> {
+                var newValue = term(value);
+                goals.add("%s(%s, %s, %s)".formatted(
+                        kinds.get(variable.value()).setProperty, names.get(variable.value()), atom(key.value()), newValue));
+                forget(variable.value(), key.value());
+            }
+
+            case RemoveProperty(PropertyAccess(Leaf(var variable), Leaf(var key))) -> {
+                goals.add("%s(%s, %s)".formatted(
+                        kinds.get(variable.value()).removeProperty, names.get(variable.value()), atom(key.value())));
+                forget(variable.value(), key.value());
+            }
+
+            case SetLabels(var variable, var labels) -> labels.forEach(label -> goals.add(
+                    "cy_set_node_label(%s, %s)".formatted(names.get(variable.token().value()), atom(label.token().value()))));
+
+            case RemoveLabels(var variable, var labels) -> labels.forEach(label -> goals.add(
+                    "cy_remove_node_label(%s, %s)".formatted(names.get(variable.token().value()), atom(label.token().value()))));
+
+            case SetProperty _, RemoveProperty _ -> throw unsupported("nested property access");
+
+            case SetAllProperties _ -> throw unsupported("SET of all the properties");
 
             case Leaf _, Node _, Relationship _, RelRange _, Property _, PropertyAccess _, Comparison _,
                  Or _, And _, Not _, Arithmetic _, Unary _, NullTest _, FunctionCall _, LabelTest _,
-                 Order _, SortItem _, Skip _, Limit _, SetProperty _, SetAllProperties _, SetLabels _,
-                 RemoveProperty _, RemoveLabels _ ->
+                 Order _, SortItem _, Skip _, Limit _ ->
                     throw new IllegalStateException("Unexpected node outside an expression: " + node);
         }
     }
@@ -314,6 +352,80 @@ public class CodeGen {
     }
 
     /**
+     * Agrega los goals que crean un patrón del {@code CREATE}. Los nodos que ya tienen variable
+     * enlazada (por el {@code MATCH} o por una parte anterior del mismo patrón) se reutilizan;
+     * los demás se crean. La semántica ya garantiza que la relación tiene un tipo y una dirección.
+     *
+     * @param pattern un nodo ({@link Pattern}) o un nodo-relación-nodo ({@link Path})
+     */
+    private void create(AstNode pattern) {
+        if (!(pattern instanceof Path(var from, var relationship, var to))) {
+            createNode((Pattern) pattern);
+            return;
+        }
+
+        var source = createNode(from);
+        var target = createNode(to);
+        var type = atom(relationship.types().getFirst().token().value());
+        var properties = pairs(relationship.properties());
+        var edge = declare(relationship.variable(), Kind.RELATIONSHIP);
+
+        goals.add(relationship.direction() == Relationship.Direction.LEFT
+                ? createEdge(target, source, type, properties, edge)
+                : createEdge(source, target, type, properties, edge));
+    }
+
+    /**
+     * Devuelve la variable de un nodo del {@code CREATE}: si ya estaba enlazada la reutiliza y
+     * si no agrega el goal que lo crea con sus etiquetas y propiedades.
+     *
+     * @param pattern el nodo escrito en el {@code CREATE}
+     * @return la variable de Prolog con el id del nodo
+     */
+    private String createNode(Pattern pattern) {
+        var bound = pattern.variable().stream().anyMatch(variable -> names.containsKey(variable.token().value()));
+        var variable = declare(pattern.variable(), Kind.NODE);
+        if (bound) return variable;
+
+        var labels = list(pattern.labels().stream().map(label -> atom(label.token().value())).toList());
+        var properties = pairs(pattern.properties());
+        goals.add("cy_create_node(%s, %s, %s)".formatted(labels, properties, variable));
+        return variable;
+    }
+
+    /**
+     * Arma el goal que borra una variable del {@code DELETE}. Un nodo con relaciones solo se
+     * borra con {@code DETACH}; borrar una relación nunca borra sus nodos.
+     *
+     * @param target la expresión escrita en el {@code DELETE}
+     * @param detach si la cláusula es {@code DETACH DELETE}
+     * @return el goal de Prolog
+     */
+    private String delete(AstNode target, boolean detach) {
+        if (!(target instanceof Leaf(var token)) || token.type() != TokenType.IDENTIFIER)
+            throw unsupported("DELETE of something other than a variable");
+
+        var kind = kinds.get(token.value());
+        var predicate = detach && kind == Kind.NODE ? "cy_detach_delete_node" : kind.delete;
+        return "%s(%s)".formatted(predicate, names.get(token.value()));
+    }
+
+    /**
+     * Olvida el valor leído de una propiedad que se acaba de cambiar, para que una lectura
+     * posterior (por ejemplo en el {@code RETURN}) la vuelva a consultar y vea el valor nuevo.
+     */
+    private void forget(String variable, String key) {
+        names.remove(variable + "." + key);
+    }
+
+    /** Lista de Prolog con las propiedades como pares {@code 'clave'-Valor}. */
+    private String pairs(List<Property> properties) {
+        return list(properties.stream()
+                .map(property -> "%s-%s".formatted(atom(property.key().token().value()), term(property.value())))
+                .toList());
+    }
+
+    /**
      * En un mismo {@code MATCH}, dos relaciones no pueden ser el mismo arco
      * (en {@code (a)-[]->(b), (b)-[]->(a)} los dos arcos deben ser distintos).
      */
@@ -372,6 +484,10 @@ public class CodeGen {
 
     private static String edge(String edge, String source, String target) {
         return "cy_edge(%s, %s, %s)".formatted(edge, source, target);
+    }
+
+    private static String createEdge(String source, String target, String type, String properties, String edge) {
+        return "cy_create_edge(%s, %s, %s, %s, %s)".formatted(source, target, type, properties, edge);
     }
 
     /** Conjunción de goals; sin goals es {@code true}. */

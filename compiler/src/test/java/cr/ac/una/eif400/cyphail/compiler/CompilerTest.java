@@ -89,7 +89,7 @@ public class CompilerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "CREATE (n:Persona)",
+            "MATCH (n), (m) SET n = m",
             "MATCH (n) RETURN DISTINCT n",
             "MATCH (n) RETURN size(n)"
     })

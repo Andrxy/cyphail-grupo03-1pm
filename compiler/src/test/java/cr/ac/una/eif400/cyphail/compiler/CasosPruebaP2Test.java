@@ -24,9 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Pruebas con los casos de prueba unitarios del sprint P2 (documento "Casos de prueba del parser:
  * sprint de relaciones, create, delete separados") y sus validaciones.
  *
- * <p>Cada caso debe pasar el lexer, la gramática y la semántica. Los casos de solo {@code MATCH}
- * además deben generar código. Los de {@code CREATE} y {@code DELETE} (7, 8 y 9) solo se prueban
- * hasta la semántica, porque su generación de código todavía no existe.</p>
+ * <p>Cada caso debe pasar el lexer, la gramática y la semántica, y además generar código.</p>
  *
  * @author Sebastián González
  *
@@ -115,21 +113,6 @@ public class CasosPruebaP2Test {
                 Arguments.of("Caso 8c", CASO_8C));
     }
 
-    /** Los casos de solo MATCH, que ya tienen generación de código. */
-    static Stream<Arguments> casosMatch() {
-        return Stream.of(
-                Arguments.of("Caso 1", CASO_1),
-                Arguments.of("Caso 2", CASO_2),
-                Arguments.of("Caso 3 (<-)", CASO_3_IN),
-                Arguments.of("Caso 3 (sin dirección)", CASO_3_NONE),
-                Arguments.of("Caso 4", CASO_4),
-                Arguments.of("Caso 5", CASO_5),
-                Arguments.of("Caso 6", CASO_6),
-                Arguments.of("Caso 10", CASO_10),
-                Arguments.of("Caso 8b", CASO_8B),
-                Arguments.of("Caso 8c", CASO_8C));
-    }
-
     private static AstNode parse(String source) {
         return assertOk(Grammar.parse(assertOk(Tokenizer.tokenize(source)).value())).value();
     }
@@ -149,8 +132,8 @@ public class CasosPruebaP2Test {
     }
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("casosMatch")
-    @DisplayName("Cada caso de solo MATCH genera codigo Prolog")
+    @MethodSource("todosLosCasos")
+    @DisplayName("Cada caso genera codigo Prolog")
     void generaCodigo(String nombre, String source) {
         String code = assertDoesNotThrow(() -> CodeGen.generate(parse(source)));
 
