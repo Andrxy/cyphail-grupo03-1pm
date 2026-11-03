@@ -91,6 +91,24 @@ public class SemanticAnalyzerP2Test {
     }
 
     @Test
+    @DisplayName("Una relacion del CREATE necesita exactamente un tipo y una direccion")
+    void createSinTipoNiDireccion() {
+        assertEquals(List.of(
+                        "A relationship created with CREATE must have exactly one type",
+                        "A relationship created with CREATE must have a direction"),
+                check("MATCH (a), (b) CREATE (a)-[r]-(b)"));
+    }
+
+    @Test
+    @DisplayName("Las etiquetas solo se cambian en variables de nodo")
+    void etiquetasEnRelacion() {
+        assertEquals(List.of(
+                        "Labels can only be changed with SET on node variables, 'r' is a relationship",
+                        "Labels can only be changed with REMOVE on node variables, 'r' is a relationship"),
+                check("MATCH (a)-[r]->(b) SET r:X REMOVE r:Y"));
+    }
+
+    @Test
     @DisplayName("Detecta una variable no declarada en SET")
     void setNoDeclarada() {
         assertEquals(List.of("Undefined variable 'q' in SET target"),

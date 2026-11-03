@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.joining;
  * Prompt: Proporcióneme un ejemplo de cómo funciona una verificación semántica básica en base a un AST de un lenguaje
  *
  * @author Andrey Solano
- * @author Seb González
+ * @author Sebastián González
  * @version P1
  */
 public class SemanticAnalyzer {
@@ -84,7 +84,10 @@ public class SemanticAnalyzer {
 
             case Where(var condition) -> use(condition, "WHERE");
 
-            case Create(var patterns) -> patterns.forEach(this::visit);
+            case Create(var patterns) -> {
+                patterns.forEach(this::visit);
+                patterns.forEach(this::checkCreatedRelationship);
+            }
 
             case Delete(var _, var targets) ->
                     targets.forEach(target -> use(target, "DELETE"));
@@ -115,16 +118,20 @@ public class SemanticAnalyzer {
                 use(value, "SET value");
             }
 
-            case SetLabels(var variable, var _) ->
-                    use(variable, "SET labels");
+            case SetLabels(var variable, var _) -> {
+                use(variable, "SET labels");
+                requireNode(variable, "SET");
+            }
 
             case RemoveClause(var items) -> items.forEach(this::visit);
 
             case RemoveProperty(var target) ->
                     use(target, "REMOVE property");
 
-            case RemoveLabels(var variable, var _) ->
-                    use(variable, "REMOVE labels");
+            case RemoveLabels(var variable, var _) -> {
+                use(variable, "REMOVE labels");
+                requireNode(variable, "REMOVE");
+            }
 
             case Relationship(var variable, var _, var _, var properties, var _) -> {
                 var name = variable.stream().map(SemanticAnalyzer::name).collect(joining());
@@ -179,6 +186,36 @@ public class SemanticAnalyzer {
         var name = name(variable);
         if (!labeled.add(name))
             reasons.add("Labels of node variable '%s' can only be declared once".formatted(name));
+    }
+
+    /**
+     * Revisa que una relación del CREATE se pueda crear: como en Cypher, necesita exactamente
+     * un tipo, una dirección y no puede tener rango de longitud.
+     *
+     * @param pattern un patrón del CREATE; si no es un nodo-relación-nodo no se revisa nada
+     */
+    private void checkCreatedRelationship(AstNode pattern) {
+        if (!(pattern instanceof Path(var _, var relationship, var _)))
+            return;
+        if (relationship.types().size() != 1)
+            reasons.add("A relationship created with CREATE must have exactly one type");
+        if (relationship.direction() == Relationship.Direction.NONE)
+            reasons.add("A relationship created with CREATE must have a direction");
+        if (!relationship.range().isEmpty())
+            reasons.add("A relationship created with CREATE cannot have a length range");
+    }
+
+    /**
+     * Revisa que las etiquetas se cambien solo en variables de nodo: una relación tiene un
+     * único tipo que no se puede cambiar con SET ni REMOVE.
+     *
+     * @param variable la variable a la que se le cambian las etiquetas
+     * @param clause la cláusula donde ocurre, para el mensaje
+     */
+    private void requireNode(Leaf variable, String clause) {
+        if (kinds.get(name(variable)) == Kind.RELATIONSHIP)
+            reasons.add("Labels can only be changed with %s on node variables, '%s' is a relationship"
+                    .formatted(clause, name(variable)));
     }
 
     /**
