@@ -3,6 +3,7 @@ package cr.ac.una.eif400.cyphail.cli.repl;
 import cr.ac.una.eif400.cyphail.cli.output.Formatter;
 import cr.ac.una.eif400.cyphail.broker.Broker;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.AboutCommand;
+import cr.ac.una.eif400.cyphail.cli.repl.actions.ClearCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.ExitCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.HelpCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.LoadCommand;
@@ -37,7 +38,8 @@ import java.util.stream.Stream;
                 AboutCommand.class,
                 TreeCommand.class,
                 UseCommand.class,
-                LoadCommand.class
+                LoadCommand.class,
+                ClearCommand.class
         }
 )
 public class Repl {
