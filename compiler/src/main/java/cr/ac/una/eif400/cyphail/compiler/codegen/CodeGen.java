@@ -21,11 +21,12 @@ import static java.util.stream.Collectors.joining;
  * el {@link AstNode} sellado. Se usan tres recorridos según el lugar donde aparece el nodo:
  * {@link #visit} para cláusulas y patrones (agrega goals), {@link #term} para expresiones que
  * producen un valor (devuelve un término de Prolog) y {@link #condition} para las condiciones
- * del {@code WHERE} (devuelve un goal).<br><br>
+ * del {@code WHERE} (devuelve el término que evalúa {@code cy_where}).<br><br>
  *
  * Las variables de Cyphail se renombran con el prefijo {@code __} y la inicial en mayúscula
  * ({@code a} pasa a {@code __A}). Las propiedades consultadas se guardan en variables propias
- * ({@code a.edad} pasa a {@code __Aedad}) que se leen una sola vez por consulta.<br><br>
+ * ({@code a.edad} pasa a {@code __Aedad}) que se leen una sola vez por consulta. Una propiedad
+ * que no existe vale {@code null}, y ese valor se propaga por los cálculos y las condiciones.<br><br>
  *
  * Las cláusulas {@code CREATE}, {@code SET}, {@code REMOVE} y {@code DELETE} se traducen a goals
  * que modifican el grafo en memoria. Van después de los goals del {@code MATCH}, así que se
@@ -115,7 +116,7 @@ public class CodeGen {
                 where.forEach(this::visit);
             }
 
-            case Where(var condition) -> goals.add(condition(condition));
+            case Where(var condition) -> goals.add("cy_where(%s)".formatted(condition(condition)));
 
             case Pattern pattern -> {
                 var variable = declare(pattern.variable(), Kind.NODE);
@@ -233,42 +234,39 @@ public class CodeGen {
     }
 
     /**
-     * Traduce la condición de un {@code WHERE} a un goal. Las propiedades que usa se leen antes,
-     * fuera de la condición, como en {@code cy_node_prop(N, edad, E), \+ cy_greater_than(E, 30)}.
+     * Traduce la condición de un {@code WHERE} al término que evalúa {@code cy_where}, que maneja
+     * tres valores: {@code true}, {@code false} y {@code null}. Las propiedades que usa se leen
+     * antes, como en {@code cy_node_prop(N, edad, E), cy_where(not(cy_greater_than(E, 30)))}.
      *
      * @param expression la condición de Cyphail
-     * @return el goal de Prolog
+     * @return el término de Prolog con la condición
      */
     private String condition(AstNode expression) {
         return switch (expression) {
-            case And(var left, var right) -> allOf(List.of(condition(left), condition(right)));
+            case And(var left, var right) -> conjunction(condition(left), condition(right));
 
-            // once/1: si las dos ramas se cumplen, el OR cuenta una sola vez (sin filas repetidas)
-            case Or(var left, var right) -> "once(%s)".formatted(anyOf(List.of(condition(left), condition(right))));
+            case Or(var left, var right) -> "or(%s, %s)".formatted(condition(left), condition(right));
 
-            case Not(var inner) -> "\\+ " + condition(inner);
+            case Not(var inner) -> "not(%s)".formatted(condition(inner));
 
             case Comparison(var left, var operator, var right) ->
                     "%s(%s, %s)".formatted(comparison(operator), term(left), term(right));
 
-            case NullTest(PropertyAccess(Leaf(var variable), Leaf(var key)), var negated) ->
-                    (negated ? "" : "\\+ ") + lookup(kinds.get(variable.value()), names.get(variable.value()), key.value(), "_");
-
-            case NullTest _ -> throw unsupported("IS NULL on something other than a property");
+            case NullTest(var inner, var negated) -> {
+                var test = "is_null(%s)".formatted(term(inner));
+                yield negated ? "not(%s)".formatted(test) : test;
+            }
 
             case LabelTest(Leaf(var variable), var labels) -> {
                 var kind = kinds.get(variable.value());
                 var prolog = names.get(variable.value());
-                yield allOf(labels.stream()
+                yield labels.stream()
                         .map(label -> "%s(%s, %s)".formatted(kind.label, prolog, atom(label.token().value())))
-                        .toList());
+                        .reduce(CodeGen::conjunction)
+                        .orElseThrow();
             }
 
             case LabelTest _ -> throw unsupported("label test on something other than a variable");
-
-            case Leaf(var token) when token.type() == TokenType.TRUE -> "true";
-
-            case Leaf(var token) when token.type() == TokenType.FALSE -> "fail";
 
             case Leaf _, PropertyAccess _, FunctionCall _, Arithmetic _, Unary _ ->
                     "cy_equal(%s, true)".formatted(term(expression));
@@ -456,10 +454,10 @@ public class CodeGen {
         });
     }
 
-    /** Agrega {@code Variable is Expresión} y devuelve la variable con el resultado. */
+    /** Agrega {@code cy_calculate(Expresión, Variable)} y devuelve la variable con el resultado. */
     private String calculate(String expression) {
         var result = "__" + ++counter;
-        goals.add("%s is %s".formatted(result, expression));
+        goals.add("cy_calculate(%s, %s)".formatted(expression, result));
         return result;
     }
 
@@ -488,6 +486,11 @@ public class CodeGen {
 
     private static String createEdge(String source, String target, String type, String properties, String edge) {
         return "cy_create_edge(%s, %s, %s, %s, %s)".formatted(source, target, type, properties, edge);
+    }
+
+    /** Conjunción de dos condiciones de un {@code WHERE}. */
+    private static String conjunction(String left, String right) {
+        return "and(%s, %s)".formatted(left, right);
     }
 
     /** Conjunción de goals; sin goals es {@code true}. */

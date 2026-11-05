@@ -142,11 +142,12 @@ public class CasosPruebaP2Test {
 
     @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {CASO_6, CASO_10})
-    @DisplayName("El OR se genera dentro de once/1 para no repetir filas (casos 6 y 10)")
-    void orDentroDeOnce(String source) {
+    @DisplayName("El OR se evalua dentro de cy_where para propagar null (casos 6 y 10)")
+    void orDentroDeCyWhere(String source) {
         String code = CodeGen.generate(parse(source));
 
-        assertTrue(code.contains("once(("), code);
+        assertTrue(code.contains("cy_where("), code);
+        assertTrue(code.contains("or(cy_"), code);
     }
 
     @Test
