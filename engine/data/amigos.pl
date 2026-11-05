@@ -18,7 +18,7 @@ node(amigos, luis).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Etiquetas de nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Asocia cada nodo con sus etiquetas.
+% Asocia cada nodo con sus etiquetas (edges).
 node_label(amigos, ana, 'Persona').
 node_label(amigos, luis, 'Persona').
 node_label(amigos, ana, 'Person').
@@ -32,7 +32,7 @@ node_prop(amigos, ana, edad, 28).
 node_prop(amigos, luis, nombre, 'Luis').
 node_prop(amigos, luis, edad, 31).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Relaciones %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Relaciones (edges) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Identifica las relaciones y sus nodos de origen y destino.
 edge(amigos, e1, ana, luis).

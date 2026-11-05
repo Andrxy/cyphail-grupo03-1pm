@@ -15,11 +15,13 @@ cy_edge_type(Id_edge, Type) :-
     edge_type(G, Id_edge, Type)
 .
 
-% Busca una propiedad de una relación en el grafo actual.
-cy_edge_prop(Id_edge, Key, Value) :-
+% Busca una propiedad de una relación en el grafo actual; si no existe, leerla da null.
+cy_edge_prop(Id_edge, Key, Value) :- (
     get_current_graph(G),
-    edge_prop(G, Id_edge, Key, Value)
-.
+    edge_prop(G, Id_edge, Key, Value_exist)
+    ->  Value = Value_exist
+    ;   var(Value), Value = null
+).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Utils %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

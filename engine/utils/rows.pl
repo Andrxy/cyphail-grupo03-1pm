@@ -2,14 +2,6 @@
 :- use_module(library(apply)).
 :- use_module(library(lists)).
 
-% Convierte un átomo o string en un átomo para comparar textos.
-text_atom(Value, Text) :- (
-    atom(Value)
-    ->  Text = Value
-    ;   string(Value),
-        atom_string(Text, Value)
-).
-
 % Convierte los encabezados y las filas en líneas de texto.
 format_rows([], _, '') :- ! .
 

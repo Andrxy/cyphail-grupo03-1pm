@@ -29,9 +29,9 @@ node(ingenieria, intel).
 node(ingenieria, universidad_nacional).
 node(ingenieria, acme_tech).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Etiquetas de nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Labels de nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Asocia cada nodo con sus etiquetas.
+% Asocia cada nodo con sus etiquetas (labels).
 node_label(ingenieria, alejandro, 'Persona').
 node_label(ingenieria, andrey, 'Persona').
 node_label(ingenieria, sebastian, 'Persona').
@@ -81,7 +81,7 @@ node_prop(ingenieria, universidad_nacional, nombre, 'Universidad Nacional de Cos
 node_prop(ingenieria, acme_tech, nombre, 'ACMETech').
 node_prop(ingenieria, hp, pais, 'CR').
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Relaciones %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Relaciones (edges) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Identifica las relaciones y sus nodos de origen y destino.
 edge(ingenieria, e1, alejandro, hp).

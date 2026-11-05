@@ -1,5 +1,6 @@
 :- encoding(utf8).
-:- ensure_loaded('rows.pl').
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Comparisons %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Compara números por valor y otros términos por identidad.
 cy_equal(Left, Right) :- (
@@ -29,14 +30,34 @@ cy_greater_than(Left, Right) :-
 
 % Comprueba si el primer valor es menor o igual que el segundo.
 cy_less_or_equal(Left, Right) :- (
-    number(Left), number(Right)
-    ->  Left =< Right
-    ;   text_atom(Left, LeftText),
-        text_atom(Right, RightText),
-        LeftText @=< RightText
+    cy_equal(Left, Right)
+    ;
+    cy_less_than(Left, Right)
 ).
 
 % Comprueba si el primer valor es mayor o igual que el segundo.
 cy_greater_or_equal(Left, Right) :-
     cy_less_or_equal(Right, Left)
 .
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Three-valued %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Evalúa una comparación con tres valores: si un operando es null, el resultado es null.
+cy_compare(Comparison, Result) :- (
+    Comparison =.. [_, Left, Right],
+    (Left == null ; Right == null)
+    ->  Result = null
+    ;   call(Comparison)
+    ->  Result = true
+    ;   Result = false
+).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Utils %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Convierte un átomo o string en un átomo para comparar textos.
+text_atom(Value, Text) :- (
+    atom(Value)
+    ->  Text = Value
+    ;   string(Value),
+        atom_string(Text, Value)
+).
