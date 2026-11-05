@@ -3,6 +3,7 @@
 :- ensure_loaded('graph.pl').
 :- ensure_loaded('nodes.pl').
 :- ensure_loaded('edges.pl').
+:- ensure_loaded('../utils/edge_queries.pl').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Match %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

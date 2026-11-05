@@ -8,7 +8,6 @@
 :- ensure_loaded('graph/nodes.pl').
 :- ensure_loaded('graph/edges.pl').
 :- ensure_loaded('graph/paths.pl').
-:- ensure_loaded('graph/mutations.pl').
 
 % Ejecuta el patrón y convierte todas sus soluciones en texto.
 cy_exec_query(Goal, Headers, Columns, Rows) :-

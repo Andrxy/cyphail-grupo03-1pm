@@ -1,5 +1,7 @@
 :- encoding(utf8).
+:- use_module(library(lists)).
 :- ensure_loaded('graph.pl').
+:- ensure_loaded('../utils/mutations.pl').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Match %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -23,39 +25,38 @@ cy_edge_prop(Id_edge, Key, Value) :- (
     ;   var(Value), Value = null
 ).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Utils %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Create %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Cuenta todos los arcos del grafo actual.
-edge_count(Count) :-
-    aggregate_all(count, cy_edge(_, _, _), Count)
+% Crea una relación de un tipo entre dos nodos del grafo actual y devuelve su id.
+cy_create_edge(From, To, Type, Props, Id_edge) :-
+    new_id(e, Id_edge),
+    assert_edge(Id_edge, From, To),
+    assert_edge_type(Id_edge, Type),
+    forall(member(Key-Value, Props), assert_edge_prop(Id_edge, Key, Value))
 .
 
-% Comprueba que la relación tenga alguno de los tipos; sin tipos acepta cualquiera.
-edge_has_any_type(_, []) :- ! .
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Set %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-edge_has_any_type(Edge, Types) :-
-    once((cy_edge_type(Edge, Type), memberchk(Type, Types)))
+% Cambia el valor de una propiedad de una relación; asignar null la elimina.
+cy_set_edge_prop(Id_edge, Key, Value) :-
+    cy_remove_edge_prop(Id_edge, Key),
+    assert_edge_prop(Id_edge, Key, Value)
 .
 
-% Comprueba que la relación tenga todas las propiedades Clave-Valor.
-edge_has_props(Edge, Props) :-
-    forall(member(Key-Value, Props), cy_edge_prop(Edge, Key, Value))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Delete %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Elimina una relación con su tipo y sus propiedades; los nodos de sus extremos no cambian.
+cy_delete_edge(Id_edge) :-
+    get_current_graph(G),
+    retractall(edge(G, Id_edge, _, _)),
+    retractall(edge_type(G, Id_edge, _)),
+    retractall(edge_prop(G, Id_edge, _, _))
 .
 
-% Comprueba que la relación cumpla los tipos y las propiedades.
-edge_matches(Edge, Types, Props) :-
-    edge_has_any_type(Edge, Types),
-    edge_has_props(Edge, Props)
-.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Remove %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Una relación que sale de un nodo o entra a él.
-node_edge(Id_node, Id_edge) :- (
-    cy_edge(Id_edge, Id_node, _)
-    ;
-    cy_edge(Id_edge, _, Id_node)
-).
-
-% Comprueba si un nodo todavía tiene alguna relación.
-node_has_edges(Id_node) :-
-    once(node_edge(Id_node, _))
+% Elimina una propiedad de una relación; si no la tiene no hace nada.
+cy_remove_edge_prop(Id_edge, Key) :-
+    get_current_graph(G),
+    retractall(edge_prop(G, Id_edge, Key, _))
 .
