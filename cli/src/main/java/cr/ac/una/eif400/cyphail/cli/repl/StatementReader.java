@@ -10,6 +10,9 @@ import java.util.function.Predicate;
  * @version P2
  */
 public final class StatementReader {
+    /** Prompt que se muestra al pedir cada línea adicional de una consulta. */
+    static final String CONTINUATION_PROMPT = "     ...> ";
+
     /**
      * Lee una consulta multilínea. Al terminar la entrada devuelve lo leído, aunque falte ';'.
      *
@@ -21,7 +24,7 @@ public final class StatementReader {
     public String read(Scanner scanner, String firstLine, Predicate<String> isTerminated) {
         String statement = firstLine;
         while (!isTerminated.test(statement)) {
-            IO.print("     ...> ");
+            IO.print(CONTINUATION_PROMPT);
             if (!scanner.hasNextLine()) {
                 IO.println();
                 break;

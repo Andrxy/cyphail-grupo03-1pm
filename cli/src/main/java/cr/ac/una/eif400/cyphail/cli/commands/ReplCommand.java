@@ -29,6 +29,10 @@ public class ReplCommand implements Runnable {
     @Override
     public void run() {
         Repl repl = new Repl(Compiler.getInstance(), Broker.getInstance());
-        repl.open();
+        if (System.console() != null && System.console().isTerminal()) {
+            repl.openInteractive();
+        } else {
+            repl.open();
+        }
     }
 }

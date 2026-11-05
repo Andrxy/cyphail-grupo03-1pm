@@ -11,9 +11,22 @@ import cr.ac.una.eif400.cyphail.cli.repl.actions.TreeCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.UseCommand;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
+import org.jline.reader.EOFError;
+import org.jline.reader.EndOfFileException;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.ParsedLine;
+import org.jline.reader.UserInterruptException;
+import org.jline.reader.impl.DefaultParser;
+import org.jline.reader.impl.history.DefaultHistory;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.time.Instant;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.Optional;
@@ -44,9 +57,13 @@ import java.util.stream.Stream;
 )
 public class Repl {
     private static final String TREE_COMMAND = ".tree";
+    private static final String CLEAR_COMMAND = ".clear";
     private final CommandLine dispatcher;
     private final Broker broker;
     private final Compiler compiler;
+
+    /** Indica si se separa el siguiente prompt con una línea en blanco; solo es false justo después de .clear. */
+    private boolean blankLineBeforePrompt = true;
 
     /**
      * Construye una nueva instancia del repl inicializando los componentes de compilación,
@@ -90,8 +107,78 @@ public class Repl {
                 .anyMatch(code -> code == ExitCommand.EXIT_CODE);
     }
 
+    /**
+     * Igual que {@link #open()}, pero sobre una terminal real con edición de línea propia: la consulta
+     * multilínea queda en un solo búfer, así que la flecha arriba la devuelve completa y en una línea.
+     */
+    public void openInteractive() {
+        try (Terminal terminal = TerminalBuilder.builder().system(true).dumb(false).build()) {
+            LineReader reader = buildLineReader(terminal);
+            printBanner();
+            boolean running = true;
+            while (running) {
+                try {
+                    if (blankLineBeforePrompt) {
+                        IO.println();
+                    }
+                    String line = reader.readLine(buildPrompt()).strip();
+                    running = line.isBlank() || dispatch(line) != ExitCommand.EXIT_CODE;
+                } catch (UserInterruptException interrupted) {
+                    continue;
+                } catch (EndOfFileException endOfInput) {
+                    IO.println();
+                    running = false;
+                }
+            }
+        } catch (IOException error) {
+            throw new UncheckedIOException(error);
+        }
+    }
+
+    /**
+     * Configura JLine: pide más líneas mientras falte el ';' y guarda cada consulta como una sola línea
+     * en el historial, salvo que al unirla deje de estar terminada (por ejemplo con un comentario "//").
+     */
+    private LineReader buildLineReader(Terminal terminal) {
+        return LineReaderBuilder.builder()
+                .terminal(terminal)
+                .parser(new DefaultParser() {
+                    @Override
+                    public ParsedLine parse(String line, int cursor, ParseContext context) {
+                        if (context == ParseContext.ACCEPT_LINE && awaitsMoreLines(line)) {
+                            throw new EOFError(-1, -1, "Statement not terminated with ';'");
+                        }
+                        return super.parse(line, cursor, context);
+                    }
+                })
+                .history(new DefaultHistory() {
+                    @Override
+                    public void add(Instant time, String line) {
+                        String joined = line.replaceAll("\\s*\\R\\s*", " ");
+                        super.add(time, compiler.isTerminated(joined) ? joined : line);
+                    }
+                })
+                .variable(LineReader.SECONDARY_PROMPT_PATTERN, StatementReader.CONTINUATION_PROMPT)
+                .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+                .build();
+    }
+
+    /** Indica si el texto es una consulta o .tree sin completar, es decir, si todavía falta el ';'. */
+    private boolean awaitsMoreLines(String text) {
+        String line = text.stripLeading();
+        if (line.isBlank() || !spansLines(line)) {
+            return false;
+        }
+        String[] parts = line.split("\\s+", 2);
+        String source = parts[0].equals(TREE_COMMAND) ? (parts.length > 1 ? parts[1] : "") : line;
+        return !compiler.isTerminated(source);
+    }
+
     /** Lee una línea con su prompt. Optional.empty indica que terminó la entrada. */
     private Optional<String> readLine(Scanner scanner) {
+        if (blankLineBeforePrompt) {
+            IO.println();
+        }
         IO.print(buildPrompt());
         if (!scanner.hasNextLine()) {
             IO.println();
@@ -183,6 +270,7 @@ public class Repl {
     private int dispatch(String line) {
         String[] args = line.split("\\s+", 2);
         String firstWord = args[0];
+        blankLineBeforePrompt = !firstWord.equals(CLEAR_COMMAND);
 
         Set<String> actionNames = dispatcher.getSubcommands().keySet();
 
