@@ -13,6 +13,7 @@ import cr.ac.una.eif400.cyphail.compiler.parser.grammar.Grammar;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.*;
+import cr.ac.una.eif400.cyphail.compiler.semantic.records.AnalysisResult;
 import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyzer;
 
 import java.util.ArrayList;
@@ -72,8 +73,11 @@ public class Compiler {
      */
     public QueryResponse compile(String source) {
         return switch (analyze(source)) {
-            case Ok(InputTokens _, AstNode ast) -> resolve(ast, withoutTerminator(source));
-            case Fail(String reason) -> QueryResponse.error(reason);
+            case Ok(InputTokens _, AnalysisResult analysis) ->
+                    resolve(analysis);
+
+            case Fail(String reason) ->
+                    QueryResponse.error(reason);
         };
     }
 
@@ -117,15 +121,16 @@ public class Compiler {
      * Transpila el AST validado y entrega al broker el goal de Prolog generado.
      * Las construcciones aún no soportadas se devuelven como errores de compilación.
      *
-     * @param ast el árbol validado
-     * @param source el texto original, conservado en la firma del punto de integración
+     * @param analysis
      * @return la respuesta del broker
      */
-    private QueryResponse resolve(AstNode ast, String source) {
+    private QueryResponse resolve(AnalysisResult analysis) {
         try {
-            return broker.resolveQuery(CodeGen.generate(ast));
+            return broker.resolveQuery(CodeGen.generate(analysis));
         } catch (UnsupportedOperationException error) {
-            return QueryResponse.error("Code generation error: " + error.getMessage());
+            return QueryResponse.error(
+                    "Code generation error: " + error.getMessage()
+            );
         }
     }
 
@@ -138,8 +143,11 @@ public class Compiler {
      */
     private QueryResponse compileStatement(List<TokenString> tokens, String source) {
         return switch (analyze(tokens)) {
-            case Ok(InputTokens _, AstNode ast) -> resolve(ast, source);
-            case Fail(String reason) -> QueryResponse.error(reason);
+            case Ok(InputTokens _, AnalysisResult analysis) ->
+                    resolve(analysis);
+
+            case Fail(String reason) ->
+                    QueryResponse.error(reason);
         };
     }
 
@@ -248,18 +256,24 @@ public class Compiler {
      * @param source código fuente de la consulta.
      * @return el AST de la consulta, o el motivo del fallo.
      */
-    private Result<InputTokens, AstNode, String> analyze(String source) {
+    private Result<InputTokens, AnalysisResult, String> analyze(String source) {
         return switch (Tokenizer.tokenize(source)) {
-            case Fail(String reason) -> new Fail<>(reason);
-            case Ok(InputString _, List<TokenString> tokens) -> analyze(tokens);
+            case Fail(String reason) ->
+                    new Fail<>(reason);
+
+            case Ok(InputString _, List<TokenString> tokens) ->
+                    analyze(tokens);
         };
     }
 
     /** Ejecuta el análisis sintáctico y semántico de una sentencia con o sin terminador. */
-    private Result<InputTokens, AstNode, String> analyze(List<TokenString> tokens) {
+    private Result<InputTokens, AnalysisResult, String> analyze(List<TokenString> tokens) {
         return switch (Grammar.parse(withoutTerminator(tokens))) {
-            case Fail(String reason) -> new Fail<>("Syntax error: " + reason);
-            case Ok(InputTokens rest, AstNode ast) -> validate(rest, ast);
+            case Fail(String reason) ->
+                    new Fail<>("Syntax error: " + reason);
+
+            case Ok(InputTokens rest, AstNode ast) ->
+                    validate(rest, ast);
         };
     }
 
@@ -270,11 +284,14 @@ public class Compiler {
      * @param ast  árbol producido por el análisis sintáctico.
      * @return el mismo árbol si no hay errores, o el motivo del fallo.
      */
-    private Result<InputTokens, AstNode, String> validate(InputTokens rest, AstNode ast) {
-        List<String> reasons = SemanticAnalyzer.check(ast);
+    private Result<InputTokens, AnalysisResult, String> validate(InputTokens rest, AstNode ast) {
+        var analysis = SemanticAnalyzer.analyze(ast);
 
-        return reasons.isEmpty()
-                ? new Ok<>(rest, ast)
-                : new Fail<>("Semantic error: " + String.join("; ", reasons));
+        return analysis.isValid()
+                ? new Ok<>(rest, analysis)
+                : new Fail<>(
+                "Semantic error: "
+                        + String.join("; ", analysis.diagnostics())
+        );
     }
 }
