@@ -1,0 +1,165 @@
+// PRUEBAS MANUALES DEL REPL Y DEL MOTOR
+// Desde la raiz del proyecto:
+//   .use ingenieria
+//   .load "examples/pruebas-repl.cyphail"
+//
+// Se ejecutan consultas validas y, al final, un error semantico intencional.
+// .load se detiene en el primer error. Los otros errores estan comentados:
+// copialos individualmente al REPL para probarlos sin bloquear este script.
+// Los comandos .use, .tree, .help y .exit se usan en el REPL, no dentro de .load.
+// Esta es una suite manual con resultados esperados, no una verificacion automatica.
+// Las mutaciones solo afectan nodos con la etiqueta PruebaRepl.
+
+RETURN '01 - Limpieza de datos de una ejecucion anterior' AS caso;
+MATCH (n:PruebaRepl) DETACH DELETE n;
+
+// Una consulta en una linea. En ingenieria hay cuatro personas inicialmente.
+RETURN '02 - Consulta simple' AS caso;
+MATCH (p:Persona) RETURN p.nombre;
+
+// Varias lineas, una linea vacia y el terminador en su propia linea.
+// Debe devolver los cuatro puestos de trabajo del grafo ingenieria.
+RETURN '03 - Multilinea y alias' AS caso;
+MATCH (p:Persona)-[r:TRABAJA_EN]->(e:Empresa)
+RETURN p.nombre AS Ingeniero,
+       r.cargo AS Puesto,
+       r.salario AS Salario,
+       e.nombre AS Empresa
+
+;
+
+// El historial se prueba escribiendo o pegando esta consulta directamente:
+// despues de ejecutarla, presiona arriba para recuperarla y usa arriba/abajo
+// para recorrer sus lineas. .load no agrega cada consulta al historial de JLine.
+
+RETURN '04 - Varias consultas en una linea' AS caso;
+RETURN 10 AS primero; RETURN 20 AS segundo;
+
+// Los puntos y coma dentro de strings y comentarios no separan consultas.
+RETURN '05 - Strings, espacios, tildes y comentarios' AS caso;
+RETURN 'Ana; Maria' AS texto, 'dos  espacios' AS espacios, 'San José' AS ciudad;
+/* Un comentario de bloque con ; y con palabras MATCH RETURN. */
+RETURN 'comentario conservado' AS texto // este ; no termina la consulta
+;
+
+// Debe devolver Andrey, cuya edad es 31.
+RETURN '06 - Propiedades inline y comparaciones' AS caso;
+MATCH (p:Persona {nombre: 'Andrey'})
+WHERE p.edad >= 30 AND p.edad < 40
+RETURN p.nombre, p.edad;
+
+// Debe devolver Alejandro, Dev, 2021.
+RETURN '07 - OR, NOT y propiedades de relaciones' AS caso;
+MATCH (p:Persona)-[r:TRABAJA_EN {cargo: 'Dev'}]->(e:Empresa)
+WHERE r.desde >= 2018 OR NOT e.pais = 'CR'
+RETURN p.nombre, r.cargo, r.desde;
+
+RETURN '08 - Relacion entrante' AS caso;
+MATCH (e:Empresa)<-[r:TRABAJA_EN]-(p:Persona)
+RETURN p.nombre, e.nombre, type(r);
+
+// Debe mostrar ambos sentidos de cada CONOCE: cuatro filas inicialmente.
+RETURN '09 - Relacion sin direccion' AS caso;
+MATCH (a:Persona)-[r:CONOCE]-(b:Persona)
+RETURN a.nombre, b.nombre, r.desde;
+
+// Una propiedad ausente se presenta como null.
+RETURN '10 - Null e IS NULL' AS caso;
+MATCH (p:Persona)
+WHERE p.edad IS NULL
+RETURN p.nombre, p.edad;
+
+RETURN '11 - IS NOT NULL y aritmetica' AS caso;
+MATCH (p:Persona)
+WHERE p.edad IS NOT NULL
+RETURN p.nombre, p.edad + 1 AS siguiente, p.edad % 7 AS resto;
+
+// Una consulta sin coincidencias debe ser exitosa y mostrar una tabla vacia.
+RETURN '12 - Sin coincidencias' AS caso;
+MATCH (p:Persona {nombre: 'Persona inexistente de la suite'}) RETURN p.nombre;
+
+RETURN '13 - CREATE de nodos con strings, numeros y booleanos' AS caso;
+CREATE (a:PruebaRepl {clave: 'suite-a', nombre: 'Ana de prueba', edad: 20, activo: true}),
+       (b:PruebaRepl {clave: 'suite-b', nombre: 'Luis de prueba', edad: 30})
+RETURN a, b;
+
+RETURN '14 - CREATE de relacion reutilizando nodos' AS caso;
+MATCH (a:PruebaRepl {clave: 'suite-a'}), (b:PruebaRepl {clave: 'suite-b'})
+CREATE (a)-[r:PRUEBA_REPL {desde: 2026, nivel: 'amigo'}]->(b)
+RETURN a.nombre, type(r), r.desde, b.nombre;
+
+RETURN '15 - RETURN estrella' AS caso;
+MATCH (a:PruebaRepl)-[r:PRUEBA_REPL]->(b:PruebaRepl) RETURN *;
+
+// La edad leida despues de SET debe ser 21, no el valor anterior.
+RETURN '16 - SET de propiedades de nodo' AS caso;
+MATCH (a:PruebaRepl {clave: 'suite-a'})
+SET a.edad = a.edad + 1, a.ciudad = 'Heredia'
+RETURN a.nombre, a.edad, a.ciudad;
+
+RETURN '17 - SET de propiedades de relacion' AS caso;
+MATCH (a:PruebaRepl)-[r:PRUEBA_REPL]->(b:PruebaRepl)
+SET r.desde = 2027
+RETURN r.desde;
+
+RETURN '18 - SET de etiquetas' AS caso;
+MATCH (a:PruebaRepl {clave: 'suite-a'}) SET a:TemporalRepl;
+MATCH (a:TemporalRepl) RETURN a.nombre;
+
+// La ciudad y el nivel deben aparecer como null despues de REMOVE.
+RETURN '19 - REMOVE de propiedades' AS caso;
+MATCH (a:PruebaRepl {clave: 'suite-a'}) REMOVE a.ciudad RETURN a.ciudad;
+MATCH (a:PruebaRepl)-[r:PRUEBA_REPL]->(b:PruebaRepl)
+REMOVE r.nivel
+RETURN r.nivel;
+
+RETURN '20 - REMOVE de etiquetas' AS caso;
+MATCH (a:PruebaRepl {clave: 'suite-a'}) REMOVE a:TemporalRepl;
+MATCH (a:TemporalRepl) RETURN a.nombre; // Cero filas.
+
+RETURN '21 - SET null elimina una propiedad' AS caso;
+MATCH (a:PruebaRepl {clave: 'suite-a'}) SET a.edad = null RETURN a.edad;
+
+RETURN '22 - DELETE de relacion' AS caso;
+MATCH (a:PruebaRepl)-[r:PRUEBA_REPL]->(b:PruebaRepl) DELETE r;
+MATCH (a:PruebaRepl)-[r:PRUEBA_REPL]->(b:PruebaRepl) RETURN r; // Cero filas.
+
+RETURN '23 - DELETE de nodos sin relaciones y comprobacion de limpieza' AS caso;
+MATCH (n:PruebaRepl) DELETE n;
+MATCH (n:PruebaRepl) RETURN n; // Cero filas.
+
+RETURN '24 - FIN DE LOS CASOS VALIDOS' AS caso;
+
+// ERROR INTENCIONAL: debe informar Undefined variable 'q'.
+MATCH (p:Persona) RETURN q;
+
+// Esta consulta NO debe ejecutarse: comprueba que .load se detiene en el error.
+RETURN 'ESTO NO DEBE APARECER' AS ejecucion_indebida;
+
+// OTROS ERRORES: copiar y ejecutar UNO POR UNO en el REPL.
+// E01 - Lexico: caracter no reconocido.
+// RETURN @;
+// E02 - Sintaxis: falta cerrar el parentesis del nodo.
+// MATCH (p:Persona RETURN p;
+// E03 - Sintaxis: falta una expresion despues de RETURN.
+// RETURN;
+// E04 - Semantica: misma variable para nodo y relacion.
+// MATCH (a)-[a:CONOCE]->(b) RETURN a;
+// E05 - Semantica: variable de relacion repetida.
+// MATCH (a)-[r]->(b), (c)-[r]->(d) RETURN r;
+// E06 - Semantica: etiqueta declarada otra vez al reutilizar una variable.
+// MATCH (a:Persona), (a:Empresa) RETURN a;
+// E07 - Semantica: CREATE de relacion sin tipo.
+// CREATE (a:PruebaRepl)-[r]->(b:PruebaRepl);
+// E08 - Generacion: DISTINCT todavia no esta soportado.
+// MATCH (p:Persona) RETURN DISTINCT p.nombre;
+// E09 - Generacion: ORDER BY todavia no esta soportado.
+// MATCH (p:Persona) RETURN p.nombre ORDER BY p.nombre;
+// E10 - Generacion: funcion no soportada.
+// MATCH (p:Persona) RETURN size(p);
+// E11 - Motor: division por cero.
+// RETURN 1 / 0 AS resultado;
+//
+// Para revisar un AST: .tree MATCH (p:Persona) RETURN p.nombre;
+// Para comprobar recuperacion tras un error: RETURN 'El REPL sigue vivo' AS estado;
+// Para probar EOF sin ';', copia una consulta a otro archivo sin terminador y usa .load.
