@@ -18,7 +18,6 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.DefaultParser;
-import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import picocli.CommandLine;
@@ -26,7 +25,6 @@ import picocli.CommandLine.Command;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.time.Instant;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.Optional;
@@ -109,7 +107,7 @@ public class Repl {
 
     /**
      * Igual que {@link #open()}, pero sobre una terminal real con edición de línea propia: la consulta
-     * multilínea queda en un solo búfer, así que la flecha arriba la devuelve completa y en una línea.
+     * multilínea queda en un solo búfer y se recupera completa desde el historial.
      */
     public void openInteractive() {
         try (Terminal terminal = TerminalBuilder.builder().system(true).dumb(false).build()) {
@@ -136,10 +134,10 @@ public class Repl {
     }
 
     /**
-     * Configura JLine: pide más líneas mientras falte el ';' y guarda cada consulta como una sola línea
-     * en el historial, salvo que al unirla deje de estar terminada (por ejemplo con un comentario "//").
+     * Configura JLine: pide más líneas mientras falte el ';' y conserva el bloque en el historial.
+     * Las flechas recorren sus líneas antes de pasar a otra entrada del historial.
      */
-    private LineReader buildLineReader(Terminal terminal) {
+    LineReader buildLineReader(Terminal terminal) {
         return LineReaderBuilder.builder()
                 .terminal(terminal)
                 .parser(new DefaultParser() {
@@ -149,13 +147,6 @@ public class Repl {
                             throw new EOFError(-1, -1, "Statement not terminated with ';'");
                         }
                         return super.parse(line, cursor, context);
-                    }
-                })
-                .history(new DefaultHistory() {
-                    @Override
-                    public void add(Instant time, String line) {
-                        String joined = line.replaceAll("\\s*\\R\\s*", " ");
-                        super.add(time, compiler.isTerminated(joined) ? joined : line);
                     }
                 })
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, StatementReader.CONTINUATION_PROMPT)
