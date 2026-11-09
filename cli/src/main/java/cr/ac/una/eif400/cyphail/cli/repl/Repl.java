@@ -204,11 +204,26 @@ public class Repl {
      * @return true si la consulta se ejecutó correctamente
      */
     public boolean executeQuery(String sourceCode) {
-        try (Stream<QueryResponse> responses = compiler.compileScript(sourceCode)) {
+        return executeQuery(sourceCode, false);
+    }
+
+    /** Los scripts pueden mostrar cada consulta antes de su respuesta. */
+    public boolean executeQuery(String sourceCode, boolean showQueries) {
+        try (Stream<QueryResponse> responses = compiler.compileScript(sourceCode, source -> {
+            if (showQueries) showQuery(source);
+        })) {
             return responses.allMatch(response -> {
                 show(response);
                 return response.isOk();
             });
+        }
+    }
+
+    private void showQuery(String source) {
+        String[] lines = source.split("\\R", -1);
+        IO.println(buildPrompt() + lines[0]);
+        for (int index = 1; index < lines.length; index++) {
+            IO.println(StatementReader.CONTINUATION_PROMPT + lines[index]);
         }
     }
 
@@ -220,6 +235,7 @@ public class Repl {
         }
 
         IO.println(response.getMessage());
+        IO.println();
     }
 
     /**

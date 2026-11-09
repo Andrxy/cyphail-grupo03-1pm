@@ -17,6 +17,7 @@ import cr.ac.una.eif400.cyphail.compiler.semantic.records.AnalysisResult;
 import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyzer;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -87,21 +88,28 @@ public class Compiler {
      * @return las respuestas en orden, o un error léxico si el script no se puede tokenizar
      */
     public Stream<QueryResponse> compileScript(String script) {
-        switch (Tokenizer.tokenize(script)) {
+        return compileScript(script, source -> {});
+    }
+
+    /** Notifica el texto original justo antes de compilar y ejecutar cada sentencia. */
+    public Stream<QueryResponse> compileScript(String script, Consumer<String> beforeStatement) {
+        switch (Tokenizer.tokenizeWithComments(script)) {
             case Fail(String reason) -> {
                 return Stream.of(QueryResponse.error(reason));
             }
             case Ok(InputString _, List<TokenString> tokens) -> {
-                List<List<TokenString>> statements = Statements.split(tokens);
-                return statements.stream()
-                                 .map(this::compileStatement);
+                return Statements.withSource(script, tokens).stream()
+                        .map(statement -> {
+                            beforeStatement.accept(statement.source());
+                            return compileStatement(statement.tokens());
+                        });
             }
         }
     }
 
     /**
      * Revisa si el último token es un punto y coma. Un error léxico también termina
-     * la lectura para que el REPL lo muestre de inmediato.
+     * la lectu ra para que el REPL lo muestre de inmediato.
      *
      * @param source el texto acumulado hasta ahora
      * @return true si se puede despachar, false si hacen falta más líneas
@@ -132,7 +140,7 @@ public class Compiler {
     }
 
     /**
-     * Compila los tokens de una sentencia conservando su texto para el broker provisional.
+     * Compila los tokens de una sentencia y ejecuta el Prolog generado.
      *
      * @param tokens los tokens de una sentencia sin terminador
      * @return la respuesta de la ejecución o del análisis

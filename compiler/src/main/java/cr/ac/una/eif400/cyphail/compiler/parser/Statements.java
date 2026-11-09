@@ -4,6 +4,7 @@ import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -14,6 +15,39 @@ import java.util.stream.Stream;
  * @version P2
  */
 public class Statements {
+
+    public record Statement(String source, List<TokenString> tokens) {}
+
+    /** Ubica cada token una sola vez, incluidos los comentarios, sin volver a tokenizar. */
+    public static List<Statement> withSource(String source, List<TokenString> tokens) {
+        List<Statement> statements = new ArrayList<>();
+        List<TokenString> current = new ArrayList<>();
+        int position = 0;
+        int start = -1;
+        int end = 0;
+        for (TokenString token : tokens) {
+            int tokenStart = source.indexOf(token.value(), position);
+            position = tokenStart + token.value().length();
+            if (token.type() == TokenType.LINE_COMMENT || token.type() == TokenType.BLOCK_COMMENT) {
+                continue;
+            }
+            if (token.type() == TokenType.SEMICOLON) {
+                if (!current.isEmpty()) {
+                    statements.add(new Statement(source.substring(start, position), List.copyOf(current)));
+                    current.clear();
+                    start = -1;
+                }
+            } else {
+                if (current.isEmpty()) start = tokenStart;
+                current.add(token);
+                end = position;
+            }
+        }
+        if (!current.isEmpty()) {
+            statements.add(new Statement(source.substring(start, end), List.copyOf(current)));
+        }
+        return statements;
+    }
 
     /**
      * Parte los tokens en sentencias separadas por {@code ;}, descartando las sentencias vacías

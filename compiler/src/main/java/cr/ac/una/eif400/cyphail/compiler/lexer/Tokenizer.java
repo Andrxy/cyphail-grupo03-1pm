@@ -54,6 +54,15 @@ public class Tokenizer {
     private static IParser<InputString, List<TokenString>, String> TOKENIZER = Star(ANY_TOKEN);
 
     public static Result<InputString, List<TokenString>, String> tokenize(String sourceCode) {
+        return tokenize(sourceCode, false);
+    }
+
+    /** Conserva los comentarios para ubicar las sentencias en su texto original. */
+    public static Result<InputString, List<TokenString>, String> tokenizeWithComments(String sourceCode) {
+        return tokenize(sourceCode, true);
+    }
+
+    private static Result<InputString, List<TokenString>, String> tokenize(String sourceCode, boolean includeComments) {
         return switch (TOKENIZER.parse(new InputString(sourceCode))) {
             case Fail(var reason) -> new Fail<>(reason);
             case Ok(var rest, var tokens) -> {
@@ -62,7 +71,7 @@ public class Tokenizer {
                 }
 
                 List<TokenString> filtered = tokens.stream()
-                                                   .filter(token -> token.type() != LINE_COMMENT && token.type() != BLOCK_COMMENT)
+                                                   .filter(token -> includeComments || (token.type() != LINE_COMMENT && token.type() != BLOCK_COMMENT))
                                                    .toList();
                 yield new Ok<>(rest, filtered);
 

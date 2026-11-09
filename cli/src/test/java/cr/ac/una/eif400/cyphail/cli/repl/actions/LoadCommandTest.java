@@ -97,9 +97,33 @@ class LoadCommandTest extends CommandTestSupport {
         assertEquals(1, ejecutar(".load", script.toString()));
         assertTrue(salida().contains("primera"), salida());
         assertTrue(salida().contains("Undefined variable 'q'"), salida());
+        assertTrue(salida().indexOf("MATCH (n) RETURN q;")
+                < salida().indexOf("Undefined variable 'q'"), salida());
         assertFalse(salida().contains("segunda"), salida());
         assertEquals(0, ejecutar(".about"));
         assertTrue(salida().contains("What is cyphail?"));
+    }
+
+    @Test
+    void muestraCadaConsultaMultilineaAntesDeSuResultado() throws Exception {
+        requiereSwipl();
+        String query = "RETURN 'a;b' AS texto,\n\n  'dos  espacios' AS otro;";
+        Path script = script("// RETURN falso;\n" + query + " RETURN 'fin' AS ultimo;");
+
+        assertEquals(0, ejecutar(".load", script.toString()));
+        String output = salida().replace("\r\n", "\n");
+        assertTrue(output.contains("cyphail>>> RETURN 'a;b' AS texto,"), output);
+        assertTrue(output.contains("     ...> \n     ...>   'dos  espacios' AS otro;"), output);
+        assertTrue(output.indexOf("RETURN 'a;b'") < output.indexOf("| texto"), output);
+        assertTrue(output.indexOf("| texto") < output.indexOf("RETURN 'fin'"), output);
+        assertFalse(output.contains("RETURN falso"), output);
+    }
+
+    @Test
+    void laConsultaInteractivaNoSeImprimeDosVeces() throws Exception {
+        requiereSwipl();
+        assertTrue(repl.executeQuery(PRIMERA));
+        assertFalse(salida().contains(PRIMERA), salida());
     }
 
     @Test
@@ -155,7 +179,8 @@ class LoadCommandTest extends CommandTestSupport {
         List<String> queries = new ArrayList<>();
         repl = new Repl(Compiler.getInstance(), Broker.getInstance()) {
             @Override
-            public boolean executeQuery(String sourceCode) {
+            public boolean executeQuery(String sourceCode, boolean showQueries) {
+                assertTrue(showQueries);
                 queries.add(sourceCode);
                 return true;
             }

@@ -70,4 +70,26 @@ public class StatementsTest {
         assertEquals(List.of("MATCH ( a ) WHERE a . x > 1 RETURN a"),
                 split("MATCH (a)\n  WHERE a.x > 1\n  RETURN a;"));
     }
+
+    @Test
+    void conservaElTextoSinConfundirTokensDentroDeComentariosOStrings() {
+        String first = "RETURN 'a;b' AS texto,\r\n\r\n  'dos  espacios' AS otro /* ; RETURN */;";
+        String second = "RETURN 2 // ; RETURN 9\n;";
+        String last = "RETURN 3";
+        String script = "// RETURN 0;\n;; " + first + " /* RETURN 5; */ " + second + last;
+        var tokens = assertOk(Tokenizer.tokenizeWithComments(script)).value();
+        var statements = Statements.withSource(script, tokens);
+
+        assertEquals(List.of(first, second, last), statements.stream()
+                .map(statement -> statement.source()).toList());
+        assertEquals(Statements.split(assertOk(Tokenizer.tokenize(script)).value()),
+                statements.stream().map(statement -> statement.tokens()).toList());
+    }
+
+    @Test
+    void ignoraLosComentariosYSeparadoresSinConsulta() {
+        String script = "// RETURN 0;\n; /* RETURN 1; */ ;;";
+        assertEquals(List.of(), Statements.withSource(script,
+                assertOk(Tokenizer.tokenizeWithComments(script)).value()));
+    }
 }

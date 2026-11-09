@@ -47,7 +47,7 @@ public class LoadCommand implements Callable<Integer> {
         }
         if (content.startsWith("\uFEFF")) content = content.substring(1);
 
-        return repl.executeQuery(content) ? 0 : 1;
+        return repl.executeQuery(content, true) ? 0 : 1;
     }
 
     /** El REPL entrega el argumento completo, incluyendo las comillas que rodean una ruta. */
