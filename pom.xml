@@ -14,6 +14,7 @@
         <module>cli</module>
         <module>compiler</module>
         <module>broker</module>
+        <module>web</module>
     </modules>
 
     <properties>

@@ -1,5 +1,7 @@
 # Cyphail
 
+La demo interactiva en React y Cytoscape.js se inicia siguiendo [demo-web/README.md](demo-web/README.md).
+
 ## Build and run
 
 Four steps: check the tools, get the project, build it, run it.

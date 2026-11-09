@@ -74,8 +74,8 @@ node_prop(ingenieria, discretas, profesor, 'Carlos Loria').
 node_prop(ingenieria, bases_datos, profesor, 'Roger Leon').
 node_prop(ingenieria, programacion, profesor, 'Oscar Benavides').
 
-node_prop(ingenieria, microsoft, nombre, 'Microsoft inc').
-node_prop(ingenieria, hp, nombre, 'Hewlett y Packard (HP)').
+node_prop(ingenieria, microsoft, nombre, 'Microsoft').
+node_prop(ingenieria, hp, nombre, 'HP').
 node_prop(ingenieria, intel, nombre, 'Intel inc').
 node_prop(ingenieria, universidad_nacional, nombre, 'Universidad Nacional de Costa Rica').
 node_prop(ingenieria, acme_tech, nombre, 'ACMETech').

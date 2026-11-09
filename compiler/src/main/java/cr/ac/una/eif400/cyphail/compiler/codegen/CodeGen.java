@@ -65,7 +65,11 @@ public class CodeGen {
         var generator = new CodeGen(analysis.symbols());
         generator.visit(analysis.ast());
 
-        return "cy_exec_query(%s, %s, %s, Rows)".formatted(
+        String executor = analysis.ast() instanceof Query query && !query.updates().isEmpty()
+                ? "cy_exec_update"
+                : "cy_exec_query";
+        return "%s(%s, %s, %s, Rows)".formatted(
+                executor,
                 allOf(generator.goals),
                 list(generator.headers.stream().map(CodeGen::atom).toList()),
                 list(generator.columns)

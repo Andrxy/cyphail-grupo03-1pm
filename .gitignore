@@ -10,3 +10,7 @@ target/
 out/
 **/out/
 *.log
+engine/state/
+
+demo-web/node_modules/
+demo-web/dist/
