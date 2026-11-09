@@ -16,9 +16,7 @@ import cr.ac.una.eif400.cyphail.compiler.parser.result.*;
 import cr.ac.una.eif400.cyphail.compiler.semantic.records.AnalysisResult;
 import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyzer;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -95,9 +93,8 @@ public class Compiler {
             }
             case Ok(InputString _, List<TokenString> tokens) -> {
                 List<List<TokenString>> statements = Statements.split(tokens);
-                List<String> sources = sourcesOf(script, statements);
-                return IntStream.range(0, statements.size())
-                        .mapToObj(index -> compileStatement(statements.get(index), sources.get(index)));
+                return statements.stream()
+                                 .map(this::compileStatement);
             }
         }
     }
@@ -138,10 +135,9 @@ public class Compiler {
      * Compila los tokens de una sentencia conservando su texto para el broker provisional.
      *
      * @param tokens los tokens de una sentencia sin terminador
-     * @param source su texto original sin terminador
      * @return la respuesta de la ejecución o del análisis
      */
-    private QueryResponse compileStatement(List<TokenString> tokens, String source) {
+    private QueryResponse compileStatement(List<TokenString> tokens) {
         return switch (analyze(tokens)) {
             case Ok(InputTokens _, AnalysisResult analysis) ->
                     resolve(analysis);
@@ -149,46 +145,6 @@ public class Compiler {
             case Fail(String reason) ->
                     QueryResponse.error(reason);
         };
-    }
-
-    /**
-     * Recupera el texto original de las sentencias que separó Statements.split.
-     * Vuelve a tokenizar los prefijos terminados en ';' para reconocer el separador sin
-     * implementar otro lexer. Es menos eficiente, pero conserva strings, comentarios y
-     * espacios tal como se escribieron, necesarios para los fixtures del broker falso.
-     *
-     * @param script el texto original
-     * @param statements las sentencias separadas por tokens
-     * @return el texto correspondiente a cada sentencia, sin su terminador
-     */
-    private static List<String> sourcesOf(String script, List<List<TokenString>> statements) {
-        List<String> sources = new ArrayList<>();
-        int start = 0;
-        for (List<TokenString> statement : statements) {
-            boolean found = false;
-            for (int end = script.indexOf(';', start); end >= 0; end = script.indexOf(';', end + 1)) {
-                if (Tokenizer.tokenize(script.substring(start, end + 1))
-                        instanceof Ok(InputString _, List<TokenString> prefix)
-                        && !prefix.isEmpty() && prefix.getLast().type() == TokenType.SEMICOLON) {
-                    List<List<TokenString>> parts = Statements.split(prefix);
-                    if (parts.isEmpty()) {
-                        start = end + 1;
-                    } else if (parts.equals(List.of(statement))) {
-                        sources.add(script.substring(start, end).strip());
-                        start = end + 1;
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) sources.add(script.substring(start).strip());
-        }
-        return sources;
-    }
-
-    /** Quita los espacios exteriores y el punto y coma final de una sentencia. */
-    private static String withoutTerminator(String source) {
-        return source.strip().replaceFirst(";$", "").strip();
     }
 
     /** Quita el token terminador antes de entregar la sentencia a la gramática. */
