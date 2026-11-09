@@ -11,7 +11,7 @@ import cr.ac.una.eif400.cyphail.cli.repl.actions.TreeCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.UseCommand;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
-import cr.ac.una.eif400.cyphail.compiler.parser.Statements;
+import cr.ac.una.eif400.cyphail.compiler.parser.Statement;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
 import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
@@ -219,7 +219,7 @@ public class Repl {
                 show(QueryResponse.error(reason));
                 return false;
             }
-            case Ok(InputString _, List<Statements.Statement> statements) -> {
+            case Ok(InputString _, List<Statement> statements) -> {
                 return statements.stream().allMatch(statement -> {
                     if (showQueries) showQuery(statement.source());
                     QueryResponse response = compiler.compileStatement(statement);

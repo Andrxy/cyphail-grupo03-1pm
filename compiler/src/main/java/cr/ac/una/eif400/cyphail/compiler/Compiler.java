@@ -9,6 +9,7 @@ import cr.ac.una.eif400.cyphail.compiler.lexer.Tokenizer;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenString;
 import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
 import cr.ac.una.eif400.cyphail.compiler.parser.Statements;
+import cr.ac.una.eif400.cyphail.compiler.parser.Statement;
 import cr.ac.una.eif400.cyphail.compiler.parser.grammar.Grammar;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
 import cr.ac.una.eif400.cyphail.compiler.parser.input.InputTokens;
@@ -89,13 +90,13 @@ public class Compiler {
     public Stream<QueryResponse> compileScript(String script) {
         return switch (readScript(script)) {
             case Fail(String reason) -> Stream.of(QueryResponse.error(reason));
-            case Ok(InputString _, List<Statements.Statement> statements) ->
+            case Ok(InputString _, List<Statement> statements) ->
                     statements.stream().map(statement -> compileStatement(statement));
         };
     }
 
     /** Separa el script y conserva su texto sin ejecutar ninguna sentencia. */
-    public Result<InputString, List<Statements.Statement>, String> readScript(String script) {
+    public Result<InputString, List<Statement>, String> readScript(String script) {
         return switch (Tokenizer.tokenizeWithComments(script)) {
             case Fail(String reason) -> new Fail<>(reason);
             case Ok(InputString rest, List<TokenString> tokens) ->
@@ -141,7 +142,7 @@ public class Compiler {
      * @param statement la sentencia separada del script con sus tokens
      * @return la respuesta de la ejecución o del análisis
      */
-    public QueryResponse compileStatement(Statements.Statement statement) {
+    public QueryResponse compileStatement(Statement statement) {
         return switch (analyze(statement.tokens())) {
             case Ok(InputTokens _, AnalysisResult analysis) ->
                     resolve(analysis);

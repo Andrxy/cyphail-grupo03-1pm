@@ -16,8 +16,6 @@ import java.util.stream.Stream;
  */
 public class Statements {
 
-    public record Statement(String source, List<TokenString> tokens) {}
-
     /** Ubica cada token una sola vez, incluidos los comentarios, sin volver a tokenizar. */
     public static List<Statement> withSource(String source, List<TokenString> tokens) {
         List<Statement> statements = new ArrayList<>();
