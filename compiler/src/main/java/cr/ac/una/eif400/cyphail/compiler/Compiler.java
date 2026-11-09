@@ -17,7 +17,6 @@ import cr.ac.una.eif400.cyphail.compiler.semantic.records.AnalysisResult;
 import cr.ac.una.eif400.cyphail.compiler.semantic.SemanticAnalyzer;
 
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -88,23 +87,20 @@ public class Compiler {
      * @return las respuestas en orden, o un error léxico si el script no se puede tokenizar
      */
     public Stream<QueryResponse> compileScript(String script) {
-        return compileScript(script, source -> {});
+        return switch (readScript(script)) {
+            case Fail(String reason) -> Stream.of(QueryResponse.error(reason));
+            case Ok(InputString _, List<Statements.Statement> statements) ->
+                    statements.stream().map(statement -> compileStatement(statement));
+        };
     }
 
-    /** Notifica el texto original justo antes de compilar y ejecutar cada sentencia. */
-    public Stream<QueryResponse> compileScript(String script, Consumer<String> beforeStatement) {
-        switch (Tokenizer.tokenizeWithComments(script)) {
-            case Fail(String reason) -> {
-                return Stream.of(QueryResponse.error(reason));
-            }
-            case Ok(InputString _, List<TokenString> tokens) -> {
-                return Statements.withSource(script, tokens).stream()
-                        .map(statement -> {
-                            beforeStatement.accept(statement.source());
-                            return compileStatement(statement.tokens());
-                        });
-            }
-        }
+    /** Separa el script y conserva su texto sin ejecutar ninguna sentencia. */
+    public Result<InputString, List<Statements.Statement>, String> readScript(String script) {
+        return switch (Tokenizer.tokenizeWithComments(script)) {
+            case Fail(String reason) -> new Fail<>(reason);
+            case Ok(InputString rest, List<TokenString> tokens) ->
+                    new Ok<>(rest, Statements.withSource(script, tokens));
+        };
     }
 
     /**
@@ -142,11 +138,11 @@ public class Compiler {
     /**
      * Compila los tokens de una sentencia y ejecuta el Prolog generado.
      *
-     * @param tokens los tokens de una sentencia sin terminador
+     * @param statement la sentencia separada del script con sus tokens
      * @return la respuesta de la ejecución o del análisis
      */
-    private QueryResponse compileStatement(List<TokenString> tokens) {
-        return switch (analyze(tokens)) {
+    public QueryResponse compileStatement(Statements.Statement statement) {
+        return switch (analyze(statement.tokens())) {
             case Ok(InputTokens _, AnalysisResult analysis) ->
                     resolve(analysis);
 

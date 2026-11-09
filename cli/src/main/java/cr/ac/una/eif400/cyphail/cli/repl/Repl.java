@@ -11,6 +11,10 @@ import cr.ac.una.eif400.cyphail.cli.repl.actions.TreeCommand;
 import cr.ac.una.eif400.cyphail.cli.repl.actions.UseCommand;
 import cr.ac.una.eif400.cyphail.common.QueryResponse;
 import cr.ac.una.eif400.cyphail.compiler.Compiler;
+import cr.ac.una.eif400.cyphail.compiler.parser.Statements;
+import cr.ac.una.eif400.cyphail.compiler.parser.input.InputString;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Fail;
+import cr.ac.una.eif400.cyphail.compiler.parser.result.Ok;
 import org.jline.reader.EOFError;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
@@ -26,6 +30,7 @@ import picocli.CommandLine.Command;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Scanner;
+import java.util.List;
 import java.util.Set;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -209,13 +214,19 @@ public class Repl {
 
     /** Los scripts pueden mostrar cada consulta antes de su respuesta. */
     public boolean executeQuery(String sourceCode, boolean showQueries) {
-        try (Stream<QueryResponse> responses = compiler.compileScript(sourceCode, source -> {
-            if (showQueries) showQuery(source);
-        })) {
-            return responses.allMatch(response -> {
-                show(response);
-                return response.isOk();
-            });
+        switch (compiler.readScript(sourceCode)) {
+            case Fail(String reason) -> {
+                show(QueryResponse.error(reason));
+                return false;
+            }
+            case Ok(InputString _, List<Statements.Statement> statements) -> {
+                return statements.stream().allMatch(statement -> {
+                    if (showQueries) showQuery(statement.source());
+                    QueryResponse response = compiler.compileStatement(statement);
+                    show(response);
+                    return response.isOk();
+                });
+            }
         }
     }
 
