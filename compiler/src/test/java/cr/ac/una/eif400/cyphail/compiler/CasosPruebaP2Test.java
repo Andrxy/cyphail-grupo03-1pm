@@ -135,16 +135,17 @@ public class CasosPruebaP2Test {
     @MethodSource("todosLosCasos")
     @DisplayName("Cada caso genera codigo Prolog")
     void generaCodigo(String nombre, String source) {
-        String code = assertDoesNotThrow(() -> CodeGen.generate(parse(source)));
+        String code = assertDoesNotThrow(() -> CodeGen.generate(SemanticAnalyzer.analyze(parse(source))));
 
-        assertTrue(code.startsWith("cy_exec_query("), code);
+        assertTrue(code.startsWith(source.contains("CREATE ") || source.contains("DELETE ")
+                ? "cy_exec_update(" : "cy_exec_query("), code);
     }
 
     @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {CASO_6, CASO_10})
     @DisplayName("El OR se evalua dentro de cy_where para propagar null (casos 6 y 10)")
     void orDentroDeCyWhere(String source) {
-        String code = CodeGen.generate(parse(source));
+        String code = CodeGen.generate(SemanticAnalyzer.analyze(parse(source)));
 
         assertTrue(code.contains("cy_where("), code);
         assertTrue(code.contains("or(cy_"), code);
@@ -153,7 +154,7 @@ public class CasosPruebaP2Test {
     @Test
     @DisplayName("Caso 10: se generan las tres restricciones de unicidad de relaciones")
     void unicidadDeRelacionesEnCaso10() {
-        String code = CodeGen.generate(parse(CASO_10));
+        String code = CodeGen.generate(SemanticAnalyzer.analyze(parse(CASO_10)));
 
         assertTrue(code.contains("cy_not_equal(__T, __S)"), code);
         assertTrue(code.contains("cy_not_equal(__T, __K)"), code);

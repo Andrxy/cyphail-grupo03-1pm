@@ -22,12 +22,6 @@ import static java.util.stream.Collectors.joining;
  * La tabla semántica proporciona las categorías de las variables.
  * El generador mantiene los nombres Prolog, los temporales,
  * las propiedades consultadas y los goals producidos.
- *
- * @version P2
- * @author Andrey Solano
- * @author Alejandro Miranda
- * @author Sebastian González
- * @author Wilson Umaña
  */
 public class CodeGen {
 
@@ -71,7 +65,11 @@ public class CodeGen {
         var generator = new CodeGen(analysis.symbols());
         generator.visit(analysis.ast());
 
-        return "cy_exec_query(%s, %s, %s, Rows)".formatted(
+        String executor = analysis.ast() instanceof Query query && !query.updates().isEmpty()
+                ? "cy_exec_update"
+                : "cy_exec_query";
+        return "%s(%s, %s, %s, Rows)".formatted(
+                executor,
                 allOf(generator.goals),
                 list(generator.headers.stream().map(CodeGen::atom).toList()),
                 list(generator.columns)
