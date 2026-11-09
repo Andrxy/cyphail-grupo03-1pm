@@ -15,6 +15,11 @@ cy_exec_query(Goal, Headers, Columns, Rows) :-
     format_rows(Headers, Solutions, Rows)
 .
 
+% Ejecuta una actualizacion y revierte sus cambios si ocurre un error.
+cy_exec_update(Goal, Headers, Columns, Rows) :-
+    transaction(cy_exec_query(Goal, Headers, Columns, Rows))
+.
+
 % Devuelve los grafos disponibles y sus descripciones en formato Rows.
 cy_graphs(Rows) :-
     findall(
