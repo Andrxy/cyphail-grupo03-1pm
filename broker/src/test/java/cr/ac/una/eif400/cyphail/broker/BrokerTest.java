@@ -10,6 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+/**
+ * @author Alejandro Miranda
+ */
 @DisplayName("Pruebas del Broker")
 public class BrokerTest {
 
