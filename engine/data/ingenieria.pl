@@ -100,6 +100,11 @@ node_label(ingenieria, intel, 'Empresa').
 node_label(ingenieria, universidad_nacional, 'Empresa').
 node_label(ingenieria, acme_tech, 'Empresa').
 
+node_label(ingenieria, microsoft, 'USA').
+node_label(ingenieria, hp, 'Costa Rica').
+node_label(ingenieria, intel, 'Costa Rica').
+node_label(ingenieria, universidad_nacional, 'Costa Rica').
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Propiedades de nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %!  node_prop(?Graph, ?Id_node, ?Key, ?Value) is nondet.
