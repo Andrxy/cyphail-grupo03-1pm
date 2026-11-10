@@ -413,7 +413,7 @@ The larger part of the use. Understanding the SPEC and the assigned grammar, lea
 
 ### Assistance in implementation
 
-**Sprint P2, broker with MQI (Sebastián González).** The `broker.mqi` package and the rewrite of `Broker` follow the team's Plan #3 and the design of the course demo `MQI_ResponseDemo` (same types, protocol and process start-up). Claude (Anthropic) was used as a programming assistant to write them. Sebastián integrated them in four commits, ran them on Windows with SWI-Prolog 10, found the protocol failures there (`Invalid MQI message header`, a hanging test) that led to the fixes, verified each commit (blob ids, diff stats, full test suite, manual REPL test) and studied the code to defend it.
+**Sprint P2, broker with MQI (Sebastián González).** The `broker.mqi` package and the rewrite of `Broker` follow the team's Plan #3 and the design of the course demo `MQI_ResponseDemo` (same types, protocol and process start-up). Claude (Anthropic) was used as a programming assistant to write them. Sebastián integrated them along four commits, ran them with SWI-Prolog 10, found the protocol failures there (`Invalid MQI message header`, a hanging test) that led to the fixes, verified each commit (blob ids, diff stats, full test suite, manual REPL test) and studied the code to defend it.
 
 ### Prompts
 
