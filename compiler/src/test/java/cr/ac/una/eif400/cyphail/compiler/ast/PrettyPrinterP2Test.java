@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Pruebas del PrettyPrinter con los nodos del sprint P2.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 @DisplayName("Pruebas del PrettyPrinter con los nodos del sprint P2")

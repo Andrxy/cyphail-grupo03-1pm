@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Pruebas de las palabras clave escritas en minuscula y de su uso como nombre de etiqueta, tipo o propiedad.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 @DisplayName("Pruebas de palabras clave usadas como nombres")

@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Pruebas de la semantica estatica de relaciones, SET, REMOVE, ORDER BY y expresiones del sprint P2.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 @DisplayName("Pruebas semanticas del sprint P2")

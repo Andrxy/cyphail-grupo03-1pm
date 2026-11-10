@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Pruebas del tokenizer para comentarios, identificadores reservados, flechas y palabras clave del sprint P2.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 @DisplayName("Pruebas del tokenizer del sprint P2")

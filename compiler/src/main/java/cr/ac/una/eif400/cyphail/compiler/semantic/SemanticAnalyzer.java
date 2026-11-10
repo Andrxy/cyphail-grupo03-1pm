@@ -12,14 +12,35 @@ import java.util.List;
 import static cr.ac.una.eif400.cyphail.compiler.semantic.records.Type.*;
 import static java.util.stream.Collectors.joining;
 
+/**
+ * Analizador semántico encargado de validar las variables y
+ * restricciones de una consulta dentro del AST de Cyphail.
+ * Construye la tabla de símbolos y registra los errores semánticos.
+ *
+ * Prompt: Ahorita me encuentro depurando el tema del SemanticAnalyser para devolver la tabla de símbolos al CodeGen y que este la utilice. Está muy desordenado y quiero utilizar records de Symbol y de SymbolTable para tener una mejor organización. Qué cosas debería guardar el símbolo y la tabla de símbolos
+ *
+ * @author Andrey Solano
+ * @author Alejandro Miranda
+ * @author Sebastian Gonzalez
+ * @version P2
+ */
 public class SemanticAnalyzer {
 
     private SymbolTable symbols = SymbolTable.create();
     private final List<String> reasons = new ArrayList<>();
 
+    /**
+     * Inicializa el analizador semántico con una tabla de símbolos vacía.
+     */
     private SemanticAnalyzer() {
     }
 
+    /**
+     * Analiza semánticamente una consulta y recopila sus diagnósticos.
+     *
+     * @param query el AST de la consulta a analizar
+     * @return el resultado del análisis semántico
+     */
     public static AnalysisResult analyze(AstNode query) {
         var checker = new SemanticAnalyzer();
         checker.visit(query);
@@ -31,10 +52,21 @@ public class SemanticAnalyzer {
         );
     }
 
+    /**
+     * Obtiene los diagnósticos semánticos de una consulta.
+     *
+     * @param query el AST de la consulta a verificar
+     * @return la lista de diagnósticos encontrados
+     */
     public static List<String> check(AstNode query) {
         return analyze(query).diagnostics();
     }
 
+    /**
+     * Recorre el AST y valida sus cláusulas y declaraciones.
+     *
+     * @param node el nodo del AST que se desea analizar
+     */
     private void visit(AstNode node) {
         switch (node) {
             case Query(var matches, var updates, var ret) -> {
@@ -188,6 +220,11 @@ public class SemanticAnalyzer {
         }
     }
 
+    /**
+     * Valida las restricciones de una relación creada con CREATE.
+     *
+     * @param pattern el patrón de creación a verificar
+     */
     private void checkCreatedRelationship(AstNode pattern) {
         if (!(pattern instanceof Path(var _, var relationship, var _))) {
             return;
@@ -212,6 +249,12 @@ public class SemanticAnalyzer {
         }
     }
 
+    /**
+     * Verifica que la variable no corresponda a una relación.
+     *
+     * @param variable la variable que se desea verificar
+     * @param clause la cláusula donde se utiliza la variable
+     */
     private void requireNode(Leaf variable, String clause) {
         symbols.lookup(name(variable))
                 .filter(symbol -> symbol.type() == RELATIONSHIP)
@@ -237,6 +280,12 @@ public class SemanticAnalyzer {
         }
     }
 
+    /**
+     * Reporta las variables no definidas utilizadas en una expresión.
+     *
+     * @param expression la expresión que se desea validar
+     * @param place el contexto donde se utiliza la expresión
+     */
     private void use(AstNode expression, String place) {
         for (var name : variables(expression)) {
             if (symbols.lookup(name).isEmpty()) {
@@ -247,10 +296,22 @@ public class SemanticAnalyzer {
         }
     }
 
+    /**
+     * Obtiene el nombre almacenado en una hoja del AST.
+     *
+     * @param leaf la hoja que contiene el nombre
+     * @return el nombre de la hoja
+     */
     private static String name(Leaf leaf) {
         return leaf.token().value();
     }
 
+    /**
+     * Extrae recursivamente las variables utilizadas en una expresión.
+     *
+     * @param expression la expresión que se desea recorrer
+     * @return la lista de nombres de variables encontradas
+     */
     private static List<String> variables(AstNode expression) {
         return switch (expression) {
             case Leaf(var token) ->
@@ -312,6 +373,12 @@ public class SemanticAnalyzer {
         };
     }
 
+    /**
+     * Reúne las variables utilizadas en una lista de nodos.
+     *
+     * @param nodes la lista de nodos que se desea recorrer
+     * @return la lista de nombres de variables encontradas
+     */
     private static List<String> variablesOf(List<? extends AstNode> nodes) {
         return nodes.stream()
                 .flatMap(node -> variables(node).stream())

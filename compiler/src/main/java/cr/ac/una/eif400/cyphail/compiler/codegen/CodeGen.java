@@ -22,6 +22,17 @@ import static java.util.stream.Collectors.joining;
  * La tabla semántica proporciona las categorías de las variables.
  * El generador mantiene los nombres Prolog, los temporales,
  * las propiedades consultadas y los goals producidos.
+ *
+ * Prompt: Qué hace el CodeGen en un transpilador?
+ * Prompt: En clase elaboramos este CodeGen vanilla en prolog, qué ideas se puede sacar de este pero para hacerlo en java
+ * Prompt: Elabore casos unitarios con los ejemplos que están en ejemplos-cypher-prolog.md para probar el CodeGen
+ * Prompt: Proponga una estructura inicial del CodeGen en java utilizando switch exhaustivo para que esa sea la que se desarrolle
+ * Prompt: Para efectos de este proyecto, en la parte de elaboración del CodeGen, más o menos cómo sería utilizando el switch exhaustivo como en el SemanticAnalyser.  Dialoguemos, propongamos ideas. Analice todo de ser necesario. Ese es el engine que proporcionó el propfesor que hay que usar/adaptar utilizando el protocolo MQI
+ * Prompt: En base al modelo prolog que estamos trabajando en clase, qué otros predicados propondría usted para implementar en el engine
+ *
+ * @author Andrey Solano
+ * @author Alejandro Miranda
+ * @version P2
  */
 public class CodeGen {
 
@@ -48,6 +59,11 @@ public class CodeGen {
     private List<String> matchRelationships = new ArrayList<>();
     private int counter = 0;
 
+    /**
+     * Inicializa el generador con la tabla de símbolos.
+     *
+     * @param symbols la tabla de símbolos del análisis semántico
+     */
     private CodeGen(SymbolTable symbols) {
         this.symbols = symbols;
     }
@@ -464,6 +480,12 @@ public class CodeGen {
         );
     }
 
+    /**
+     * Agrega las restricciones de etiquetas y propiedades de un nodo.
+     *
+     * @param variable el nombre Prolog del nodo
+     * @param pattern el patrón que contiene sus restricciones
+     */
     private void constrainNode(String variable, Pattern pattern) {
         pattern.labels().forEach(label ->
                 goals.add("cy_node_label(%s, %s)".formatted(
@@ -538,6 +560,13 @@ public class CodeGen {
         return variable;
     }
 
+    /**
+     * Genera el goal para eliminar un nodo o una relación.
+     *
+     * @param target el elemento que se desea eliminar
+     * @param detach indica si se eliminan también las relaciones del nodo
+     * @return el goal de eliminación en Prolog
+     */
     private String delete(AstNode target, boolean detach) {
         if (!(target instanceof Leaf(var token))
                 || token.type() != TokenType.IDENTIFIER) {
@@ -649,10 +678,22 @@ public class CodeGen {
         });
     }
 
+    /**
+     * Invalida el valor almacenado para una propiedad.
+     *
+     * @param variable la variable propietaria
+     * @param key el nombre de la propiedad
+     */
     private void forget(String variable, String key) {
         names.remove(variable + "." + key);
     }
 
+    /**
+     * Genera un cálculo en Prolog y un temporal para su resultado.
+     *
+     * @param expression la expresión aritmética a evaluar
+     * @return el nombre del temporal que contiene el resultado
+     */
     private String calculate(String expression) {
         var result = "__" + ++counter;
 
@@ -663,6 +704,12 @@ public class CodeGen {
         return result;
     }
 
+    /**
+     * Genera un nombre Prolog que no haya sido utilizado.
+     *
+     * @param hint el nombre sugerido para la variable
+     * @return un nombre de variable disponible
+     */
     private String fresh(String hint) {
         var candidate = "__" + hint;
 
@@ -688,6 +735,12 @@ public class CodeGen {
         }
     }
 
+    /**
+     * Convierte las propiedades en pares clave-valor para Prolog.
+     *
+     * @param properties la lista de propiedades
+     * @return una lista Prolog de pares clave-valor
+     */
     private String pairs(List<Property> properties) {
         return list(
                 properties.stream()
@@ -699,11 +752,26 @@ public class CodeGen {
         );
     }
 
+    /**
+     * Agrega una columna a la proyección de resultados.
+     *
+     * @param header el encabezado de la columna
+     * @param value el término Prolog correspondiente
+     */
     private void column(String header, String value) {
         headers.add(header);
         columns.add(value);
     }
 
+    /**
+     * Construye un goal para consultar o modificar una propiedad.
+     *
+     * @param predicate el predicado Prolog a utilizar
+     * @param variable la variable del elemento
+     * @param key el nombre de la propiedad
+     * @param value el valor de la propiedad
+     * @return el goal de propiedad en Prolog
+     */
     private static String propertyGoal(
             String predicate,
             String variable,
@@ -718,10 +786,28 @@ public class CodeGen {
         );
     }
 
+    /**
+     * Construye un goal para consultar una relación.
+     *
+     * @param edge la variable de la relación
+     * @param source el nodo de origen
+     * @param target el nodo de destino
+     * @return el goal de relación en Prolog
+     */
     private static String edge(String edge, String source, String target) {
         return "cy_edge(%s, %s, %s)".formatted(edge, source, target);
     }
 
+    /**
+     * Construye un goal para crear una relación.
+     *
+     * @param source el nodo de origen
+     * @param target el nodo de destino
+     * @param type el tipo de relación
+     * @param properties las propiedades de la relación
+     * @param edge la variable que recibirá la relación creada
+     * @return el goal de creación en Prolog
+     */
     private static String createEdge(
             String source,
             String target,
@@ -738,29 +824,68 @@ public class CodeGen {
         );
     }
 
+    /**
+     * Combina dos condiciones mediante una conjunción.
+     *
+     * @param left la condición izquierda
+     * @param right la condición derecha
+     * @return la conjunción en Prolog
+     */
     private static String conjunction(String left, String right) {
         return "and(%s, %s)".formatted(left, right);
     }
 
+    /**
+     * Agrupa goals que deben ejecutarse conjuntamente.
+     *
+     * @param goals la lista de goals
+     * @return la conjunción de goals o true si está vacía
+     */
     private static String allOf(List<String> goals) {
         return goals.isEmpty() ? "true" : group(goals, ", ");
     }
 
+    /**
+     * Agrupa goals como alternativas.
+     *
+     * @param alternatives la lista de alternativas
+     * @return la disyunción de goals
+     */
     private static String anyOf(List<String> alternatives) {
         return group(alternatives, " ; ");
     }
 
+    /**
+     * Une goals usando el separador indicado.
+     *
+     * @param goals la lista de goals
+     * @param separator el separador entre goals
+     * @return la expresión agrupada
+     */
     private static String group(List<String> goals, String separator) {
         return goals.size() == 1
                 ? goals.getFirst()
                 : goals.stream().collect(joining(separator, "(", ")"));
     }
 
+    /**
+     * Comprueba si la llamada corresponde a la función type con un argumento.
+     *
+     * @param name el nombre de la función
+     * @param arguments la lista de argumentos
+     * @return true si corresponde a type con un argumento
+     */
     private static boolean isType(Leaf name, List<AstNode> arguments) {
         return name.token().value().equalsIgnoreCase("type")
                 && arguments.size() == 1;
     }
 
+    /**
+     * Obtiene el predicado Prolog de un operador de comparación.
+     *
+     * @param operator el operador de comparación
+     * @return el nombre del predicado correspondiente
+     */
     private static String comparison(Leaf operator) {
         return switch (operator.token().type()) {
             case EQUALS -> "cy_equal";
@@ -776,6 +901,12 @@ public class CodeGen {
         };
     }
 
+    /**
+     * Obtiene la representación Prolog de un operador aritmético.
+     *
+     * @param operator el operador aritmético
+     * @return el operador equivalente en Prolog
+     */
     private static String arithmetic(Leaf operator) {
         return operator.token().value().equals("%")
                 ? "mod"
@@ -822,20 +953,44 @@ public class CodeGen {
         };
     }
 
+    /**
+     * Escapa un texto para representarlo como átomo Prolog.
+     *
+     * @param text el texto que se desea convertir
+     * @return el átomo Prolog entre comillas simples
+     */
     private static String atom(String text) {
         return "'"
                 + text.replace("\\", "\\\\").replace("'", "\\'")
                 + "'";
     }
 
+    /**
+     * Construye una lista con sintaxis de Prolog.
+     *
+     * @param items los elementos de la lista
+     * @return la lista en formato Prolog
+     */
     private static String list(List<String> items) {
         return "[" + String.join(", ", items) + "]";
     }
 
+    /**
+     * Convierte a mayúscula la primera letra de un nombre.
+     *
+     * @param name el nombre de entrada
+     * @return el nombre con inicial mayúscula
+     */
     private static String capitalize(String name) {
         return Character.toUpperCase(name.charAt(0)) + name.substring(1);
     }
 
+    /**
+     * Construye una excepción para una característica no soportada.
+     *
+     * @param feature el nombre de la característica
+     * @return la excepción con el mensaje correspondiente
+     */
     private static UnsupportedOperationException unsupported(String feature) {
         return new UnsupportedOperationException(
                 "Not supported yet: " + feature

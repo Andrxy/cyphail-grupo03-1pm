@@ -27,6 +27,10 @@ import static cr.ac.una.eif400.cyphail.compiler.parser.grammar.GrammarHelpers.*;
  * <p>Cada regla es un parser construido con los combinadores de {@link Combinators}:
  * {@code Sequence} para el orden, {@code OrFlat} para las alternativas, {@code Star}, {@code Plus} y
  * {@code Optional} para las repeticiones, y {@code TFlat} para convertir lo reconocido en un nodo del AST.</p>
+ *
+ * @author Andrey Solano
+ * @author Wilson Umaña
+ * @author Alejandro Miranda
  */
 public class Grammar {
     public static Result<InputTokens, AstNode, String> parse(List<TokenString> source) {
