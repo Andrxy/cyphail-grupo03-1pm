@@ -1,20 +1,61 @@
 :- encoding(utf8).
 
+/** <module> Comparaciones
+
+Comparaciones que usa el código generado para los operadores del WHERE:
+= es cy_equal/2, <> es cy_not_equal/2, < es cy_less_than/2, > es
+cy_greater_than/2, <= es cy_less_or_equal/2 y >= es cy_greater_or_equal/2.
+
+Existen porque los operadores de Prolog no bastan: 28 == 28.0 es falso en
+Prolog, pero en Cypher 28 = 28.0 es verdadero. Los números se comparan por
+valor y los textos en orden alfabético.
+
+Notación de modos y determinismo: ver engine.pl.
+
+@author Alejandro Miranda
+@author Sebastián González (documentación)
+@version P2
+*/
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Comparisons %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Compara números por valor y otros términos por identidad.
+%!  cy_equal(+Left, +Right) is semidet.
+%
+%   Compara números por valor y otros términos por identidad.
+%
+%   =:= compara números por valor; == compara cualquier otro término por
+%   identidad, sin unificar.
+%
+%   @arg Left   Primer valor.
+%   @arg Right  Segundo valor.
 cy_equal(Left, Right) :- (
     number(Left), number(Right)
     ->  Left =:= Right
     ;   Left == Right
 ).
 
-% Comprueba que dos valores sean diferentes.
+%!  cy_not_equal(+Left, +Right) is semidet.
+%
+%   Comprueba que dos valores sean diferentes.
+%
+%   Usa negación por fallo (\+). CodeGen también lo genera para que dos
+%   relaciones del mismo MATCH no sean la misma relación.
+%
+%   @arg Left   Primer valor.
+%   @arg Right  Segundo valor.
 cy_not_equal(Left, Right) :-
     \+ cy_equal(Left, Right)
 .
 
-% Comprueba si un número o texto es menor que otro del mismo tipo.
+%!  cy_less_than(+Left, +Right) is semidet.
+%
+%   Comprueba si un número o texto es menor que otro del mismo tipo.
+%
+%   Dos números se comparan con <. Dos textos (átomos o strings) se comparan
+%   en orden estándar con @<. Si los tipos no coinciden, falla.
+%
+%   @arg Left   Primer valor.
+%   @arg Right  Segundo valor.
 cy_less_than(Left, Right) :- (
     number(Left), number(Right)
     ->  Left < Right
@@ -23,26 +64,49 @@ cy_less_than(Left, Right) :- (
         LeftText @< RightText
 ).
 
-% Comprueba si el primer valor es mayor que el segundo.
+%!  cy_greater_than(+Left, +Right) is semidet.
+%
+%   Comprueba si el primer valor es mayor que el segundo.
+%
+%   @arg Left   Primer valor.
+%   @arg Right  Segundo valor.
 cy_greater_than(Left, Right) :-
     cy_less_than(Right, Left)
 .
 
-% Comprueba si el primer valor es menor o igual que el segundo.
+%!  cy_less_or_equal(+Left, +Right) is semidet.
+%
+%   Comprueba si el primer valor es menor o igual que el segundo.
+%
+%   @arg Left   Primer valor.
+%   @arg Right  Segundo valor.
 cy_less_or_equal(Left, Right) :- (
     cy_equal(Left, Right)
     ;
     cy_less_than(Left, Right)
 ).
 
-% Comprueba si el primer valor es mayor o igual que el segundo.
+%!  cy_greater_or_equal(+Left, +Right) is semidet.
+%
+%   Comprueba si el primer valor es mayor o igual que el segundo.
+%
+%   @arg Left   Primer valor.
+%   @arg Right  Segundo valor.
 cy_greater_or_equal(Left, Right) :-
     cy_less_or_equal(Right, Left)
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Three-valued %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Evalúa una comparación con tres valores: si un operando es null, el resultado es null.
+%!  cy_compare(+Comparison, -Result) is det.
+%
+%   Evalúa una comparación con tres valores: si un operando es null, el resultado es null.
+%
+%   =.. (univ) desarma la comparación, por ejemplo cy_greater_than(31, 30),
+%   para revisar sus operandos; si ninguno es null, call/1 la ejecuta.
+%
+%   @arg Comparison  Meta de comparación con dos operandos.
+%   @arg Result      true, false o null.
 cy_compare(Comparison, Result) :- (
     Comparison =.. [_, Left, Right],
     (Left == null ; Right == null)
@@ -54,7 +118,15 @@ cy_compare(Comparison, Result) :- (
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Utils %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Convierte un átomo o string en un átomo para comparar textos.
+%!  text_atom(+Value, -Text) is semidet.
+%
+%   Convierte un átomo o string en un átomo para comparar textos.
+%
+%   Falla si Value no es átomo ni string; por eso cy_less_than/2 falla al
+%   comparar un texto con un número.
+%
+%   @arg Value  Átomo o string.
+%   @arg Text   El mismo texto como átomo.
 text_atom(Value, Text) :- (
     atom(Value)
     ->  Text = Value

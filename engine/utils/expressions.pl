@@ -1,10 +1,35 @@
 :- encoding(utf8).
+
+/** <module> WHERE y aritmética con null
+
+Evalúa las condiciones del WHERE con lógica de tres valores (true, false y
+null) y calcula la aritmética propagando null, como Cypher.
+
+CodeGen genera la condición del WHERE como un término y la envuelve en
+cy_where/1. Por ejemplo, WHERE r.desde > 2010 AND b.edad >= 30 se traduce a:
+
+  cy_where(and(cy_greater_than(__Rdesde, 2010), cy_greater_or_equal(__Bedad, 30)))
+
+Así una fila con una propiedad ausente (null) no pasa el filtro, y un OR que
+se cumple por los dos lados no produce filas repetidas.
+
+Notación de modos y determinismo: ver engine.pl.
+
+@author Alejandro Miranda
+@author Sebastián González (documentación)
+@version P2
+*/
+
 :- use_module(library(lists)).
 :- ensure_loaded('comparisons.pl').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Where %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Una fila pasa el WHERE solo si la condición es verdadera; false y null la descartan.
+%!  cy_where(+Condition) is semidet.
+%
+%   Una fila pasa el WHERE solo si la condición es verdadera; false y null la descartan.
+%
+%   @arg Condition  Término con and/2, or/2, not/1, is_null/1 y comparaciones cy_*.
 cy_where(Condition) :-
     evaluate(Condition, Result),
     Result == true
@@ -12,7 +37,17 @@ cy_where(Condition) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Arithmetic %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Calcula una expresión aritmética; si algún operando es null el resultado es null.
+%!  cy_calculate(+Expression, -Result) is det.
+%
+%   Calcula una expresión aritmética; si algún operando es null el resultado es null.
+%
+%   CodeGen genera, por ejemplo, cy_calculate(__Pedad + 1, __1) para
+%   p.edad + 1. Solo revisa los operandos directos de la expresión.
+%
+%   @arg Expression  Expresión aritmética de Prolog.
+%   @arg Result      Su valor, o null.
+%   @throws error(evaluation_error(zero_divisor), _) si se divide entre cero.
+%           Dentro de cy_exec_update/4 el error revierte la transacción.
 cy_calculate(Expression, Result) :- (
     Expression =.. [_ | Operands],
     memberchk(null, Operands)
@@ -22,7 +57,16 @@ cy_calculate(Expression, Result) :- (
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Utils %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Evalúa una condición con tres valores: true, false o null.
+%!  evaluate(+Condition, -Result) is det.
+%
+%   Evalúa una condición con tres valores: true, false o null.
+%
+%   Recorre el término de forma recursiva. El corte (!) de cada cláusula
+%   impide que and/2, or/2, not/1 o is_null/1 caigan en la última cláusula,
+%   que trata cualquier otro término como una comparación.
+%
+%   @arg Condition  Condición del WHERE.
+%   @arg Result     true, false o null.
 evaluate(and(Left, Right), Result) :- !,
     evaluate(Left, LeftValue),
     evaluate(Right, RightValue),
@@ -48,7 +92,13 @@ evaluate(Comparison, Result) :-
     cy_compare(Comparison, Result)
 .
 
-% AND de tres valores: false decide; si no, null contagia.
+%!  and_value(+Left, +Right, -Result) is det.
+%
+%   AND de tres valores: false decide; si no, null contagia.
+%
+%   @arg Left    true, false o null.
+%   @arg Right   true, false o null.
+%   @arg Result  true, false o null.
 and_value(false, _, false) :- ! .
 
 and_value(_, false, false) :- ! .
@@ -57,7 +107,13 @@ and_value(true, true, true) :- ! .
 
 and_value(_, _, null).
 
-% OR de tres valores: true decide; si no, null contagia.
+%!  or_value(+Left, +Right, -Result) is det.
+%
+%   OR de tres valores: true decide; si no, null contagia.
+%
+%   @arg Left    true, false o null.
+%   @arg Right   true, false o null.
+%   @arg Result  true, false o null.
 or_value(true, _, true) :- ! .
 
 or_value(_, true, true) :- ! .
@@ -66,12 +122,22 @@ or_value(false, false, false) :- ! .
 
 or_value(_, _, null).
 
-% NOT de tres valores: null sigue siendo null.
+%!  not_value(+Value, -Result) is det.
+%
+%   NOT de tres valores: null sigue siendo null.
+%
+%   @arg Value   true, false o null.
+%   @arg Result  true, false o null.
 not_value(true, false).
 not_value(false, true).
 not_value(null, null).
 
-% IS NULL nunca da null: siempre responde true o false.
+%!  null_value(+Value, -Result) is det.
+%
+%   IS NULL nunca da null: siempre responde true o false.
+%
+%   @arg Value   Valor que se examina.
+%   @arg Result  true si Value es null; false en otro caso.
 null_value(null, true) :- ! .
 
 null_value(_, false).

@@ -1,18 +1,54 @@
 :- encoding(utf8).
+
+/** <module> Datos del grafo ingenieria
+
+Grafo principal de pruebas: personas, cursos y empresas de ingeniería, con relaciones CONOCE, TRABAJA_EN y SOCIO_DE.
+
+Cada hecho lleva el nombre del grafo como primer argumento; así varios grafos
+conviven en el mismo engine. El código generado no consulta estos hechos
+directamente: usa las vistas cy_* de graph/, que fijan el grafo con
+get_current_graph/1.
+
+Usa los nombres de los casos de prueba del profesor (Persona, Empresa, CONOCE, TRABAJA_EN, SOCIO_DE, nombre, desde, cargo), de modo que esos casos se pueden correr tal cual.
+
+Notación de modos y determinismo: ver engine.pl.
+
+@author Alejandro Miranda
+@author Sebastián González (documentación)
+@version P2
+*/
+
+% multifile: cada archivo de data/ aporta cláusulas a los mismos predicados;
+% sin esta declaración, cargar un segundo grafo borraría los hechos del primero.
+% dynamic: CREATE, SET, REMOVE y DELETE agregan y quitan estos hechos en ejecución.
 :- multifile((graph/1, graph_desc/2, node/2, node_label/3, node_prop/4, edge/4, edge_type/3, edge_prop/4)).
 :- dynamic((node/2, node_label/3, node_prop/4, edge/4, edge_type/3, edge_prop/4)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Grafo %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Identifica los grafos disponibles.
+%!  graph(?Graph) is nondet.
+%
+%   Identifica los grafos disponibles.
+%
+%   @arg Graph  Nombre del grafo.
 graph(ingenieria).
 
-% Guarda la descripción de cada grafo.
+%!  graph_desc(?Graph, ?Description) is nondet.
+%
+%   Guarda la descripción de cada grafo; la muestra el comando .use.
+%
+%   @arg Graph        Nombre del grafo.
+%   @arg Description  Texto descriptivo.
 graph_desc(ingenieria, 'Personas, cursos y empresas de ingeniería').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Identifica los nodos que pertenecen al grafo.
+%!  node(?Graph, ?Id_node) is nondet.
+%
+%   Identifica los nodos que pertenecen al grafo.
+%
+%   @arg Graph    Nombre del grafo.
+%   @arg Id_node  Identificador único del nodo dentro del grafo.
 node(ingenieria, alejandro).
 node(ingenieria, andrey).
 node(ingenieria, sebastian).
@@ -31,7 +67,13 @@ node(ingenieria, acme_tech).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Labels de nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Asocia cada nodo con sus etiquetas (labels).
+%!  node_label(?Graph, ?Id_node, ?Label) is nondet.
+%
+%   Asocia cada nodo con sus etiquetas (labels); un nodo puede tener varias.
+%
+%   @arg Graph    Nombre del grafo.
+%   @arg Id_node  Identificador del nodo.
+%   @arg Label    Etiqueta, por ejemplo 'Persona'.
 node_label(ingenieria, alejandro, 'Persona').
 node_label(ingenieria, andrey, 'Persona').
 node_label(ingenieria, sebastian, 'Persona').
@@ -60,7 +102,14 @@ node_label(ingenieria, acme_tech, 'Empresa').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Propiedades de nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Almacena las propiedades de cada nodo.
+%!  node_prop(?Graph, ?Id_node, ?Key, ?Value) is nondet.
+%
+%   Almacena las propiedades de cada nodo; una propiedad ausente se lee como null.
+%
+%   @arg Graph    Nombre del grafo.
+%   @arg Id_node  Identificador del nodo.
+%   @arg Key      Nombre de la propiedad.
+%   @arg Value    Valor: átomo, número o booleano.
 node_prop(ingenieria, alejandro, nombre, 'Alejandro').
 node_prop(ingenieria, andrey, nombre, 'Andrey').
 node_prop(ingenieria, sebastian, nombre, 'Sebastian').
@@ -83,7 +132,14 @@ node_prop(ingenieria, hp, pais, 'CR').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Relaciones (edges) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Identifica las relaciones y sus nodos de origen y destino.
+%!  edge(?Graph, ?Id_edge, ?From, ?To) is nondet.
+%
+%   Identifica las relaciones y sus nodos de origen y destino; toda relación tiene dirección.
+%
+%   @arg Graph    Nombre del grafo.
+%   @arg Id_edge  Identificador único de la relación dentro del grafo.
+%   @arg From     Nodo de origen.
+%   @arg To       Nodo de destino.
 edge(ingenieria, e1, alejandro, hp).
 edge(ingenieria, e2, andrey, microsoft).
 edge(ingenieria, e3, sebastian, acme_tech).
@@ -94,7 +150,13 @@ edge(ingenieria, e7, andrey, hp).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Tipos de relaciones %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Asocia cada relación con su tipo.
+%!  edge_type(?Graph, ?Id_edge, ?Type) is nondet.
+%
+%   Asocia cada relación con su tipo; cada relación tiene uno solo.
+%
+%   @arg Graph    Nombre del grafo.
+%   @arg Id_edge  Identificador de la relación.
+%   @arg Type     Tipo, por ejemplo 'CONOCE'.
 edge_type(ingenieria, e1, 'TRABAJA_EN').
 edge_type(ingenieria, e2, 'TRABAJA_EN').
 edge_type(ingenieria, e3, 'TRABAJA_EN').
@@ -105,7 +167,14 @@ edge_type(ingenieria, e7, 'SOCIO_DE').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Propiedades de relaciones %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Almacena las propiedades de cada relación.
+%!  edge_prop(?Graph, ?Id_edge, ?Key, ?Value) is nondet.
+%
+%   Almacena las propiedades de cada relación; una propiedad ausente se lee como null.
+%
+%   @arg Graph    Nombre del grafo.
+%   @arg Id_edge  Identificador de la relación.
+%   @arg Key      Nombre de la propiedad.
+%   @arg Value    Valor: átomo o número.
 edge_prop(ingenieria, e1, salario, 5000).
 edge_prop(ingenieria, e2, salario, 6000).
 edge_prop(ingenieria, e3, salario, 7000).
