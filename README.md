@@ -413,7 +413,7 @@ The larger part of the use. Understanding the SPEC and the assigned grammar, lea
 
 ### Assistance in implementation
 
-**Sprint P2, broker with MQI (Sebastián González).** The `broker.mqi` package and the rewrite of `Broker` follow the team's Plan #3 and the design of the course demo `MQI_ResponseDemo` (same types, protocol and process start-up). Claude (Anthropic) was used as a programming assistant to write them. Sebastián integrated them in four commits, ran them on Windows with SWI-Prolog 10, found the protocol failures there (`Invalid MQI message header`, a hanging test) that led to the fixes, verified each commit (blob ids, diff stats, full test suite, manual REPL test) and studied the code to defend it.
+**Sprint P2, broker with MQI (Sebastián González).** The `broker.mqi` package and the rewrite of `Broker` follow the team's Plan #3 and the design of the course demo `MQI_ResponseDemo` (same types, protocol and process start-up). Claude (Anthropic) was used as a programming assistant to write them. Sebastián integrated them along four commits, ran them with SWI-Prolog 10, found the protocol failures there (`Invalid MQI message header`, a hanging test) that led to the fixes, verified each commit (blob ids, diff stats, full test suite, manual REPL test) and studied the code to defend it.
 
 ### Prompts
 
@@ -516,6 +516,45 @@ The larger part of the use. Understanding the SPEC and the assigned grammar, lea
 7. Análisis comparativo: comparación de las clases del broker con MQI_ResponseDemo para declarar con precisión dónde termina la referencia oficial.
 8. Documentación del código: documentación de cada archivo .pl del engine con comentarios PlDoc (modos, determinismo, argumentos, errores), siguiendo el encabezado de módulo del demo del curso MQI_ResponseDemo y la notación de modos vista en clase, sin cambiar el código.
 
+**Andrey Solano**
+
+1. Ahorita me encuentro depurando el tema del SemanticAnalyser para devolver la tabla de símbolos al CodeGen y que este la utilice. Está muy desordenado y quiero utilizar records de Symbol y de SymbolTable para tener una mejor organización. Qué cosas debería guardar el símbolo y la tabla de símbolos
+2. Para efectos de este proyecto, en la parte de elaboración del CodeGen, más o menos cómo sería utilizando el switch exhaustivo como en el SemanticAnalyser. Dialoguemos, propongamos ideas. Analice todo de ser necesario. Ese es el engine que proporcionó el propfesor que hay que usar/adaptar utilizando el protocolo MQI
+3. En base al modelo prolog que estamos trabajando en clase, qué otros predicados propondría usted para implementar en el engine
+4. Analice la gramatica, el spec del P2 y haga un documento corto latex con una propuesta no desarrollada de predicados propios que hay que desarrollar
+5. Qué hace el CodeGen en un transpilador?
+6. En clase elaboramos este CodeGen vanilla en prolog, qué ideas se puede sacar de este pero para hacerlo en java
+7. Elabore casos unitarios con los ejemplos que están en ejemplos-cypher-prolog.md para probar el CodeGen
+8. En lo último que falta de implementar en la gramática, qué constructores hay que agregar al AstBuilder
+9. Explíqueme cómo funciona los predicados dinámicos, luego el assert y refract en prolog, y cuál es la relación para crear los CREATE y REMOVE en el proyecto
+10. Proponga ideas de cómo hacer el manejo del null, esto con el tema de la lógica trievaluada
+11. Proponga una estructura inicial del CodeGen en java utilizando switch exhaustivo para que esa sea la que se desarrolle
+
+**Wilson Umaña**
+
+1. Cómo puedo implementar consultas multilínea en el REPL?
+2. Ayúdame a conservar las consultas multilínea en el historial y permitir recorrer sus líneas con las flechas.
+3. Cómo puedo hacer que los .tree multilínea funcionen.
+4. cómo implemento un comando .load para ejecutar consultas desde un archivo?
+5. cómo hago para que no enseñe solamente el resultado de las consultas del .cyphail sino también las consultas
+6. Créame una clase sencilla que lea queries unilinea o multilinea hasta que estén completas
+7. Créame un script con queries válidas y con errores para probar el .load
+8. Hazme las pruebas unitarias para probar el .load
+
+**Alejandro Miranda**
+
+1. Como agrego a la gramática el tema de las consultas las relaciones entre nodos con dirección y de largo variable y las instrucciones para cambiar datos como "REMOVE"? ¿Qué cosas debo cuidar para no romper lo que ya funcionaba?
+2. Como represento un árbol de sintaxis en Java para que un "switch" me obligue a cubrir todos los tipos de nodo? ¿Qué pasa cuando agrego nodos nuevos?
+3. Que cosas debe revisar un analizado semántico en un lenguaje de consultas sobre grafos especialmente de la gramatica similar a la de openCypher (te la adjunto)? Por ejemplo: una variable repetida, un nodo usado donde va una relación, o una variable reutilizada con etiquetas distintas. ¿Cuáles son errores de la gramática y cuáles son errores de significado?
+4. ¿Que diferencia hay en Prolog entre guardar un grafo como hechos en la base y pasarlo como argumento a cada predicado?
+5. Cómo recorro en Prolog caminos de largo variable (por ejemplo, de 1 a 3 saltos) en un grafo que tiene ciclos? ¿Cómo evito que el programa se quede dando vueltas para siempre.
+6. Como hago cambios en un grafo en Prolog (crear, modificar, quitar y borrar) sin usar "assert" ni "retract", tratando el grafo como un valor que no se modifica? ¿Qué ventajas y qué desventajas tiene frente a usar predicados dinámicos?
+7. Como manejo la logica de tres valores (verdadero, falso y nulo) en Prolog? ¿Por qué la negación de Prolog no sirve para representar el nulo? ¿Cómo se comporta el nulo con "AND", "OR" y "NOT", y por qué una condición nula en un "WHERE" descarta la fila?
+8. Qué debería pasar cuando se borra un nodo que todavía tiene aristas conectadas? ¿Qué opciones hay (dar error, borrar también las aristas o borrar solo si no tiene ninguna)?
+9. Como traduzco una secuencia de instrucciones que cambian datos ("CREATE", "SET", "REMOVE", "DELETE") a Prolog, pasando el grafo de un paso al siguiente? ¿Por que ese patrón de ir pasando el estado reemplaza a modificar una base de datos global?
+10. Por qué un "OR" en un "WHERE", traducido a Prolog, puede dar filas repetidas? ¿Como ayuda "once/1" a evitarlo sin cambiar el resultado correcto?
+11. Dame las pruebas unitarias en Java con JUnit 5 para un compilador de consultas tipo Cypher que tiene varias etapas (lexer, parser, análisis semántico y generación de código a Prolog). Quiero casos por cada etapa, con consultas válidas y consultas con errores, y que cada prueba tenga un nombre claro te adjunto las clases necesarias.
+12. Genérame una prueba en Java con JUnit 5 que lea de un archivo JSON un grafo y una consulta con su resultado esperado, y que verifique que el resultado de ejecutar la consulta es el correcto. Quiero que la misma prueba sirva para varios grafos y varias consultas sin repetir código te adjunto las clases de java necesarias para que tengas contexto.
 ---
 
 ## References
