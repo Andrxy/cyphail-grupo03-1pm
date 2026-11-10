@@ -148,6 +148,7 @@ edge(ingenieria, e2, andrey, microsoft).
 edge(ingenieria, e3, sebastian, acme_tech).
 edge(ingenieria, e4, alejandro, andrey).
 edge(ingenieria, e5, andrey, sebastian).
+edge(ingenieria, e8, wilsinky, sebastian).
 edge(ingenieria, e6, andrey, hp).
 edge(ingenieria, e7, andrey, hp).
 
@@ -165,6 +166,7 @@ edge_type(ingenieria, e2, 'TRABAJA_EN').
 edge_type(ingenieria, e3, 'TRABAJA_EN').
 edge_type(ingenieria, e4, 'CONOCE').
 edge_type(ingenieria, e5, 'CONOCE').
+edge_type(ingenieria, e8, 'CONOCE').
 edge_type(ingenieria, e6, 'TRABAJA_EN').
 edge_type(ingenieria, e7, 'SOCIO_DE').
 
