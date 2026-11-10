@@ -7,7 +7,7 @@ import picocli.CommandLine;
  * Clase principal de la aplicación.
  * Inicializa el flujo de ejecución del sistema recibiendo los argumentos
  * del cmd y delegándolos al comando raíz de Picocli, en este
- * caso sería el CyphailCommand.
+ * caso sería el CyphailCommand
  *
  * <p>Implementa un bloque try-catch que captura cualquier excepción no controlada
  * durante la ejecución, imprimiendo el mensaje correspondiente</p>
