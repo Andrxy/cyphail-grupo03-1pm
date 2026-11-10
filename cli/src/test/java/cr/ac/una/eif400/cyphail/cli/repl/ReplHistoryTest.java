@@ -20,6 +20,11 @@ import java.io.PipedOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @author Wilson Umaña
+ * @version P2
+ */
+
 @Timeout(10)
 class ReplHistoryTest {
     private String up;

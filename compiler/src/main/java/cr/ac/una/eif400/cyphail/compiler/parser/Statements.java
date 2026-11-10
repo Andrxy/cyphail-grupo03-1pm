@@ -12,6 +12,7 @@ import java.util.stream.Stream;
  * Separa una lista de tokens en sentencias, usando el token {@code ;} como terminador
  *
  * @author Alejandro Miranda
+ * @author Wilson Umaña
  * @version P2
  */
 public class Statements {

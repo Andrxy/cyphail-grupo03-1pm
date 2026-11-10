@@ -16,6 +16,8 @@ import java.util.concurrent.Callable;
  * Lee un script UTF-8 y lo entrega al REPL para ejecutar sus sentencias sobre la sesión actual.
  * La separación y compilación le corresponden al Compiler, igual que en la entrada interactiva.
  *
+ * @author Wilson Umaña
+ *
  * @version P2
  */
 @Command(name = ".load", description = "Loads and executes a .cyphail script")

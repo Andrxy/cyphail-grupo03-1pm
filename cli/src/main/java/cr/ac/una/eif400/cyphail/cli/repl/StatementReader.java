@@ -7,6 +7,9 @@ import java.util.function.Predicate;
  * Acumula líneas hasta que el compilador indique que la entrada se puede despachar.
  * No interpreta strings, comentarios ni separa sentencias: eso lo hace el compilador.
  *
+ * Prompt utilizado: Créame una clase sencilla que lea queries unilinea o multilinea hasta que estén completas
+ *
+ * @author Wilson Umaña
  * @version P2
  */
 public final class StatementReader {

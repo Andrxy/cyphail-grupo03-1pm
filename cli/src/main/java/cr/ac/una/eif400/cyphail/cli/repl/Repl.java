@@ -45,7 +45,7 @@ import java.util.stream.Stream;
  * @author Andrey Solano
  * @author Sebastián González
  * @author Wilson Umaña
- * @version P1.1
+ * @version P2
  */
 @Command(
         subcommands = {

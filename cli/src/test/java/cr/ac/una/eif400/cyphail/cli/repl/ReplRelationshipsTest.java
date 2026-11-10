@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Pruebas del comando {@code .tree} del REPL con relaciones escritas con espacios.
  *
+ * @author Wilson Umaña
  * @version P2
  */
 @DisplayName("Pruebas del Repl con relaciones")
