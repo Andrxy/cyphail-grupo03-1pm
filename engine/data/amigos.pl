@@ -1,6 +1,6 @@
 :- encoding(utf8).
 
-/** <module> Datos del grafo amigos
+/* Datos del grafo amigos
 
 Grafo pequeño de ejemplo: dos personas, Ana y Luis, unidas por dos relaciones (AMIGO_DE y CONOCE).
 
@@ -11,11 +11,9 @@ get_current_graph/1.
 
 Sirve para pruebas rápidas y para mostrar que el engine maneja más de un grafo.
 
-Notación de modos y determinismo: ver engine.pl.
-
-@author Alejandro Miranda
-@author Sebastián González (documentación)
-@version P2
+Alejandro Miranda
+Sebastián González (documentación)
+P2
 */
 
 % multifile: cada archivo de data/ aporta cláusulas a los mismos predicados;
@@ -26,41 +24,41 @@ Notación de modos y determinismo: ver engine.pl.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Grafo %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%!  graph(?Graph) is nondet.
+%   graph(?Graph) is nondet.
 %
 %   Identifica los grafos disponibles.
 %
-%   @arg Graph  Nombre del grafo.
+%   Graph  Nombre del grafo.
 graph(amigos).
 
-%!  graph_desc(?Graph, ?Description) is nondet.
+%   graph_desc(?Graph, ?Description) is nondet.
 %
 %   Guarda la descripción de cada grafo; la muestra el comando .use.
 %
-%   @arg Graph        Nombre del grafo.
-%   @arg Description  Texto descriptivo.
+%   Graph        Nombre del grafo.
+%   Description  Texto descriptivo.
 graph_desc(amigos, 'Red de amigos').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%!  node(?Graph, ?Id_node) is nondet.
+%   node(?Graph, ?Id_node) is nondet.
 %
 %   Identifica los nodos que pertenecen al grafo.
 %
-%   @arg Graph    Nombre del grafo.
-%   @arg Id_node  Identificador único del nodo dentro del grafo.
+%   Graph    Nombre del grafo.
+%   Id_node  Identificador único del nodo dentro del grafo.
 node(amigos, ana).
 node(amigos, luis).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Etiquetas de nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%!  node_label(?Graph, ?Id_node, ?Label) is nondet.
+%   node_label(?Graph, ?Id_node, ?Label) is nondet.
 %
 %   Asocia cada nodo con sus etiquetas (labels); un nodo puede tener varias.
 %
-%   @arg Graph    Nombre del grafo.
-%   @arg Id_node  Identificador del nodo.
-%   @arg Label    Etiqueta, por ejemplo 'Persona'.
+%   Graph    Nombre del grafo.
+%   Id_node  Identificador del nodo.
+%   Label    Etiqueta, por ejemplo 'Persona'.
 node_label(amigos, ana, 'Persona').
 node_label(amigos, luis, 'Persona').
 node_label(amigos, ana, 'Person').
@@ -68,14 +66,14 @@ node_label(amigos, luis, 'Person').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Propiedades de nodos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%!  node_prop(?Graph, ?Id_node, ?Key, ?Value) is nondet.
+%   node_prop(?Graph, ?Id_node, ?Key, ?Value) is nondet.
 %
 %   Almacena las propiedades de cada nodo; una propiedad ausente se lee como null.
 %
-%   @arg Graph    Nombre del grafo.
-%   @arg Id_node  Identificador del nodo.
-%   @arg Key      Nombre de la propiedad.
-%   @arg Value    Valor: átomo, número o booleano.
+%   Graph    Nombre del grafo.
+%   Id_node  Identificador del nodo.
+%   Key      Nombre de la propiedad.
+%   Value    Valor: átomo, número o booleano.
 node_prop(amigos, ana, nombre, 'Ana').
 node_prop(amigos, ana, edad, 28).
 node_prop(amigos, luis, nombre, 'Luis').
@@ -83,38 +81,38 @@ node_prop(amigos, luis, edad, 31).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Relaciones (edges) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%!  edge(?Graph, ?Id_edge, ?From, ?To) is nondet.
+%   edge(?Graph, ?Id_edge, ?From, ?To) is nondet.
 %
 %   Identifica las relaciones y sus nodos de origen y destino; toda relación tiene dirección.
 %
-%   @arg Graph    Nombre del grafo.
-%   @arg Id_edge  Identificador único de la relación dentro del grafo.
-%   @arg From     Nodo de origen.
-%   @arg To       Nodo de destino.
+%   Graph    Nombre del grafo.
+%   Id_edge  Identificador único de la relación dentro del grafo.
+%   From     Nodo de origen.
+%   To       Nodo de destino.
 edge(amigos, e1, ana, luis).
 edge(amigos, e2, ana, luis).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Tipos de relaciones %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%!  edge_type(?Graph, ?Id_edge, ?Type) is nondet.
+%   edge_type(?Graph, ?Id_edge, ?Type) is nondet.
 %
 %   Asocia cada relación con su tipo; cada relación tiene uno solo.
 %
-%   @arg Graph    Nombre del grafo.
-%   @arg Id_edge  Identificador de la relación.
-%   @arg Type     Tipo, por ejemplo 'CONOCE'.
+%   Graph    Nombre del grafo.
+%   Id_edge  Identificador de la relación.
+%   Type     Tipo, por ejemplo 'CONOCE'.
 edge_type(amigos, e1, 'AMIGO_DE').
 edge_type(amigos, e2, 'CONOCE').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Propiedades de relaciones %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%!  edge_prop(?Graph, ?Id_edge, ?Key, ?Value) is nondet.
+%   edge_prop(?Graph, ?Id_edge, ?Key, ?Value) is nondet.
 %
 %   Almacena las propiedades de cada relación; una propiedad ausente se lee como null.
 %
-%   @arg Graph    Nombre del grafo.
-%   @arg Id_edge  Identificador de la relación.
-%   @arg Key      Nombre de la propiedad.
-%   @arg Value    Valor: átomo o número.
+%   Graph    Nombre del grafo.
+%   Id_edge  Identificador de la relación.
+%   Key      Nombre de la propiedad.
+%   Value    Valor: átomo o número.
 edge_prop(amigos, e1, desde, 2015).
 edge_prop(amigos, e2, desde, 2015).
