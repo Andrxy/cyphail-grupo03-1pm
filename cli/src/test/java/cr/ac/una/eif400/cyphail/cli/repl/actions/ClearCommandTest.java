@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Pruebas del comando ".clear".
  *
  * @author Alejandro Miranda - Grupo 03-1pm
- * @version 1.0
+ * @version P2
  */
 @DisplayName("Pruebas del comando .clear")
 public class ClearCommandTest extends CommandTestSupport {

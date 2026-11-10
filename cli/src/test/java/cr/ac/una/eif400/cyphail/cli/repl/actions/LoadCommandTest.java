@@ -21,6 +21,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+/**
+ * Pruebas del comando {@code .load}.
+ *
+ * @author Wilson Umaña
+ * @version P2
+ */
+
 class LoadCommandTest extends CommandTestSupport {
     private static final String PRIMERA = "RETURN 'primera' AS valor";
     private static final String SEGUNDA = "RETURN 'segunda' AS otro";

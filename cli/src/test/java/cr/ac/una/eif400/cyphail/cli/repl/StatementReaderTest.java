@@ -7,6 +7,13 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Pruebas de la clase statement reader
+ *
+ * @author Wilson Umaña
+ * @version P2
+ */
+
 class StatementReaderTest {
     private final StatementReader reader = new StatementReader();
 
