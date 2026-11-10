@@ -8,7 +8,8 @@ package cr.ac.una.eif400.cyphail.common;
  * <p>Para efectos de esta versión P1.1, se establece como la estructura fundamental de transferencia de datos (DTO en web)
  * para validar la arquitectura y la comunicación entre los componentes del sistema.</p>
  *
- * @author Andrey Solano - Grupo 03-1pm
+ * @author Andrey Solano
+ * @author Alejandro Miranda
  * @version P1.1
  */
 public class QueryResponse {
