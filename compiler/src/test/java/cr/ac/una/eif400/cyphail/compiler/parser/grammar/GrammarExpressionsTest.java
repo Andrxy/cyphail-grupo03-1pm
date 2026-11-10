@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Pruebas de la jerarquia de expresiones en la gramatica del sprint P2.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 @DisplayName("Pruebas de las expresiones en la gramatica")

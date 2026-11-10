@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Pruebas de las clausulas SET, REMOVE y RETURN extendido en la gramatica del sprint P2.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 @DisplayName("Pruebas de SET, REMOVE y RETURN en la gramatica")

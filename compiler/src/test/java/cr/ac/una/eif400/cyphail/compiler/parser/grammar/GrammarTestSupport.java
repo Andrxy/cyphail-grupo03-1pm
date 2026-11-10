@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 /**
  * Ayudas compartidas por las pruebas de la gramatica del sprint P2.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 final class GrammarTestSupport {

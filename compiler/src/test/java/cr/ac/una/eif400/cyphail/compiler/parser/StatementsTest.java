@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Pruebas de la separacion de un script en sentencias por el token {@code ;}.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 @DisplayName("Pruebas de Statements")

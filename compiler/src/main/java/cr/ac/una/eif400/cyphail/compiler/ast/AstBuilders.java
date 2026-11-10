@@ -12,7 +12,8 @@ import cr.ac.una.eif400.cyphail.compiler.lexer.token.TokenType;
  *
  * @author Alejandro Miranda
  * @author Wilson Umaña
- * @version P1
+ * @author Andrey Solano
+ * @version P2
  */
 public class AstBuilders {
 
@@ -236,6 +237,12 @@ public class AstBuilders {
         return new Comparison(parts.get(0), (Leaf) comp.get(0), comp.get(1));
     }
 
+    /**
+     * Construye una asignación de propiedad ({@link SetProperty}).
+     *
+     * @param parts las partes que contienen la propiedad y su nuevo valor
+     * @return un nodo {@link SetProperty}
+     */
     public static AstNode toSetProperty(List<AstNode> parts) {
         return new SetProperty(
                 (PropertyAccess) parts.get(0),
@@ -243,6 +250,12 @@ public class AstBuilders {
         );
     }
 
+    /**
+     * Construye una asignación de todas las propiedades ({@link SetAllProperties}).
+     *
+     * @param parts las partes que contienen la variable y las propiedades
+     * @return un nodo {@link SetAllProperties}
+     */
     public static AstNode toSetAllProperties(List<AstNode> parts) {
         return new SetAllProperties(
                 (Leaf) parts.get(0),
@@ -250,6 +263,12 @@ public class AstBuilders {
         );
     }
 
+    /**
+     * Construye una asignación de etiquetas ({@link SetLabels}).
+     *
+     * @param parts las partes que contienen la variable y las etiquetas
+     * @return un nodo {@link SetLabels}
+     */
     public static AstNode toSetLabels(List<AstNode> parts) {
         return new SetLabels(
                 (Leaf) parts.get(0),
@@ -257,10 +276,22 @@ public class AstBuilders {
         );
     }
 
+    /**
+     * Construye una cláusula de actualización ({@link SetClause}).
+     *
+     * @param parts la lista de asignaciones
+     * @return un nodo {@link SetClause}
+     */
     public static AstNode toSet(List<AstNode> parts) {
         return new SetClause(itemsAs(toItems(parts.subList(1, 3)), AstNode.class));
     }
 
+    /**
+     * Construye una eliminación de etiquetas ({@link RemoveLabels}).
+     *
+     * @param parts las partes que contienen la variable y las etiquetas
+     * @return un nodo {@link RemoveLabels}
+     */
     public static AstNode toRemoveLabels(List<AstNode> parts) {
         return new RemoveLabels(
                 (Leaf) parts.get(0),
@@ -268,10 +299,22 @@ public class AstBuilders {
         );
     }
 
+    /**
+     * Construye una eliminación de propiedad ({@link RemoveProperty}).
+     *
+     * @param parts las partes que contienen la propiedad a eliminar
+     * @return un nodo {@link RemoveProperty}
+     */
     public static AstNode toRemoveProperty(List<AstNode> parts) {
         return new RemoveProperty((PropertyAccess) parts.getFirst());
     }
 
+    /**
+     * Construye una cláusula de eliminación ({@link RemoveClause}).
+     *
+     * @param parts la lista de elementos que se desean eliminar
+     * @return un nodo {@link RemoveClause}
+     */
     public static AstNode toRemove(List<AstNode> parts) {
         return new RemoveClause(itemsAs(toItems(parts.subList(1, 3)), AstNode.class));
     }
@@ -282,6 +325,12 @@ public class AstBuilders {
         return new Node(parts.stream().flatMap(part -> itemsAs(part, AstNode.class).stream()).toList());
     }
 
+    /**
+     * Construye una cláusula de ordenamiento ({@link Order}).
+     *
+     * @param parts la lista de criterios de ordenamiento
+     * @return un nodo {@link Order}
+     */
     public static AstNode toOrder(List<AstNode> parts) {
         return new Order(itemsAs(toItems(parts.subList(2, 4)), SortItem.class));
     }
@@ -303,6 +352,12 @@ public class AstBuilders {
         return new Limit(parts.get(1));
     }
 
+    /**
+     * Construye un patrón simple o un camino ({@link Path}).
+     *
+     * @param parts las partes del patrón y su posible relación
+     * @return un nodo {@link AstNode} con el patrón resultante
+     */
     public static AstNode toPatternElement(List<AstNode> parts) {
         var chain = itemsAs(parts.get(1), Node.class);
         if (chain.isEmpty()) return parts.get(0);
@@ -324,14 +379,32 @@ public class AstBuilders {
         return new Node(entries);
     }
 
+    /**
+     * Combina expresiones mediante disyunciones lógicas ({@link Or}).
+     *
+     * @param parts la lista de expresiones lógicas
+     * @return un nodo {@link AstNode} con la disyunción
+     */
     public static AstNode toOr(List<AstNode> parts) {
         return itemsAs(toItems(parts), AstNode.class).stream().reduce(Or::new).orElseThrow();
     }
 
+    /**
+     * Combina expresiones mediante conjunciones lógicas ({@link And}).
+     *
+     * @param parts la lista de expresiones lógicas
+     * @return un nodo {@link AstNode} con la conjunción
+     */
     public static AstNode toAnd(List<AstNode> parts) {
         return itemsAs(toItems(parts), AstNode.class).stream().reduce(And::new).orElseThrow();
     }
 
+    /**
+     * Aplica las negaciones lógicas ({@link Not}) a una expresión.
+     *
+     * @param parts las negaciones y la expresión original
+     * @return un nodo {@link AstNode} con las negaciones aplicadas
+     */
     public static AstNode toNot(List<AstNode> parts) {
         var result = parts.get(1);
         for (var _ : itemsAs(parts.get(0), Leaf.class))
@@ -339,6 +412,12 @@ public class AstBuilders {
         return result;
     }
 
+    /**
+     * Construye comparaciones entre expresiones ({@link Comparison}).
+     *
+     * @param parts las expresiones y operadores de comparación
+     * @return un nodo {@link AstNode} con las comparaciones
+     */
     public static AstNode toComparison(List<AstNode> parts) {
         var comparisons = new ArrayList<AstNode>();
         var left = parts.get(0);
@@ -350,6 +429,12 @@ public class AstBuilders {
         return comparisons.stream().reduce(And::new).orElse(parts.get(0));
     }
 
+    /**
+     * Construye una expresión aritmética ({@link Arithmetic}).
+     *
+     * @param parts los operandos y operadores aritméticos
+     * @return un nodo {@link AstNode} con la expresión resultante
+     */
     public static AstNode toArithmetic(List<AstNode> parts) {
         var result = parts.get(0);
         for (var pair : itemsAs(parts.get(1), Node.class))
@@ -358,6 +443,12 @@ public class AstBuilders {
     }
 
 
+    /**
+     * Construye una expresión con operadores unarios ({@link Unary}).
+     *
+     * @param parts los operadores unarios y la expresión
+     * @return un nodo {@link AstNode} con los operadores aplicados
+     */
     public static AstNode toUnary(List<AstNode> parts) {
         var result = parts.get(1);
         for (var sign : itemsAs(parts.get(0), Leaf.class).reversed())
@@ -365,12 +456,24 @@ public class AstBuilders {
         return result;
     }
 
+    /**
+     * Construye una verificación de nulidad ({@link NullTest}).
+     *
+     * @param parts la expresión y la condición opcional de nulidad
+     * @return un nodo {@link AstNode} con la verificación
+     */
     public static AstNode toNullTest(List<AstNode> parts) {
         var test = itemsAs(parts.get(1), Node.class);
         if (test.isEmpty()) return parts.get(0);
         return new NullTest(parts.get(0), !itemsAs(test.getFirst().items().get(1), Leaf.class).isEmpty());
     }
 
+    /**
+     * Construye accesos a propiedades o verificaciones de etiquetas.
+     *
+     * @param parts la expresión y sus accesos o etiquetas
+     * @return un nodo {@link AstNode} con las operaciones aplicadas
+     */
     public static AstNode toPropertyOrLabels(List<AstNode> parts) {
         var result = parts.get(0);
         for (var suffix : itemsAs(parts.get(1), AstNode.class))
@@ -382,6 +485,12 @@ public class AstBuilders {
         return result;
     }
 
+    /**
+     * Construye una llamada a función ({@link FunctionCall}).
+     *
+     * @param parts el nombre de la función y sus argumentos
+     * @return un nodo {@link FunctionCall}
+     */
     public static AstNode toFunctionCall(List<AstNode> parts) {
         return new FunctionCall((Leaf) parts.get(0), itemsAs(parts.get(2), AstNode.class));
     }
@@ -395,15 +504,23 @@ public class AstBuilders {
      */
     public static AstNode toRelRange(List<AstNode> parts) {
         var bounds = itemsAs(parts.get(1), Node.class);
-        if (bounds.isEmpty()) return new RelRange(List.of(), List.of());                          // *
+
+        if (bounds.isEmpty()) return new RelRange(List.of(), List.of());
+
         var items = bounds.getFirst().items();
+
         if (items.get(0) instanceof Leaf dots && dots.token().type() == TokenType.RANGE_DOTS)
-            return new RelRange(List.of(), List.of((Leaf) items.get(1)));                       // *..m
+            return new RelRange(List.of(), List.of((Leaf) items.get(1)));
+
         var min = List.of((Leaf) items.get(0));
+
         var upper = itemsAs(items.get(1), Node.class);
-        if (upper.isEmpty()) return new RelRange(min, min);                                      // *n
-        return new RelRange(min, itemsAs(upper.getFirst().items().get(1), Leaf.class));         // *n.. | *n..m
+
+        if (upper.isEmpty()) return new RelRange(min, min);
+
+        return new RelRange(min, itemsAs(upper.getFirst().items().get(1), Leaf.class));
     }
 
 
 }
+

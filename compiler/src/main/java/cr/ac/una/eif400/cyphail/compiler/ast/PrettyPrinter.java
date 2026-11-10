@@ -1,3 +1,4 @@
+
 package cr.ac.una.eif400.cyphail.compiler.ast;
 
 import cr.ac.una.eif400.cyphail.compiler.ast.node_specializations.*;
@@ -34,7 +35,7 @@ public class PrettyPrinter {
      */
     public static String print(AstNode current) {
         return switch (current) {
-            case Query(var matches, var updates, var ret) -> block("Query",  each(matches), "Updates: " + listify(updates), each(ret));
+            case Query(var matches, var updates, var ret) -> block("Query", each(matches), "Updates: " + listify(updates), each(ret));
 
             case Leaf(var token) -> token.value();
 
@@ -166,11 +167,25 @@ public class PrettyPrinter {
         return text.lines().map(line -> INDENT + line).collect(joining("\n"));
     }
 
+    /**
+     * Formatea una expresión en notación prefija a partir de una lista de argumentos.
+     *
+     * @param head el operador o nombre de la expresión
+     * @param arguments la lista de argumentos de la expresión
+     * @return una cadena con la expresión en notación prefija
+     */
     private static String prefix(String head, List<? extends AstNode> arguments) {
         return Stream.concat(Stream.of(head), arguments.stream().map(PrettyPrinter::print))
                 .collect(joining(" ", "(", ")"));
     }
 
+    /**
+     * Formatea una expresión en notación prefija a partir de varios argumentos.
+     *
+     * @param head el operador o nombre de la expresión
+     * @param arguments los argumentos de la expresión
+     * @return una cadena con la expresión en notación prefija
+     */
     private static String prefix(String head, AstNode... arguments) {
         return prefix(head, List.of(arguments));
     }

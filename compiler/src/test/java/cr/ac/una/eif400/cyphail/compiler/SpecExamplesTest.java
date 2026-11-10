@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Pruebas del front-end (lexer, gramatica y semantica) con los ejemplos del SPEC del sprint P2.
  *
+ * @author Alejandro Miranda
  * @version P2
  */
 @DisplayName("Pruebas con los ejemplos del SPEC de P2")
